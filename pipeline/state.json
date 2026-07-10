@@ -15,7 +15,7 @@
     },
     "sitemap": {
       "agent": "sitemap-architect",
-      "status": "pending",
+      "status": "rejected",
       "output": "docs/sitemap.md",
       "depends_on": ["research-product"]
     },
@@ -64,6 +64,12 @@
       "verdict": "approved",
       "pass": 2,
       "summary": "All five first-pass fixes verified done: workout module correctly reframed as bodyweight-only calisthenics + Pilates skill tree with objective time-hold/rep-threshold mastery gates and gym/external-load explicitly out of scope; on-category competitors added with sourced complaints (Calistree, Calisthenics Mastery, Thenx, Freeletics as self-rated-gating analogue, Pilatesology/Pilates Anytime); micronutrient tracking is now Core Feature Requirement 4 with named nutrients and FCT-coverage caveats; the progression-tree validation open question is carried forward as explicitly unresolved with an owner type and timing; stale brief-based disclaimer removed. Preservation explicitly verified against the research-design pass-2 failure mode: diaspora persona with dual-cuisine scope-multiplier insight, full Nigeria+Ghana+Kenya priority-markets rationale (shared WAFCT, Kenya FCT 2018, SA/Ethiopia held for v2), and full unified-app-vs-two-modules rationale are all intact at full depth. Sitemap stage unblocked; it must treat progression-tree validation (Open Question 1) as unresolved."
+    },
+    {
+      "date": "2026-07-10",
+      "stage": "sitemap",
+      "verdict": "rejected",
+      "summary": "Structure is largely right: 11 of 13 Core Feature Requirements trace fully to real screens, Req 13 is honestly flagged as a cross-cutting engineering constraint, Open Question 1 discipline is correct (placeholder [Skill Node] names, TBD thresholds, no invented progression content), the unified one-app/two-modules structure with shared account/Home/Progress layers is correct, and the three requirement-less screens are all justified. Rejected on two concrete traceability failures: (1) Req 1's portion-photo reference set — which the research calls 'the entry-point that mainstream apps fail' — appears nowhere in the sitemap, yet traceability row 1 claims full coverage without a flag; (2) Req 9's placement assessment is structurally calisthenics-only (singular 'Starting Tier Placement', push/pull/squat-hinge/core-hold steps) with no per-track Pilates placement, reproducing the documented 'I don't know where to start' Pilates-incumbent failure. Narrow two-item fix list in pipeline/review-log.md; everything else is explicitly approved as-is and must not be thinned."
     }
   ]
 }
