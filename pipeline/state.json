@@ -21,7 +21,7 @@
     },
     "design-system": {
       "agent": "design-system-architect",
-      "status": "rejected",
+      "status": "approved",
       "output": "docs/design-system.md",
       "depends_on": ["research-design"]
     },
@@ -97,6 +97,13 @@
       "verdict": "rejected",
       "pass": 2,
       "summary": "Five of six first-pass fixes verified done with hexes cross-checked and contrast ratios independently recomputed: (1) all five node states now use genuinely dedicated hexes (locked #8A8578, unlocked #C98A2E, in-progress #3B7EA8, completed #3D8B5C, mastered #A8452A) with zero collisions anywhere in the document and the exclusivity claim now true; (2) SS4.10 honestly documents that macro rings reuse brand/semantic hues while being genuinely distinct from SS1.4; (3) rest-timer state fully specified in SS5.1/SS4.8 with auto-start, timer-xl countdown, 44pt skip/add-time controls, and lock-screen persistence flagged for build; (4) secondary button has one owner (terracotta-outlined) in both SS1.1 and SS4.1; (6) barcode explicitly deferred per the approved sitemap. Preservation verified item by item — nothing thinned. Rejected narrowly because fix 5 was only half-applied and fix 1 introduced a knock-on contrast failure: gold-muted #E0BE7C — named by hex in the pass-1 fix list — is still the Pilates player's sole progress indicator at ~1.6:1 against its light surface (~1.0:1 against the standard track), directly contradicting the new SS6.10 rule (3:1 for progress fills), which bans base gold but is silent on gold-muted; and the new node.unlocked amber #C98A2E computes to ~2.7:1 on the app background (~2.4:1 on cards), below SS6.10's own 3:1 minimum for node-state fills (the other four node hexes pass). Two-item mechanical fix list in pipeline/review-log.md; all six fix areas where marked done, and everything previously approved, must be preserved as-is."
+    },
+    {
+      "date": "2026-07-10",
+      "stage": "design-system",
+      "verdict": "approved",
+      "pass": 3,
+      "summary": "Both pass-2 fixes verified done, with every stated contrast figure independently recomputed via the WCAG relative-luminance formula and confirmed accurate: node.unlocked is now #A85F12 (4.41:1 vs app background #F7F3EE, 3.93:1 vs card #EDE6DC — matching the doc's claims; additionally verified 3.65:1/3.19:1 on the dark surfaces where SS5.1 permits node colors), and gold-muted is now #7A4E12 (6.50:1 vs background, 5.79:1 vs card, 3.99:1 vs the warmgray-400 track — matching the doc's claims; the old ~1.6:1/~1.0:1 failure is documented honestly and the old hex banned). Full-palette hex-exclusivity re-verified from scratch: #A85F12 and #7A4E12 collide with nothing (brand, semantic, neutrals, other node states, macro rings), and SS1.4's dedication claim remains true. Design coherence: no new near-duplicate — gold-muted vs node.unlocked are luminance-distinct with disjoint contexts; node.unlocked vs gold-dark is the closest pair (an inevitable consequence of the pass-2 darkening instruction), non-blocking with a screens-stage carry-forward. The two additive notes check out: SS1.4's locked-state WCAG 1.4.11 inactive-component exemption is correctly reasoned with an explicit invalidation condition, and SS4.7 now names color.node.unlocked per the optional fix. Preservation verified section by section — SS0, SS2, SS3, SS4.3/4.4, SS5 structure, SS6 rules 1-9, neutrals/dark-mode all unchanged; every change traces to the fix list. Non-blocking observations recorded (mastered ~3.0:1/~2.6:1 on dark surfaces with a compliant outline/icon path, SS6.4's 2.5.4-vs-2.3.1 citation, gold-muted naming). Screens stage now fully unblocked (both dependencies approved); seven carry-forwards recorded in pipeline/review-log.md, and the orchestrator should consider running the screens merge-point review at effort xhigh."
     }
   ]
 }
