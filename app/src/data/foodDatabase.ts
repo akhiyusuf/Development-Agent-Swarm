@@ -12,6 +12,7 @@
 
 import type { HouseholdUnit } from '../components/PortionUnitPicker';
 import type { PhotoReference } from '../components/PortionPhotoReference';
+import type { CustomFoodEntry } from '../state/types';
 
 export interface Micronutrients {
   ironMg?: number;
@@ -25,7 +26,7 @@ export interface Micronutrients {
 export interface FoodItem {
   id: string;
   name: string;
-  region: 'Nigeria' | 'Ghana' | 'Kenya' | 'Diaspora/Western';
+  region: 'Nigeria' | 'Ghana' | 'Kenya' | 'Diaspora/Western' | 'Custom';
   kind: 'ingredient' | 'composite';
   caloriesPerUnit: number; // per first (default) household unit
   proteinG: number;
@@ -90,7 +91,7 @@ export const FOOD_DATABASE: FoodItem[] = [
       { id: 'scoop', label: '1 scoop', gramsPerUnit: 200, icon: 'restaurant-outline' },
       { id: 'half-plate', label: 'Half plate', gramsPerUnit: 250, icon: 'pie-chart-outline' },
     ],
-    photoRefs: [{ id: 'waakye-1', caption: '1 scoop ≈ 200g waakye', tone: '#7A4E12' }],
+    photoRefs: [{ id: 'waakye-1', caption: '1 scoop ≈ 200g waakye', tone: '#D9A441' }],
     recipeNote: 'Rice and beans cooked with millet-stalk/sorghum leaves (mock).',
   },
   {
@@ -123,7 +124,7 @@ export const FOOD_DATABASE: FoodItem[] = [
       { id: 'slice', label: '1 slice', gramsPerUnit: 120, icon: 'square-outline' },
       { id: 'half-plate', label: 'Half plate', gramsPerUnit: 200, icon: 'pie-chart-outline' },
     ],
-    photoRefs: [{ id: 'ugali-1', caption: '1 slice ≈ 120g ugali', tone: '#B8752A' }],
+    photoRefs: [{ id: 'ugali-1', caption: '1 slice ≈ 120g ugali', tone: '#96391F' }],
   },
   {
     id: 'sukuma-wiki',
@@ -139,7 +140,7 @@ export const FOOD_DATABASE: FoodItem[] = [
       { id: 'cup', label: '1 cup', gramsPerUnit: 100, icon: 'cafe-outline' },
       { id: 'ladle', label: '1 ladle', gramsPerUnit: 130, icon: 'restaurant-outline' },
     ],
-    photoRefs: [{ id: 'sukuma-1', caption: '1 cup ≈ 100g sukuma wiki', tone: '#2E7D46' }],
+    photoRefs: [{ id: 'sukuma-1', caption: '1 cup ≈ 100g sukuma wiki', tone: '#1F5C42' }],
     recipeNote: 'Collard greens sautéed with onion and tomato (mock).',
   },
   {
@@ -216,6 +217,45 @@ export function searchFoods(query: string): FoodItem[] {
 
 export function getFoodById(id: string): FoodItem | undefined {
   return FOOD_DATABASE.find((f) => f.id === id);
+}
+
+/**
+ * Maps a user-created custom food/meal (`state.customFoods`, saved by N7 —
+ * Custom Food / Meal Builder) into the same `FoodItem` shape used by the
+ * seed database, so custom foods are first-class throughout Add Entry,
+ * Food Detail, and Confirm & Log rather than a save-only dead end. Custom
+ * foods have no household-unit set of their own beyond the single unit the
+ * user declared, no micronutrient entry (N7 omits that field — see
+ * BUILD_NOTES.md), and no portion-photo reference.
+ */
+export function customFoodToFoodItem(entry: CustomFoodEntry): FoodItem {
+  return {
+    id: entry.id,
+    name: entry.name,
+    region: 'Custom',
+    kind: 'ingredient',
+    caloriesPerUnit: entry.caloriesPerUnit,
+    proteinG: entry.proteinG,
+    carbsG: entry.carbsG,
+    fatG: entry.fatG,
+    micronutrients: {},
+    units: [{ id: 'custom-unit', label: entry.unitLabel, gramsPerUnit: entry.gramsPerUnit, icon: 'restaurant-outline' }],
+    photoRefs: [],
+  };
+}
+
+/** Searches the seed database plus a user's custom foods together by name. */
+export function searchAllFoods(query: string, customFoods: CustomFoodEntry[]): FoodItem[] {
+  const q = query.trim().toLowerCase();
+  const customMatches = customFoods
+    .map(customFoodToFoodItem)
+    .filter((f) => !q || f.name.toLowerCase().includes(q));
+  return [...customMatches, ...searchFoods(query)];
+}
+
+/** Looks up a food by id in the seed database first, then in custom foods. */
+export function findFood(id: string, customFoods: CustomFoodEntry[]): FoodItem | undefined {
+  return getFoodById(id) ?? customFoods.map(customFoodToFoodItem).find((f) => f.id === id);
 }
 
 export const MICRONUTRIENT_LABELS: Record<keyof Micronutrients, { label: string; unit: string }> = {

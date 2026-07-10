@@ -8,7 +8,7 @@ import { Card } from '../../components/Card';
 import { SingleSelect } from '../../components/SingleSelect';
 import { color } from '../../theme/tokens';
 import { useAppState } from '../../state/AppStateContext';
-import { getFoodById } from '../../data/foodDatabase';
+import { findFood } from '../../data/foodDatabase';
 import type { MealSlot } from '../../state/types';
 
 /** N8. Confirm & Log — meal-slot assignment, quantity, save. */
@@ -16,9 +16,9 @@ export function ConfirmLogScreen() {
   const nav = useNavigation<any>();
   const route = useRoute<any>();
   const { foodId, slot, unitLabel, quantity, grams, calories, proteinG, carbsG, fatG, micronutrients } = route.params;
-  const { dispatch, isOnline, uid, todayStr } = useAppState();
+  const { dispatch, isOnline, uid, todayStr, state } = useAppState();
   const [mealSlot, setMealSlot] = useState<MealSlot>(slot ?? 'snack');
-  const food = getFoodById(foodId);
+  const food = findFood(foodId, state.customFoods);
 
   const confirm = () => {
     dispatch({

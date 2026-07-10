@@ -13,6 +13,15 @@ export interface PhotoReference {
    * color standing in for where an authentic reference photo would render;
    * this is never generic "African-coded" stock art and never bakes text
    * into the tile — the caption below is real text (§6.9).
+   *
+   * IMPORTANT — token restriction: `tone` is a purely decorative fill, so it
+   * must only ever be one of the brand hues §1.1 explicitly allows for
+   * decorative use (`color.primary.terracotta`, `terracottaDark`, `gold`,
+   * `goldDark`, `deepgreen`) or a neutral. It must NEVER be
+   * `color.primary.goldMuted` (§1.1: "progress-fill role only ... never for
+   * backgrounds or large fills") or any `color.semantic.*` value (§1.3: fixed
+   * meaning app-wide, not decoration). See `foodDatabase.ts` for the actual
+   * per-food assignments.
    */
   tone?: string;
 }

@@ -6,18 +6,10 @@ import { Text } from '../../components/Typography';
 import { Card } from '../../components/Card';
 import { Button } from '../../components/Button';
 import { TrendChart, TrendPoint } from '../../components/TrendChart';
-import { StatusBadge, BadgeTone } from '../../components/StatusBadge';
+import { Ionicons } from '@expo/vector-icons';
 import { macroColor, color, space } from '../../theme/tokens';
 import { useAppState } from '../../state/AppStateContext';
 import { nodesForTrack } from '../../data/skillTree';
-
-const STATE_TONE: Record<string, BadgeTone> = {
-  locked: 'neutral',
-  unlocked: 'info',
-  inprogress: 'info',
-  completed: 'success',
-  mastered: 'warning',
-};
 
 /**
  * P1. Combined Progress Dashboard — three separately-titled sections
@@ -73,7 +65,7 @@ export function CombinedProgressDashboardScreen() {
         <Text variant="h2">Calorie-balance trend</Text>
         <TrendChart data={calorieTrend} unit="kcal" targetValue={state.goals.calorieTarget} lineColor={macroColor.calories} />
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: space[8], marginTop: space[8] }}>
-          <View style={{ width: 12, height: 12, borderRadius: 6, backgroundColor: macroColor.carbs }} />
+          <Ionicons name="pie-chart-outline" size={16} color={macroColor.carbs} />
           <Text variant="caption">Carbs today: {carbsToday}g</Text>
         </View>
         <Button label="View daily summary" variant="tertiary" onPress={() => nav.navigate('Nutrition', { screen: 'DailyNutritionSummary' })} />
@@ -93,7 +85,7 @@ export function CombinedProgressDashboardScreen() {
               </Text>
               {unlocked.map((n) => (
                 <View key={n.id} style={{ flexDirection: 'row', alignItems: 'center', gap: space[8], marginTop: space[4] }}>
-                  <View style={{ width: 12, height: 12, borderRadius: 6, backgroundColor: color.node.unlocked }} />
+                  <Ionicons name="ellipse-outline" size={14} color={color.node.unlocked} />
                   <Text variant="caption">{n.name} — unlocked</Text>
                 </View>
               ))}

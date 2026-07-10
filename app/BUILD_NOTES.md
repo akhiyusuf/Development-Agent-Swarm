@@ -5,6 +5,66 @@ This build implements `docs/sitemap.md` (approved, pass 2), `docs/design-system.
 TypeScript) app in `app/`. Everything below is a deliberate, documented deviation or
 implementation decision — nothing was silently improvised.
 
+## Round-2 fixes (this revision)
+
+The prior submission was reviewed and rejected (see `pipeline/review-log.md`, "Stage:
+build (FINAL STAGE)"). Nine required fixes from that review are addressed in this
+revision; everything the reviewer explicitly marked as passing was left untouched.
+Summary of what changed (details also noted inline below, near the relevant section):
+
+1. **Corrected a false claim in this file and fixed a reserved-token misuse.** The
+   previous revision of this document claimed `color.primary.goldMuted` (`#7A4E12`) was
+   "reserved-but-unused." That was false: `src/data/foodDatabase.ts` assigned `#7A4E12`
+   as a decorative tile-tone for the Waakye portion-photo placeholder, and two other tiles
+   reused `semantic.success`/`semantic.warning` hexes decoratively. All three were
+   replaced with non-reserved brand hues (`gold #D9A441`, `terracottaDark #96391F`,
+   `deepgreen #1F5C42`) — see the "Only approved design-system hexes" section below,
+   which is now rewritten to state the true, current status.
+2. **Node-state chips (`NodeDetailScreen` W3, `ProgressionStatusScreen` W6) now use the
+   §1.4 node-color vocabulary**, via a new `NodeStateBadge` component that reuses the
+   exact color/icon/label mapping `SkillNode.tsx` already used for the tree map itself.
+   They previously mapped node state to `StatusBadge` semantic tones (mastered rendered
+   in `semantic.warning` orange) — removed, along with the dead `STATE_TONE` copy that
+   was also sitting unused in `CombinedProgressDashboardScreen`.
+3. **Custom foods (N7) are now functional, not a save-only dead end.** `foodDatabase.ts`
+   gained `customFoodToFoodItem`/`findFood`/`searchAllFoods` helpers that project a saved
+   `CustomFoodEntry` into the same `FoodItem` shape the seed database uses. Add Entry's
+   Search/Recent/Favorites/Custom tabs now all merge in `state.customFoods`; Food Detail
+   and Confirm & Log both resolve a `foodId` through the seed database OR custom foods;
+   and Custom Food Builder's "Save & log now" now actually saves and navigates to Confirm
+   & Log with a 1×-quantity portion, instead of just saving and calling `goBack()`.
+4. **Fixed a state-corrupting bug in "Adjust a placement."** `CombinedSummaryScreen`
+   previously navigated to `PlacementResult` with fabricated params
+   (`{ track: 'calisthenics', yesCount: 1, totalSteps: 1 }`), and `PlacementResultScreen`'s
+   mount effect unconditionally dispatched `SET_PLACEMENT`, silently overwriting the
+   user's real calisthenics starting tier regardless of which track they meant to adjust.
+   Fixed with an explicit `review` mode: `PlacementResultScreen` never dispatches
+   `SET_PLACEMENT` when `review` is set — it only *displays* the track's already-stored
+   result (read from `state.placement`) and lets the user retake that track's real steps
+   if they want to actually change it. `CombinedSummaryScreen` now offers two explicit
+   buttons ("Adjust calisthenics placement" / "Adjust Pilates placement") so the user
+   picks which track, rather than the code hardcoding calisthenics.
+5. **P1's carbs and unlocked-node indicators are no longer bare colored dots.**
+   `CombinedProgressDashboardScreen` now renders the unlocked indicator as an
+   outlined-circle glyph (`ellipse-outline`) in `color.node.unlocked`, matching §1.4's
+   unlocked icon pairing, and the carbs metric as a `pie-chart-outline` glyph in
+   `macroColor.carbs` — both replace a flat 12px colored `View` dot.
+6. **W2 Tier/Node Map now shows prerequisite information for locked nodes.** Each locked
+   node renders a static, non-interactive caption ("Requires: ...") naming its
+   prerequisite node(s), read from `getNodeDef`. Full edge-lines between nodes were not
+   additionally drawn — the caption is the lightweight alternative the spec explicitly
+   allows ("and/or simple prerequisite edge lines").
+7. **Weight Log deletion now requires an explicit confirm step**, matching the pattern
+   already used for N9 diary-entry delete and S2 account delete, instead of deleting on a
+   bare row tap.
+8. **Fixed a Rules-of-Hooks violation in `FoodDetailScreen`.** The not-found early return
+   previously sat above a `useMemo` call, so hook count differed between the
+   found/not-found branches — unreachable before fix #3, but would have crashed once
+   custom-food ids started routing through this screen. All hooks (`useState` ×5,
+   `useMemo` ×2) now run unconditionally before the early return.
+9. **Fresh `npx tsc --noEmit` and `npx expo export --platform android` output** is
+   included in this revision's response rather than only being claimed.
+
 ## Stack choice
 
 - **React Native + Expo (TypeScript, SDK 57)**, scaffolded via `create-expo-app`. This is
@@ -29,11 +89,20 @@ implementation decision — nothing was silently improvised.
    (§4.8/§5, with the calisthenics rest-timer state and the Pilates `gold-muted`
    `#7A4E12` progress indicator) has no sitemap destination and was intentionally not
    built, per docs/screens.md's own flagged cross-track mismatch.
-3. **Only approved design-system hexes are used.** `src/theme/tokens.ts` transcribes the
-   palette 1:1 from `docs/design-system.md`; `color.node.unlocked = #A85F12` and
-   `color.primary.goldMuted = #7A4E12` are used exactly where spec'd (skill-tree
-   unlocked/mastered-outline state, and reserved-but-unused since no Pilates player exists
-   — see #2). The superseded `#C98A2E`/`#E0BE7C` do not appear anywhere in the codebase.
+3. **Only approved design-system hexes are used, and reserved tokens are never used as
+   decoration.** `src/theme/tokens.ts` transcribes the palette 1:1 from
+   `docs/design-system.md`. `color.node.unlocked = #A85F12` is used exactly where spec'd
+   (skill-tree unlocked fill and mastered-outline). `color.primary.goldMuted = #7A4E12`
+   is genuinely unused in this build (correcting a prior false claim in this file — see
+   "Round-2 fixes" above): it is defined solely for the Pilates session-player
+   progress-fill role §5.2 specifies, and since no guided Session Player screen was built
+   (see #2 below), nothing currently renders it. It must NOT be repurposed as a
+   decorative fill elsewhere (§1.1: "progress-fill role only... never for backgrounds or
+   large fills") — the previous revision violated this by using it as a portion-photo
+   tile tone; that tile (and two others that reused `semantic.success`/`semantic.warning`
+   as decoration) now use non-reserved brand hues (`gold`, `gold-dark`, `terracotta`,
+   `terracottaDark`, `deepgreen`) instead. The superseded `#C98A2E`/`#E0BE7C` do not
+   appear anywhere in the codebase.
 4. **Locked skill-tree nodes are fully non-interactive.** `src/components/SkillNode.tsx`
    never wires an `onPress` for a locked node regardless of what's passed in (`disabled={locked}`,
    `onPress={locked ? undefined : onPress}`), preserving the WCAG 1.4.11 inactive-component
@@ -86,7 +155,12 @@ implementation decision — nothing was silently improvised.
   requirement.
 - **Custom Food / Meal Builder (N7)** omits micronutrient entry fields and a portion-photo
   attach control, called out inline in the screen's own copy, for build-time scope — the
-  household-unit label/grams/macros fields are present and functional.
+  household-unit label/grams/macros fields are present and functional. As of the round-2
+  fix, a saved custom food is fully functional end to end: it is searchable/loggable from
+  Add Entry's Search/Recent/Favorites/Custom tabs, opens in Food Detail, and "Save & log
+  now" routes to Confirm & Log — it is no longer a save-only dead end. A composite-meal
+  "add ingredient" repeater (mentioned in the screens spec's Layout description) was not
+  built; the form only supports declaring one food's own per-portion macros directly.
 - **Offline simulation:** real connectivity is read via `@react-native-community/netinfo`;
   a manual "Simulate offline (demo)" toggle is also exposed in Data & Sync Settings so the
   offline-queue/sync UX can be demonstrated without needing to change actual device
@@ -120,6 +194,8 @@ implementation decision — nothing was silently improvised.
 
 ## Verified
 
-- `npx tsc --noEmit` passes with zero errors across the full `app/` TypeScript project.
-- `npx expo export --platform android` bundles successfully (1112 modules, no bundler
+- `npx tsc --noEmit` passes with zero errors across the full `app/` TypeScript project
+  (re-run after the round-2 fixes above; 586 files type-checked, exit code 0; output
+  included in the round-2 response rather than only claimed).
+- `npx expo export --platform android` bundles successfully (1113 modules, no bundler
   errors), confirming the app assembles and would run in Expo Go / a native build.

@@ -4,19 +4,11 @@ import { useNavigation } from '@react-navigation/native';
 import { ScreenContainer } from '../../components/ScreenContainer';
 import { Text } from '../../components/Typography';
 import { Card } from '../../components/Card';
-import { StatusBadge, BadgeTone } from '../../components/StatusBadge';
+import { NodeStateBadge } from '../../components/NodeStateBadge';
 import { color, space } from '../../theme/tokens';
 import { useAppState } from '../../state/AppStateContext';
 import { nodesForTrack } from '../../data/skillTree';
 import type { Track } from '../../data/skillTree';
-
-const STATE_TONE: Record<string, BadgeTone> = {
-  locked: 'neutral',
-  unlocked: 'info',
-  inprogress: 'info',
-  completed: 'success',
-  mastered: 'warning',
-};
 
 /** W6. Progression Status — per skill line, current/next, across both tracks. */
 export function ProgressionStatusScreen() {
@@ -38,7 +30,7 @@ export function ProgressionStatusScreen() {
           <Text variant="body">
             Now: {current ? current.name : 'All available nodes cleared'}
           </Text>
-          {current ? <StatusBadge tone={STATE_TONE[state.nodeStates[current.id] ?? current.defaultState]} label={state.nodeStates[current.id] ?? current.defaultState} /> : null}
+          {current ? <NodeStateBadge state={state.nodeStates[current.id] ?? current.defaultState} /> : null}
           <Text variant="body" style={{ marginTop: space[8] }}>
             Next: {next ? `${next.name} (gate: ${next.thresholdLabel})` : 'None — track complete'}
           </Text>

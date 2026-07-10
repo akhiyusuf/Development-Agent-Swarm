@@ -13,13 +13,22 @@ interface Props {
   syncWarning?: boolean;
 }
 
-const STATE_META: Record<NodeState, { color: string; icon: keyof typeof Ionicons.glyphMap; label: string }> = {
+/**
+ * §1.4 fixed node-state color + icon/label vocabulary. Exported so any other
+ * screen that needs to represent node state (Node Detail W3, Progression
+ * Status W6, etc.) uses this exact mapping instead of re-deriving one from
+ * `semantic.*` tones — node state must never render in a semantic color
+ * (docs/screens.md W3; design-system §1.4's "reserved exclusively for
+ * node/skill state" rule).
+ */
+export const NODE_STATE_META: Record<NodeState, { color: string; icon: keyof typeof Ionicons.glyphMap; label: string }> = {
   locked: { color: color.node.locked, icon: 'lock-closed', label: 'Locked' },
   unlocked: { color: color.node.unlocked, icon: 'ellipse-outline', label: 'Unlocked' },
   inprogress: { color: color.node.inprogress, icon: 'sync-outline', label: 'In progress' },
   completed: { color: color.node.completed, icon: 'checkmark-circle', label: 'Completed' },
   mastered: { color: color.node.mastered, icon: 'star', label: 'Mastered' },
 };
+const STATE_META = NODE_STATE_META;
 
 /**
  * §4.7 Skill-tree node. Locked nodes are fully non-interactive per carry-forward

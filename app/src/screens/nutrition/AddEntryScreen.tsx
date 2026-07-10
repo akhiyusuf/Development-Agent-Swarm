@@ -8,7 +8,7 @@ import { SegmentedControl } from '../../components/SegmentedControl';
 import { StatusBadge } from '../../components/StatusBadge';
 import { space } from '../../theme/tokens';
 import { useAppState } from '../../state/AppStateContext';
-import { searchFoods, getFoodById, FOOD_DATABASE } from '../../data/foodDatabase';
+import { searchFoods, getFoodById, FOOD_DATABASE, customFoodToFoodItem } from '../../data/foodDatabase';
 import { FoodResultsList } from './FoodResultsList';
 
 /** N2. Add Food Entry — tabs: Search / Recent / Favorites / Custom. */
@@ -20,21 +20,33 @@ export function AddEntryScreen() {
   const [tab, setTab] = useState('search');
   const [query, setQuery] = useState('');
 
+  // Custom foods (N7 saves) are first-class here: always included alongside
+  // the seed database rather than being a save-only dead end (see
+  // BUILD_NOTES.md — Req 2 fix).
+  const customFoodItems = useMemo(() => state.customFoods.map(customFoodToFoodItem), [state.customFoods]);
+
   const regionFiltered = useMemo(
-    () =>
-      FOOD_DATABASE.filter(
+    () => [
+      ...customFoodItems,
+      ...FOOD_DATABASE.filter(
         (f) => f.region === state.region.market || (state.region.includeWestern && f.region === 'Diaspora/Western')
       ),
-    [state.region]
+    ],
+    [state.region, customFoodItems]
   );
 
   const searchResults = useMemo(() => {
-    const pool = query.trim() ? searchFoods(query) : regionFiltered;
-    return pool;
-  }, [query, regionFiltered]);
+    if (!query.trim()) return regionFiltered;
+    const q = query.trim().toLowerCase();
+    return [...customFoodItems.filter((f) => f.name.toLowerCase().includes(q)), ...searchFoods(query)];
+  }, [query, regionFiltered, customFoodItems]);
 
-  const recentFoods = state.recents.map((id) => getFoodById(id)).filter(Boolean) as typeof FOOD_DATABASE;
-  const favoriteFoods = state.favorites.map((id) => getFoodById(id)).filter(Boolean) as typeof FOOD_DATABASE;
+  const recentFoods = state.recents
+    .map((id) => getFoodById(id) ?? customFoodItems.find((f) => f.id === id))
+    .filter(Boolean) as typeof FOOD_DATABASE;
+  const favoriteFoods = state.favorites
+    .map((id) => getFoodById(id) ?? customFoodItems.find((f) => f.id === id))
+    .filter(Boolean) as typeof FOOD_DATABASE;
 
   const selectFood = (foodId: string) => {
     nav.navigate('FoodDetail', { foodId, slot });
@@ -71,7 +83,14 @@ export function AddEntryScreen() {
       ) : tab === 'favorites' ? (
         <FoodResultsList foods={favoriteFoods} onSelect={(f) => selectFood(f.id)} emptyLabel="No favorites yet." />
       ) : (
-        <Button label="Build a custom food or meal" onPress={() => nav.navigate('CustomFoodBuilder', { slot })} />
+        <>
+          <Button label="Build a custom food or meal" onPress={() => nav.navigate('CustomFoodBuilder', { slot })} />
+          <FoodResultsList
+            foods={customFoodItems}
+            onSelect={(f) => selectFood(f.id)}
+            emptyLabel="No custom foods yet — build one above."
+          />
+        </>
       )}
     </ScreenContainer>
   );

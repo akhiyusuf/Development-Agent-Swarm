@@ -15,6 +15,9 @@ export function WeightLogScreen() {
   const { state, dispatch, isOnline, uid, todayStr } = useAppState();
   const [sheetVisible, setSheetVisible] = useState(false);
   const [input, setInput] = useState('');
+  // Deletion requires an explicit confirm step (matches N9 entry-delete and
+  // S2 account-delete) rather than deleting on a bare row tap.
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
   const trend: TrendPoint[] = useMemo(() => {
     const points: TrendPoint[] = [];
@@ -43,17 +46,35 @@ export function WeightLogScreen() {
         <TrendChart data={trend} unit="kg" />
       </Card>
       <Button label="Add weight" onPress={() => setSheetVisible(true)} />
-      {state.weightLog.map((w) => (
-        <ListRow
-          key={w.id}
-          title={`${w.kg} kg`}
-          subtitle={w.date}
-          onPress={() => dispatch({ type: 'DELETE_WEIGHT', id: w.id })}
-          meta={w.queued ? 'Queued' : undefined}
-        />
-      ))}
+      {state.weightLog.map((w) =>
+        confirmDeleteId === w.id ? (
+          <Card key={w.id} state="error">
+            <Text variant="body" colorToken={color.semantic.error}>
+              Delete the {w.kg} kg entry from {w.date}? This can't be undone.
+            </Text>
+            <Button
+              label="Yes, delete"
+              destructive
+              variant="tertiary"
+              onPress={() => {
+                dispatch({ type: 'DELETE_WEIGHT', id: w.id });
+                setConfirmDeleteId(null);
+              }}
+            />
+            <Button label="Cancel" variant="tertiary" onPress={() => setConfirmDeleteId(null)} />
+          </Card>
+        ) : (
+          <ListRow
+            key={w.id}
+            title={`${w.kg} kg`}
+            subtitle={w.date}
+            onPress={() => setConfirmDeleteId(w.id)}
+            meta={w.queued ? 'Queued' : undefined}
+          />
+        )
+      )}
       <Text variant="caption" colorToken={color.neutral.warmgray700}>
-        Tap an entry to remove it.
+        Tap an entry to remove it (a confirm step follows before anything is deleted).
       </Text>
 
       <BottomSheet visible={sheetVisible} onDismiss={() => setSheetVisible(false)} title="Log your weight">

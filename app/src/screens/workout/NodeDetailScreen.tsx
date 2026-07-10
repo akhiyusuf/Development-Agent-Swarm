@@ -6,18 +6,10 @@ import { Text } from '../../components/Typography';
 import { Card } from '../../components/Card';
 import { Button } from '../../components/Button';
 import { ProgressBar } from '../../components/ProgressBar';
-import { StatusBadge, BadgeTone } from '../../components/StatusBadge';
+import { NodeStateBadge } from '../../components/NodeStateBadge';
 import { color, space } from '../../theme/tokens';
 import { useAppState } from '../../state/AppStateContext';
 import { getNodeDef } from '../../data/skillTree';
-
-const STATE_TONE: Record<string, BadgeTone> = {
-  locked: 'neutral',
-  unlocked: 'info',
-  inprogress: 'info',
-  completed: 'success',
-  mastered: 'warning',
-};
 
 /**
  * W3. Node Detail — reached only for unlocked/in-progress/completed/mastered
@@ -40,7 +32,7 @@ export function NodeDetailScreen() {
         <Text variant="h2" colorToken={color.neutral.white}>
           {def.name}
         </Text>
-        <StatusBadge tone={STATE_TONE[nodeState]} label={nodeState} />
+        <NodeStateBadge state={nodeState} />
       </View>
 
       {prereqNames.length > 0 ? (

@@ -12,7 +12,7 @@ import { ProgressBar } from '../../components/ProgressBar';
 import { Input } from '../../components/Input';
 import { color, macroColor, space } from '../../theme/tokens';
 import { useAppState } from '../../state/AppStateContext';
-import { getFoodById, MICRONUTRIENT_LABELS, MICRONUTRIENT_TARGETS, Micronutrients } from '../../data/foodDatabase';
+import { findFood, MICRONUTRIENT_LABELS, MICRONUTRIENT_TARGETS, Micronutrients } from '../../data/foodDatabase';
 
 /**
  * N4/N5. Ingredient Detail & Composite Meal Detail — implemented as one
@@ -20,19 +20,43 @@ import { getFoodById, MICRONUTRIENT_LABELS, MICRONUTRIENT_TARGETS, Micronutrient
  * pattern" for both (§ N5); the only differences are recipe-note visibility
  * and copy ("ingredient" vs "dish"). See BUILD_NOTES.md for this
  * consolidation note.
+ *
+ * Looks up `foodId` in the seed database OR in `state.customFoods` (via
+ * `findFood`), so a user-created custom food (N7) routes through this same
+ * screen rather than being a dead end. Rules-of-Hooks note: every hook below
+ * is called unconditionally on every render — the "not found" early return
+ * happens only AFTER all hooks, so the hook count never differs between the
+ * found/not-found branches (this previously-latent bug is now unreachable by
+ * construction, not just by accident of what data happens to be passed in).
  */
 export function FoodDetailScreen() {
   const nav = useNavigation<any>();
   const route = useRoute<any>();
   const { foodId, slot } = route.params;
-  const { dispatch, isOnline } = useAppState();
-  const food = getFoodById(foodId);
+  const { dispatch, isOnline, state } = useAppState();
+  const food = useMemo(() => findFood(foodId, state.customFoods), [foodId, state.customFoods]);
 
   const [unitId, setUnitId] = useState(food?.units[0]?.id);
   const [quantity, setQuantity] = useState(1);
   const [advancedMode, setAdvancedMode] = useState(false);
   const [advancedGrams, setAdvancedGrams] = useState('');
   const [recipeOpen, setRecipeOpen] = useState(false);
+
+  const unit = food?.units.find((u) => u.id === unitId);
+  const grams = advancedMode ? Number(advancedGrams) || 0 : (unit?.gramsPerUnit ?? 0) * quantity;
+  const ratio = unit?.gramsPerUnit ? grams / unit.gramsPerUnit : quantity;
+  const calories = food ? Math.round(food.caloriesPerUnit * ratio) : 0;
+  const protein = food ? Math.round(food.proteinG * ratio) : 0;
+  const carbs = food ? Math.round(food.carbsG * ratio) : 0;
+  const fat = food ? Math.round(food.fatG * ratio) : 0;
+  const scaledMicros: Micronutrients = useMemo(() => {
+    if (!food) return {};
+    const out: Micronutrients = {};
+    (Object.keys(food.micronutrients) as (keyof Micronutrients)[]).forEach((k) => {
+      out[k] = +(food.micronutrients[k]! * ratio).toFixed(1);
+    });
+    return out;
+  }, [food, ratio]);
 
   if (!food) {
     return (
@@ -41,21 +65,6 @@ export function FoodDetailScreen() {
       </ScreenContainer>
     );
   }
-
-  const unit = food.units.find((u) => u.id === unitId);
-  const grams = advancedMode ? Number(advancedGrams) || 0 : (unit?.gramsPerUnit ?? 0) * quantity;
-  const ratio = unit?.gramsPerUnit ? grams / unit.gramsPerUnit : quantity;
-  const calories = Math.round(food.caloriesPerUnit * ratio);
-  const protein = Math.round(food.proteinG * ratio);
-  const carbs = Math.round(food.carbsG * ratio);
-  const fat = Math.round(food.fatG * ratio);
-  const scaledMicros: Micronutrients = useMemo(() => {
-    const out: Micronutrients = {};
-    (Object.keys(food.micronutrients) as (keyof Micronutrients)[]).forEach((k) => {
-      out[k] = +(food.micronutrients[k]! * ratio).toFixed(1);
-    });
-    return out;
-  }, [food, ratio]);
 
   const goToConfirm = () => {
     nav.navigate('ConfirmLog', {

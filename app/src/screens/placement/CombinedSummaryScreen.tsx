@@ -31,10 +31,19 @@ export function CombinedSummaryScreen() {
         <Text variant="body">Starting Tier {pilates.startingTier}</Text>
       </Card>
       <Button label="Continue" onPress={() => nav.navigate(returnTo)} />
+      <Text variant="caption" colorToken={color.neutral.warmgray700} style={{ marginTop: 4 }}>
+        Adjust a placement — this reviews the track's real stored result and lets you retake it;
+        it never overwrites a placement with fabricated data.
+      </Text>
       <Button
-        label="Adjust a placement"
+        label="Adjust calisthenics placement"
         variant="tertiary"
-        onPress={() => nav.navigate('PlacementResult', { track: 'calisthenics', returnTo, yesCount: 1, totalSteps: 1 })}
+        onPress={() => nav.navigate('PlacementResult', { track: 'calisthenics', returnTo, review: true })}
+      />
+      <Button
+        label="Adjust Pilates placement"
+        variant="tertiary"
+        onPress={() => nav.navigate('PlacementResult', { track: 'pilates', returnTo, review: true })}
       />
       <Button label="Back" variant="tertiary" onPress={() => nav.goBack()} />
     </ScreenContainer>
