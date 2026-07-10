@@ -21,7 +21,7 @@
     },
     "design-system": {
       "agent": "design-system-architect",
-      "status": "pending",
+      "status": "rejected",
       "output": "docs/design-system.md",
       "depends_on": ["research-design"]
     },
@@ -84,6 +84,12 @@
       "verdict": "approved",
       "pass": 3,
       "summary": "All four pass-2 restoration items verified done: Duolingo and Habitica gamification-audit entries restored with their concrete design lessons (fixed color-semantics mapping; full-game-skin contrast case), the named Flutterwave African-brand entry restored with its design lesson (the diaspora-food-brand paragraph now supplements rather than replaces it), YAZIO restored in the nutrition quadrant (Noom, never-approved intermediate content, correctly dropped per the either/or fix instruction), and the revision note now honestly acknowledges the intermediate pass mistakenly dropped content instead of claiming preservation. All four pass-1 fixes re-verified intact and unchanged per the do-not-touch instruction (Pilates audit with register-contrast takeaway, both in-workout execution subsections with the shared session-player implication, household-unit portion-entry note with sourcing deferred to product research, Recommended Direction confirmed with tonal-flex addendum). Originally-approved content re-verified: full nine-product audit matches the pass-1 recorded list, accessibility section intact with pass-2's approved additive improvements, cultural-identity open question still honestly flagged for the design-system-architect. Agent-spec sections and closing statement present. Design-system stage is unblocked; carry-forwards recorded in pipeline/review-log.md."
+    },
+    {
+      "date": "2026-07-10",
+      "stage": "design-system",
+      "verdict": "rejected",
+      "summary": "Four of five research carry-forwards substantially pass: the session-player tonal flex is correctly one shared component with two presets (missing only the rest-timer state), household-unit portion pickers are the explicit default with the portion-photo reference as a first-class component, the cultural-identity call is resolved explicitly with documented anti-tokenism reasoning (Option 2, restrained), and the accessibility + low-bandwidth/low-end-device rules are comprehensive and structurally honored. Agent-spec output shape is complete (palette, type scale, spacing/grid, component states, accessibility rules). Rejected because carry-forward 1 — the fixed, exclusive gamification color vocabulary — fails on its own terms: SS1.4 claims its colors are 'reserved exclusively for node/skill state,' yet by the doc's own hex tables in-progress = semantic.info, completed = semantic.success, unlocked = brand gold (streak/XP + secondary buttons), and mastered = brand terracotta (every CTA/active tab); SS4.10 then reassigns three of those hexes to macro rings while claiming distinctness from the gamification vocabulary — a factually false internal claim of the kind this pipeline has rejected twice before. Six-item fix list in pipeline/review-log.md (dedicated node-state hexes or honest reasoned scoping, macro-ring fix, rest-timer state, secondary-button color contradiction, non-text 3:1 contrast rule with failing gold-on-light pairings, barcode-deferral alignment with the sitemap); everything else is explicitly approved as-is and must not be thinned."
     }
   ]
 }
