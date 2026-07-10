@@ -25,9 +25,15 @@ real node content is a downstream content-validation task, not a sitemap decisio
 - **Region & Cuisine Preference** — Nigeria / Ghana / Kenya (v1 markets) + optional Western/diaspora food set
 - **Module Interest Screen** — "Track nutrition," "Train (calisthenics/Pilates)," or both (nutrition always on; workout module may be marked "coming soon" until it ships as fast-follow — this screen exists to support the research's sequencing recommendation, not a numbered requirement)
 - **Workout Placement Assessment** *(only entered if user opts into the workout module)*
-  - Assessment Intro (what it measures, safety note)
-  - Assessment Steps (a short series of movement-pattern checks — push / pull / squat-hinge / core-hold; generic, content TBD)
-  - Assessment Results → Starting Tier Placement
+  - Assessment Intro (what it measures overall, safety note, and — since the workout module has two independent tracks — states up front that placement is done **per track**: a user may take the Calisthenics placement, the Pilates placement, or both, depending on which track(s) they opted into)
+  - **Track Selection (for placement)** — if the user opted into both tracks at Module Interest, they choose whether to complete Calisthenics placement, Pilates placement, or both now (either order; either can be deferred and completed later from Skill Tree Home)
+  - **Calisthenics Placement**
+    - Assessment Steps (a short series of movement-pattern checks — push / pull / squat-hinge / core-hold; generic, content TBD)
+    - Assessment Results → Calisthenics Starting Tier Placement
+  - **Pilates Placement**
+    - Assessment Steps (a short series of Pilates-appropriate checks — e.g., core/breath control, mobility, mat-position tolerance; generic, content TBD — kept structurally parallel to the calisthenics steps but not asserting the same criteria, since Pilates placement is a materially different discipline)
+    - Assessment Results → Pilates Starting Tier Placement
+  - Combined Assessment Summary (shown only if both tracks were completed) — one screen recapping both starting placements before continuing
 - **Onboarding Complete / Welcome Summary**
 
 ### B. Primary Navigation (bottom tabs, top-level)
@@ -52,8 +58,9 @@ real node content is a downstream content-validation task, not a sitemap decisio
 - **Food Diary (Today)** — entries grouped by meal (breakfast/lunch/dinner/snack)
   - **Add Entry** (modal/sheet) — tabs: Search / Recent / Favorites / Custom
     - **Food Search Results**
-    - **Ingredient Detail** — household-unit portion selector (wrap, cup, ladle, "swallow," etc. + gram equivalent), macro + micronutrient preview
-    - **Composite Meal Detail** (e.g., a named local prepared dish) — same portion-selector pattern, recipe-level nutrition
+    - **Ingredient Detail** — household-unit portion selector (wrap, cup, ladle, "swallow," etc. + gram equivalent), **portion-photo reference** (photos showing what the selected household unit looks like in practice — e.g., "1 ladle," "half plate," "1 wrap" — displayed alongside the unit picker so users can visually confirm portion size rather than guess from a label alone; this is the entry-point differentiator the research names as the market's #1 still-open gap), macro + micronutrient preview
+    - **Composite Meal Detail** (e.g., a named local prepared dish) — same portion-selector pattern including the portion-photo reference, recipe-level nutrition
+    - **Portion Reference Guide** (sheet/modal, reachable from the portion selector on Ingredient Detail or Composite Meal Detail) — expanded photo set for the given food/household unit (e.g., multiple reference angles or a range from "small ladle" to "heaping ladle") for cases where a single inline thumbnail isn't enough to disambiguate portion size
     - **Custom Food / Meal Builder** — user creates and saves an ingredient or composite meal
     - **Confirm & Log** — meal-slot assignment, quantity, save
   - **Edit / Delete Entry** (modal, from diary row)
@@ -64,7 +71,7 @@ real node content is a downstream content-validation task, not a sitemap decisio
 
 #### 3. Workout — top-level tab, nested screens below *(fast-follow; mechanism only, see scope note)*
 
-- **Skill Tree Home** — track selector: Calisthenics track / Pilates track (or combined view)
+- **Skill Tree Home** — track selector: Calisthenics track / Pilates track (or combined view); also the entry point to complete a track's placement assessment later if it was deferred at onboarding
 - **Tier / Node Map** — visual tree per track; each node shows locked / in-progress / mastered state and its prerequisite node(s)
 - **Node Detail** — `[Skill Node]` name (placeholder), current status, prerequisite(s), unlock requirement (time-hold or rep-threshold, values TBD by validated content), form-cue instructional content
 - **Log Attempt** (modal, from Node Detail) — user enters reps completed or hold duration
@@ -93,6 +100,7 @@ real node content is a downstream content-validation task, not a sitemap decisio
 ### Modals / Overlays (cut across tabs, not standalone nav destinations)
 - Add Food Entry sheet
 - Edit/Delete Diary Entry
+- Portion Reference Guide (photo set)
 - Log Workout Attempt sheet
 - Mastery Gate Confirmation
 - Quick-add Weight Entry
@@ -102,9 +110,9 @@ real node content is a downstream content-validation task, not a sitemap decisio
 ## 2. Navigation Hierarchy Summary
 
 - **Top-level (bottom tab bar):** Home, Nutrition, Workout, Progress, Profile/Settings.
-- **Nested (drill-down within a tab):** Food Diary → Add Entry → Food Detail/Composite Meal Detail → Confirm & Log; Skill Tree Home → Tier/Node Map → Node Detail → Log Attempt.
-- **Modal (transient, dismissable, no deep nav state):** Add Entry sheet, Edit/Delete entry, Log Attempt sheet, Mastery Gate Confirmation, quick-add Weight Entry.
-- **Pre-nav (one-time, sequential, not part of tab bar):** Splash → Auth → Profile Setup → Goal Setup → Region Preference → Module Interest → (conditional) Workout Placement Assessment → Welcome.
+- **Nested (drill-down within a tab):** Food Diary → Add Entry → Food Detail/Composite Meal Detail (→ Portion Reference Guide) → Confirm & Log; Skill Tree Home → Tier/Node Map → Node Detail → Log Attempt.
+- **Modal (transient, dismissable, no deep nav state):** Add Entry sheet, Edit/Delete entry, Portion Reference Guide, Log Attempt sheet, Mastery Gate Confirmation, quick-add Weight Entry.
+- **Pre-nav (one-time, sequential, not part of tab bar):** Splash → Auth → Profile Setup → Goal Setup → Region Preference → Module Interest → (conditional) Workout Placement Assessment (per-track: Assessment Intro → Track Selection → Calisthenics Placement and/or Pilates Placement → Combined Assessment Summary if both) → Welcome.
 - **Workout tab visibility:** the tab and its nested tree may ship disabled/"coming soon" at nutrition-only launch per the research's sequencing recommendation, then activate as a fast-follow — this is a rollout/build-sequencing note, not a structural change to the sitemap.
 
 ---
@@ -113,7 +121,7 @@ real node content is a downstream content-validation task, not a sitemap decisio
 
 | # | Core Feature Requirement (from product-research.md) | Screen(s) |
 |---|---|---|
-| 1 | Regional-food database with real household-unit portions | Ingredient Detail, Composite Meal Detail, Food Search Results, Region & Language Settings (unit/market preference) |
+| 1 | Regional-food database with real household-unit portions **plus a portion-photo reference set** | Ingredient Detail (unit picker + portion-photo reference), Composite Meal Detail (same), Portion Reference Guide (expanded photo set), Food Search Results, Region & Language Settings (unit/market preference) |
 | 2 | Fast logging of composite/local meals + search/recent/favorites/custom | Add Entry (Search/Recent/Favorites/Custom tabs), Composite Meal Detail, Custom Food/Meal Builder, Favorites & Recents Management, Confirm & Log |
 | 3 | Macro tracking against goals | Daily Nutrition Summary, Food Diary (Today), Home (energy-balance card), Goal Settings/Adjust Targets, Nutrition History/Calendar |
 | 4 | Micronutrient data (vitamins & minerals) with graceful "no data" states | Daily Nutrition Summary (micronutrient panel), Micronutrient Detail, Home (micronutrient snapshot widget), Ingredient/Composite Meal Detail (per-food preview) |
@@ -121,7 +129,7 @@ real node content is a downstream content-validation task, not a sitemap decisio
 | 6 | Defined skill tree (calisthenics + Pilates), tiered, nodes with explicit prerequisites | Skill Tree Home, Tier/Node Map, Node Detail |
 | 7 | Objective mastery gates (time hold / rep threshold) | Node Detail (states threshold), Log Attempt, Mastery Gate Confirmation |
 | 8 | Per-user progression state (current tier + thresholds logged toward next unlock) | Tier/Node Map (per-node state), Progression Status, Workout History/Session Calendar |
-| 9 | Clear entry point / beginner-placement onboarding assessment | Workout Placement Assessment (Intro, Steps, Results) |
+| 9 | Clear entry point / beginner-placement onboarding assessment, **per track (calisthenics and Pilates each need their own placement, since a user may want one, the other, or both)** | Workout Placement Assessment (Assessment Intro, Track Selection, Calisthenics Placement, Pilates Placement, Combined Assessment Summary), Skill Tree Home (deferred-placement entry point) |
 | 10 | Exercise instruction per node (form cues, what "clean" means) | Node Detail |
 | 11 | Simple session logging (reps, hold duration) feeding progression engine | Log Attempt, Workout Session Log, Workout History/Session Calendar |
 | 12 | Single account tying nutrition + training, lightweight profile/weight/goal tracking, shared energy-balance model | Sign Up/Log In, Profile Setup, Profile, Weight Log, Goal Settings/Adjust Targets, Combined Progress Dashboard, Home |
