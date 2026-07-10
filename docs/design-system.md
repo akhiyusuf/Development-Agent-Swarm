@@ -32,6 +32,7 @@ All colors below are solid, flat values — no gradients, no photographic-textur
 | `color.primary.terracotta.dark` | `#96391F` | Pressed/active state of primary, text-on-light emphasis |
 | `color.primary.gold` | `#D9A441` | Secondary brand accent: highlights, streak/XP-adjacent UI (outside the fixed gamification vocabulary in §1.4, which uses its own dedicated hexes — see §1.4) |
 | `color.primary.gold-dark` | `#A9761E` | Contrast-safe gold variant, required wherever gold is used as an interactive/stateful UI component (button fill, icon stroke, ring/indicator) rather than a decorative background fill. Base `gold` (`#D9A441`) computes to roughly 2:1 against the light app background (`#F7F3EE`), which fails the WCAG 1.4.11 non-text/UI-component minimum of 3:1. `gold-dark` is verified above 3:1 against both light neutrals and must be used for any gold UI component subject to that rule (see §6.10). |
+| `color.primary.gold-muted` | `#7A4E12` | Dedicated muted/darkened gold variant used solely as the Pilates player's active-progress-indicator fill (§5.2). Verified ≥3:1 against the light app surface, card surfaces, and the standard progress-bar track — see §6.10 for the exact figures. Not a decorative token; do not use for backgrounds or large fills, only for the thin progress-fill role it was verified for. |
 | `color.primary.deepgreen` | `#1F5C42` | Tertiary brand accent: workout-mode / skill-tree section accent, success emphasis outside fixed semantic green |
 
 Note: the secondary button (§4.1) is terracotta-outlined, not gold — gold is reserved for highlight/streak/XP accents and decorative use, never as a button's primary color, so there is a single owner for "secondary button color" across this document.
@@ -44,7 +45,7 @@ Note: the secondary button (§4.1) is terracotta-outlined, not gold — gold is 
 | `color.neutral.charcoal` | `#4A4A44` | Secondary text (light mode) |
 | `color.neutral.warmgray-100` | `#F7F3EE` | App background (light mode) — warm off-white, not clinical pure white |
 | `color.neutral.warmgray-200` | `#EDE6DC` | Card/surface background (light mode) |
-| `color.neutral.warmgray-400` | `#C9C0B2` | Borders, dividers, disabled fills (light mode) |
+| `color.neutral.warmgray-400` | `#C9C0B2` | Borders, dividers, disabled fills, and the standard progress-bar track (light mode) |
 | `color.neutral.warmgray-700` | `#5C564C` | Placeholder text, icon-inactive |
 | `color.neutral.dark-bg` | `#17181A` | App background (dark mode / in-session calisthenics screens) |
 | `color.neutral.dark-surface` | `#232427` | Card/surface background (dark mode) |
@@ -69,12 +70,14 @@ This is a **separate, fixed vocabulary** from the general semantic set above —
 | State | Token | Hex | Icon/shape pairing (color is never the only signal) |
 |---|---|---|---|
 | Locked | `color.node.locked` | `#8A8578` (muted warm gray) | Closed padlock icon, node rendered flat/desaturated, reduced opacity (60%) |
-| Unlocked / available | `color.node.unlocked` | `#C98A2E` (dedicated amber — distinct from brand `gold` `#D9A441`) | Outlined circle icon, node rendered at full opacity, subtle static ring |
+| Unlocked / available | `color.node.unlocked` | `#A85F12` (dedicated burnt-amber/copper — distinct from brand `gold` `#D9A441` and `gold-dark` `#A9761E`; darkened from an earlier `#C98A2E` draft that failed the §6.10 3:1 non-text-contrast floor — see §6.10 for the verified figures) | Outlined circle icon, node rendered at full opacity, subtle static ring |
 | In-progress | `color.node.inprogress` | `#3B7EA8` (dedicated blue — distinct from `semantic.info` `#2A6F97`) | Half-filled arc/ring around node, animated fill only if motion is not reduced |
 | Completed | `color.node.completed` | `#3D8B5C` (dedicated green — distinct from `semantic.success` `#2E7D46` and brand `deepgreen` `#1F5C42`) | Filled checkmark icon inside node |
-| Mastered | `color.node.mastered` | `#A8452A` (dedicated red-orange — distinct from brand `terracotta` `#C1502E`), outline in `color.node.unlocked` `#C98A2E` (an intra-vocabulary reuse — both hexes belong to this same node-state set, so it does not cross-contaminate with brand/semantic meaning) | Star/badge icon, node rendered larger (per research: "boss"/milestone visual emphasis), subtle static glow — no particle/celebration effects (perf constraint) |
+| Mastered | `color.node.mastered` | `#A8452A` (dedicated red-orange — distinct from brand `terracotta` `#C1502E`), outline in `color.node.unlocked` `#A85F12` (an intra-vocabulary reuse — both hexes belong to this same node-state set, so it does not cross-contaminate with brand/semantic meaning) | Star/badge icon, node rendered larger (per research: "boss"/milestone visual emphasis), subtle static glow — no particle/celebration effects (perf constraint) |
 
 Every value in this table was chosen specifically to avoid collision with §1.1/§1.3/§4.10; there is no shared-hex exception left to reason about, and no reserve/fallback hex is needed.
+
+**Locked state's opacity and the WCAG inactive-component exemption:** `color.node.locked` (`#8A8578`) computes above the 3:1 non-text-contrast floor in isolation, but per its icon/shape pairing above it is rendered at 60% opacity, which lowers its effective on-screen contrast. This is accepted under the WCAG 1.4.11 inactive-component exemption — the rule does not apply to non-interactive/disabled-equivalent components, and locked nodes are exactly that: non-interactive until unlocked, functioning as a "not yet available" indicator rather than a control a user acts on. If a later revision makes locked nodes directly tappable (e.g., to preview prerequisites before they're met), this exemption must be re-verified and the opacity/contrast reconsidered at that time.
 
 ### 1.5 Dark mode
 
@@ -197,7 +200,7 @@ Per the research and the sitemap's flagged requirement, a photographic reference
 
 ### 4.7 Skill-tree node
 
-- Uses the fixed gamification vocabulary in §1.4 exclusively for state color. Node shape: circle for standard skills, larger circle (1.5x) with gold outline for "boss"/milestone skills.
+- Uses the fixed gamification vocabulary in §1.4 exclusively for state color. Node shape: circle for standard skills; larger circle (1.5x) with an outline in `color.node.unlocked` (`#A85F12`, per §1.4's mastered-state spec — deliberately not brand `color.primary.gold`, to avoid a screen-designer reaching for the wrong token) for "boss"/milestone skills.
 - Default: state-appropriate fill/icon per §1.4.
 - Hover/press: subtle 4px outward ring expansion (respecting reduced-motion: a static ring appears instantly instead of animating outward).
 - Disabled: not applicable — "locked" is itself a first-class state, not a disabled variant of "unlocked."
@@ -241,7 +244,7 @@ One shared session-player component, two mode-specific style presets, per the re
 
 - Background: light, muted surface (`color.neutral.warmgray-100`) even when the user has app-wide dark mode enabled — the calm register is intentional and deliberately not dark, per the research's contrast case (Alo Moves-style calm register vs. calisthenics' game-like dark register).
 - Dominant element: same `type.timer-xl` component, but single countdown only (no manual rep-increment target), lower-contrast warm-neutral color (`color.neutral.charcoal`) rather than stark white-on-black, generous surrounding whitespace (`space.48`), minimal secondary chrome (only play/pause, skip, and an auto-advance toggle visible).
-- Accent use: muted gold (`color.primary.gold` at reduced 70% saturation via a dedicated softer token `color.primary.gold-muted: #E0BE7C`) for the single active-progress indicator; no achievement-badge visuals mid-session.
+- Accent use: muted gold for the single active-progress indicator, using the dedicated token `color.primary.gold-muted: #7A4E12` (darkened from an earlier `#E0BE7C` draft value, which failed the §6.10 3:1 non-text-contrast minimum against both the light app surface and the standard progress track — see §6.10 for the verified figures); no achievement-badge visuals mid-session.
 - Motion: none beyond a simple linear progress-bar fill; transitions between exercises are a plain crossfade (≤300ms) respecting reduced-motion (instant cut fallback).
 - Audio-first: cue text is supplementary, not primary — audio cues are the expected primary channel (per research), with captions available for accessibility (never audio-only for critical state, satisfying the "never color/sense alone" principle extended to audio).
 - Session-complete: reflective tone ("session complete, 12 minutes moved, held your plank 15s longer than last time"), still surfaces threshold/skill-tree progress using §1.4 colors, but presented in the calm surface rather than a high-contrast celebration screen — keeping both modes tied to the same underlying gamification loop without matching its visual intensity.
@@ -262,6 +265,11 @@ Both presets share: identical component structure/layout grid, identical type sc
 8. **Performance-as-accessibility:** favor solid color fills over gradients/blur/shadow layering; lightweight vector iconography over illustration sets; no auto-playing video or GIF-style assets; compress and cache portion-photo and exercise-demo imagery for offline reuse; design every screen's default state to work offline (cached daily log, cached skill-tree view) rather than treating offline as an error condition. This is treated as an accessibility requirement, not just a performance nicety, given the target market's data-cost and low-end-device profile.
 9. **Text never in images:** all text (including numerals in the session player) is rendered as real text, never baked into image/icon assets.
 10. **Non-text/UI-component contrast (WCAG 1.4.11):** graphical UI components and state indicators (button fills/borders, node-state fills, progress-ring/bar fills, focus indicators) require a minimum 3:1 contrast against their adjacent background — a lower bar than body text, but not zero. Base `color.primary.gold` (`#D9A441`) fails this at roughly 2:1 against the light app background (`#F7F3EE`) and must not be used directly for any such component; use `color.primary.gold-dark` (`#A9761E`, verified above 3:1) instead wherever gold functions as a button, icon stroke, or state indicator rather than a decorative fill (see §1.1, §4.10).
+
+    Two additional pairings were audited and corrected in this revision (all figures computed via the standard WCAG relative-luminance formula):
+    - **`color.node.unlocked`** — used for the skill-tree's unlocked/available node fill and the mastered-node outline (§1.4) — is set to `#A85F12`. The prior draft value (`#C98A2E`) computed to only **~2.65:1** against the app background (`#F7F3EE`) and **~2.37:1** against card surfaces (`#EDE6DC`), both below this rule's 3:1 floor for node-state fills. `#A85F12` recomputes to **~4.41:1** against `#F7F3EE` and **~3.93:1** against `#EDE6DC` — clearing the floor with a comfortable margin — while remaining hex-distinct from every other node state and from `gold` (`#D9A441`), `gold-dark` (`#A9761E`), `terracotta` (`#C1502E`), and `warning` (`#B8752A`).
+    - **`color.primary.gold-muted`** — used solely as the Pilates player's active-progress-indicator fill (§5.2) — is set to `#7A4E12`. The prior draft value (`#E0BE7C`) computed to only **~1.6:1** against the light app surface and **~1.0:1** against the standard `warmgray-400` (`#C9C0B2`) progress track — both far below the 3:1 floor this rule sets for progress-ring/bar fills, and the ~1.0:1 figure meant the fill was nearly indistinguishable from its own track. `#7A4E12` recomputes to **~6.50:1** against `#F7F3EE`, **~5.80:1** against `#EDE6DC`, and **~3.99:1** against the `warmgray-400` track — clearing the floor against every surface it can appear on. The lighter `#E0BE7C` value must not be used anywhere in the system; `#7A4E12` is now the only defined `gold-muted`.
+    - **`color.node.locked`** (`#8A8578`) computes above 3:1 in isolation but is rendered at 60% opacity per its icon/shape pairing (§1.4), which lowers its effective on-screen contrast below the floor. This is accepted under the WCAG 1.4.11 inactive-component exemption, since locked nodes are non-interactive until unlocked; see §1.4 for the full note and the re-verification condition if that ever changes.
 
 ---
 
