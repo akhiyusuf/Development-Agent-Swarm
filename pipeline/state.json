@@ -15,7 +15,7 @@
     },
     "sitemap": {
       "agent": "sitemap-architect",
-      "status": "rejected",
+      "status": "approved",
       "output": "docs/sitemap.md",
       "depends_on": ["research-product"]
     },
@@ -70,6 +70,13 @@
       "stage": "sitemap",
       "verdict": "rejected",
       "summary": "Structure is largely right: 11 of 13 Core Feature Requirements trace fully to real screens, Req 13 is honestly flagged as a cross-cutting engineering constraint, Open Question 1 discipline is correct (placeholder [Skill Node] names, TBD thresholds, no invented progression content), the unified one-app/two-modules structure with shared account/Home/Progress layers is correct, and the three requirement-less screens are all justified. Rejected on two concrete traceability failures: (1) Req 1's portion-photo reference set — which the research calls 'the entry-point that mainstream apps fail' — appears nowhere in the sitemap, yet traceability row 1 claims full coverage without a flag; (2) Req 9's placement assessment is structurally calisthenics-only (singular 'Starting Tier Placement', push/pull/squat-hinge/core-hold steps) with no per-track Pilates placement, reproducing the documented 'I don't know where to start' Pilates-incumbent failure. Narrow two-item fix list in pipeline/review-log.md; everything else is explicitly approved as-is and must not be thinned."
+    },
+    {
+      "date": "2026-07-10",
+      "stage": "sitemap",
+      "verdict": "approved",
+      "pass": 2,
+      "summary": "Both first-pass fixes verified done. Fix 1: portion-photo reference now present at three levels — inline on Ingredient Detail alongside the household-unit picker, explicitly included in Composite Meal Detail's portion-selector pattern, and a new Portion Reference Guide sheet/modal (expanded photo set) reachable from both, listed in the modal inventory and navigation summary; traceability row 1 names all three surfaces. Fix 2: placement assessment is now structurally per-track — Assessment Intro states per-track placement up front, a Track Selection step supports one/other/both in either order, separate Calisthenics and Pilates Starting Tier Placement results replace the singular placement, deferral is supported with a re-entry point on Skill Tree Home, and a conditional Combined Assessment Summary covers the both-tracks case; traceability row 9 updated. Open Question 1 discipline held: Pilates placement steps are generic/TBD dimension categories at the same abstraction level as the approved calisthenics patterns, with no invented exercises, orderings, or thresholds. Preservation verified item by item against the first pass's approved-as-is list: five-tab nav, full onboarding sequence, all nutrition screens, the entire workout tier/node/gate set with placeholder discipline, Progress, Profile/Settings, modal inventory, Flags section (Req 13 handling, three justified requirement-less screens), deferred-features list, and the scope note are all intact; every change is additive or the required fix. Screens stage unblocked on the sitemap side (still gated on design-system); carry-forwards for screens recorded in pipeline/review-log.md."
     }
   ]
 }

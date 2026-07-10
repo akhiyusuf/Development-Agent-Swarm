@@ -158,3 +158,36 @@ All five required sections present (Target Users, Competitive Landscape, Core Fe
 2. Clarify the Workout Placement Assessment structure so both tracks get an entry point: state that Assessment Results / Starting Tier Placement is per-track (calisthenics placement and Pilates placement), or that each track has its own short placement flow. Keep all assessment *content* generic/TBD as currently done. Update traceability row 9 accordingly.
 
 **Explicitly approved as-is (must NOT change in revision):** the five-tab navigation structure, the onboarding sequence, all nutrition screens (beyond the additive fix 1), the entire workout tier/node/gate screen set and its placeholder discipline, the Progress and Profile/Settings sections, the modal inventory, the Flags section's honest handling of Req 13 and the three requirement-less screens, and the deferred-features list. Per this pipeline's history: do not silently remove or thin anything while making the two fixes above.
+
+## 2026-07-10 — Stage: sitemap (SECOND PASS) — Verdict: APPROVED
+
+**Reviewed output:** `docs/sitemap.md` (revision after first-pass rejection)
+**Dependencies:** `research-product` (approved, pass 2 — status re-confirmed in `pipeline/state.json`) → `research/product-research.md`. Checked against the first-pass fix list above and, item by item, against the first pass's explicitly-approved-as-is preservation list.
+
+### First-pass fix list: both items verified DONE
+
+| Required change (pass 1) | Status in revision |
+|---|---|
+| 1. Portion-photo reference set for Req 1, named in traceability row 1 | **Done, at three levels.** (a) Ingredient Detail now carries an inline portion-photo reference displayed alongside the household-unit picker, with the research's "entry-point differentiator / #1 still-open gap" rationale correctly cited; (b) Composite Meal Detail explicitly states it uses "the same portion-selector pattern including the portion-photo reference"; (c) a new **Portion Reference Guide** sheet/modal (expanded photo set — multiple angles / small-to-heaping range) is reachable from the portion selector on both detail screens, is listed in the modal inventory, and appears in the Navigation Hierarchy Summary's nested and modal listings. Traceability row 1 no longer over-claims: it names the portion-photo reference set in the requirement text and lists all three surfaces (Ingredient Detail, Composite Meal Detail, Portion Reference Guide). |
+| 2. Per-track placement assessment (calisthenics and Pilates each get an entry point), content kept generic/TBD; traceability row 9 updated | **Done, structurally.** Assessment Intro now states up front that placement is per-track; a **Track Selection** step lets the user take Calisthenics placement, Pilates placement, or both (either order), with deferral supported and a later entry point from Skill Tree Home (the tree-side hook is present on the Skill Tree Home screen itself, not just asserted). Results are per-track: separate "Calisthenics Starting Tier Placement" and "Pilates Starting Tier Placement" screens replace the singular undifferentiated placement, with a conditional Combined Assessment Summary when both are completed. The Navigation Hierarchy Summary's pre-nav line reflects the new structure. Traceability row 9 states the per-track requirement and lists all five assessment screens plus the deferred-placement entry point. |
+
+### Open Question 1 discipline re-verified after the fix
+
+The Pilates placement steps are described as "e.g., core/breath control, mobility, mat-position tolerance; generic, content TBD" — the same abstraction level as the already-approved calisthenics movement-pattern categories (push/pull/squat-hinge/core-hold, still marked "generic, content TBD"), and the doc explicitly disclaims asserting the criteria ("not asserting the same criteria, since Pilates placement is a materially different discipline"). No exercise names, node orderings, or specific thresholds are invented anywhere; `[Skill Node]` placeholders and "values TBD by validated content" remain intact. Acceptable — the fix is structural, as instructed, not content invention.
+
+### Preservation check (item by item against the first pass's approved-as-is list — this pipeline's documented silent-thinning failure mode)
+
+- **Five-tab bottom nav:** intact (Home, Nutrition, Workout, Progress, Profile/Settings; hierarchy summary unchanged).
+- **Onboarding sequence:** intact in full (Splash → Sign Up/Log In with forgot-password → Profile Setup → Goal & Target Setup → Region & Cuisine Preference → Module Interest → conditional Workout Placement Assessment → Onboarding Complete/Welcome). The assessment restructure is the required fix, not thinning; all prior steps survive inside it.
+- **Nutrition screens:** all intact — Food Diary (Today), Add Entry with all four tabs (Search/Recent/Favorites/Custom), Food Search Results, Ingredient Detail, Composite Meal Detail, Custom Food/Meal Builder, Confirm & Log, Edit/Delete Entry, Daily Nutrition Summary, Micronutrient Detail, Nutrition History/Calendar, Favorites & Recents Management. Changes are strictly additive (photo reference + new guide sheet).
+- **Workout tier/node/gate set and placeholder discipline:** all intact — Skill Tree Home (track selector, plus the additive deferred-placement note), Tier/Node Map with locked/in-progress/mastered states and prerequisites, Node Detail with `[Skill Node]` placeholder and TBD thresholds and form cues, Log Attempt, Mastery Gate Confirmation, Progression Status, Workout Session Log, Workout History/Session Calendar.
+- **Progress:** intact (Combined Progress Dashboard with the cross-module payoff framing, Weight Log, Goal Settings/Adjust Targets).
+- **Profile/Settings:** all eight screens intact, including Data & Sync Settings (low-data toggle, manual sync), Integrations, and Legal & Disclaimers with the liability/positioning content.
+- **Modal inventory:** intact plus one additive entry (Portion Reference Guide).
+- **Flags section:** intact — the three requirement-less screens with their justifications, the honest Req 13 cross-cutting flag, and the full deferred-features list.
+- **Scope note:** the Open Question 1 unvalidated-progression-trees caveat and mechanism-only framing carried forward intact.
+- **Traceability rows 2–8, 10–13:** spot-checked against the first pass's recorded descriptions — unchanged.
+
+Nothing was removed or thinned; every change is either one of the two required fixes or a directly supporting addition.
+
+**Verdict: APPROVED.** Screens stage is unblocked on the sitemap side (it still also depends on `design-system`, which remains rejected/pending). Carry-forwards for the screens stage: (1) treat Open Question 1 as unresolved — design assessment/node screens around placeholder content, do not invent exercises or thresholds; (2) the portion-photo reference is a first-class element of the portion selector, not decoration — the research names it the market's #1 still-open gap; (3) placement is per-track and deferrable — screens must handle the one-track, both-track, and deferred states.
