@@ -68,3 +68,37 @@ Handled correctly: Nigeria-mandatory-in-v1 honored; region-prioritization open q
 5. Reconcile or remove the top-of-file "brief-based" disclaimer and Open Q6 once the above is done against the actual `docs/idea.md` contents.
 
 What does NOT need to change: the entire nutrition-side analysis (personas, competitive landscape, data-sourcing resolution, portion-sizing problem framing), the Nigeria+Ghana+Kenya market recommendation, the unified-app/nutrition-first recommendation, the Constraints & Risks section, and the honesty posture are all strong and should be preserved as-is.
+
+## 2026-07-10 — Stage: research-design (SECOND PASS) — Verdict: REJECTED
+
+**Reviewed output:** `research/design-research.md` (revision after first-pass rejection)
+**Dependencies:** none (checked against `.claude/agents/researcher-design.md` output requirements, `docs/idea.md`, and the first-pass fix list above).
+
+### First-pass fix list: all four items verified DONE
+
+| Required change (pass 1) | Status in revision |
+|---|---|
+| 1. Pilates in scope + 1-2 Pilates apps audited for visual identity and session UX | **Done.** Three apps audited (Alo Moves, 5 Minute Pilates, Nike Training Club Pilates content), each covering both visual identity and session UX, plus an explicit register contrast vs. calisthenics apps. |
+| 2. In-workout execution conventions for both modes | **Done.** Separate calisthenics subsection (rep counters, rest timers, hold-duration timers, one-hand glanceability, session-complete tied to skill-tree nodes) and Pilates subsection (timed guided flow, audio-first cues, rest folded into transitions, reflective session-complete), with differences drawn explicitly and a concrete design implication (one shared session-player component, mode-specific tone). |
+| 3. Household-unit vs. gram portion-entry note for African dishes | **Done.** Correctly scoped as a UI-convention input (household-unit pickers primary, gram/barcode secondary) with data sourcing explicitly deferred to product research. |
+| 4. Scope statement + Recommended Direction updated | **Done.** Scope note covers both modes; Recommended Direction explicitly confirms warm/clean hybrid with an added tonal-flex requirement, and re-flags design-system-architect ownership. |
+
+### Concrete gaps (reasons for rejection): reviewed-and-approved content was silently removed, and the doc claims it wasn't
+
+The first-pass verdict explicitly instructed: "the competitor audit for nutrition/skill-tree/gamification/African-brand quadrants, the accessibility section, and the honestly-flagged cultural-identity decision are all solid and should be preserved as-is." Checked against the first pass's recorded audit list (MyFitnessPal, YAZIO, Cronometer, Calistree, Calistack, Thenx, Duolingo, Habitica, Flutterwave):
+
+1. **The gamification quadrant (Duolingo, Habitica) is entirely gone.** No gamification-native product audit remains anywhere in the revision. The achievement/unlock/streak layer is core to `docs/idea.md` differentiator #2, and `design-system` depends only on this document for those lessons; the residual unlock/badge notes inside the skill-tree section are not a substitute for the removed audit entries and their design lessons.
+2. **The African-brand quadrant lost its named reference (Flutterwave)**, replaced by an unnamed generic description ("African recipe blogs/Instagram accounts, diaspora meal-kit brands"). An audit entry with no named product is not auditable or traceable.
+3. **YAZIO was silently swapped for Noom** in the nutrition quadrant. Noom is a defensible (arguably better) warm-register example, but the change is unacknowledged.
+4. **The scope note misrepresents the above.** Line 3 states: "Everything else from the prior draft (nutrition/skill-tree/gamification/African-brand competitor quadrants, the accessibility section, and the open cultural-identity question) is preserved as reviewed." That claim is false for two of the four quadrants (gamification removed, African-brand reference stripped) and inaccurate for a third (nutrition entry swapped). The prior draft's honesty was one of its strengths; this is a regression on that axis, and it is the kind of claim downstream agents will take at face value.
+
+Preserved correctly: the accessibility section (changed only additively — new in-workout, audio/haptic, and cognitive-load items are improvements tied to the required fixes), the cultural-identity open question (still honestly flagged as a design-system-stage decision), and the skill-tree map conventions.
+
+### Required changes for approval (narrow — do not touch the four new additions)
+
+1. Restore the gamification-app audit entries (Duolingo and Habitica, each with its concrete design lesson as in the prior draft). If the reviser believes they should be cut, that must be argued explicitly, not deleted silently.
+2. Restore the named African/diaspora brand reference (Flutterwave, or another named brand with a concrete design lesson) in place of the current unnamed generic description.
+3. Either restore YAZIO or keep Noom and note the swap as a deliberate, reasoned change.
+4. Correct the scope note so it no longer claims unchanged preservation of content that was removed or altered.
+
+**Explicitly approved as-is (must NOT change in the next revision):** the Pilates audit section, both in-workout execution subsections, the portion-entry note, the updated Recommended Direction with tonal flex, and the (additively improved) accessibility section.

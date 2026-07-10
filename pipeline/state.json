@@ -50,6 +50,13 @@
       "stage": "research-product",
       "verdict": "rejected",
       "summary": "All five required sections present; nutrition-side research, market prioritization (Nigeria+Ghana+Kenya), data sourcing, and unified-vs-module recommendation are strong and honest. Rejected because the workout side contradicts docs/idea.md: calisthenics and Pilates appear nowhere, and the bodyweight skill-tree concept is reframed as gym/weights progressive overload (Fitbod/JEFIT competitors, sets/reps/weight requirements). Micronutrient tracking (explicit idea requirement) is missing from Core Feature Requirements, and the idea's open question on validated progression trees is dropped. See pipeline/review-log.md for the actionable fix list."
+    },
+    {
+      "date": "2026-07-10",
+      "stage": "research-design",
+      "verdict": "rejected",
+      "pass": 2,
+      "summary": "All four first-pass fixes verified done (Pilates audit via Alo Moves/5 Minute Pilates/NTC, in-workout execution conventions for both modes, household-unit portion-entry note, updated warm/clean-hybrid direction with tonal flex). Rejected because reviewed-and-approved content was silently removed against the explicit preserve-as-is instruction: the gamification quadrant (Duolingo, Habitica) is gone, the named African-brand reference (Flutterwave) was stripped to an unnamed generic, YAZIO was silently swapped for Noom, and the scope note falsely claims those quadrants are 'preserved as reviewed.' Narrow fix list in pipeline/review-log.md; the four new additions are approved as-is and must not change."
     }
   ]
 }
