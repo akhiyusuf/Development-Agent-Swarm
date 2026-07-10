@@ -8,9 +8,11 @@
     "userInterfaceStyle": "light",
     "backgroundColor": "#F7F3EE",
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.fitandfed.app"
     },
     "android": {
+      "package": "com.fitandfed.app",
       "adaptiveIcon": {
         "backgroundColor": "#F7F3EE",
         "foregroundImage": "./assets/android-icon-foreground.png",
