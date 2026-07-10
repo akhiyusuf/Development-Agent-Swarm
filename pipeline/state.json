@@ -3,7 +3,7 @@
   "stages": {
     "research-product": {
       "agent": "researcher-product",
-      "status": "rejected",
+      "status": "approved",
       "output": "research/product-research.md",
       "depends_on": []
     },
@@ -57,6 +57,13 @@
       "verdict": "rejected",
       "pass": 2,
       "summary": "All four first-pass fixes verified done (Pilates audit via Alo Moves/5 Minute Pilates/NTC, in-workout execution conventions for both modes, household-unit portion-entry note, updated warm/clean-hybrid direction with tonal flex). Rejected because reviewed-and-approved content was silently removed against the explicit preserve-as-is instruction: the gamification quadrant (Duolingo, Habitica) is gone, the named African-brand reference (Flutterwave) was stripped to an unnamed generic, YAZIO was silently swapped for Noom, and the scope note falsely claims those quadrants are 'preserved as reviewed.' Narrow fix list in pipeline/review-log.md; the four new additions are approved as-is and must not change."
+    },
+    {
+      "date": "2026-07-10",
+      "stage": "research-product",
+      "verdict": "approved",
+      "pass": 2,
+      "summary": "All five first-pass fixes verified done: workout module correctly reframed as bodyweight-only calisthenics + Pilates skill tree with objective time-hold/rep-threshold mastery gates and gym/external-load explicitly out of scope; on-category competitors added with sourced complaints (Calistree, Calisthenics Mastery, Thenx, Freeletics as self-rated-gating analogue, Pilatesology/Pilates Anytime); micronutrient tracking is now Core Feature Requirement 4 with named nutrients and FCT-coverage caveats; the progression-tree validation open question is carried forward as explicitly unresolved with an owner type and timing; stale brief-based disclaimer removed. Preservation explicitly verified against the research-design pass-2 failure mode: diaspora persona with dual-cuisine scope-multiplier insight, full Nigeria+Ghana+Kenya priority-markets rationale (shared WAFCT, Kenya FCT 2018, SA/Ethiopia held for v2), and full unified-app-vs-two-modules rationale are all intact at full depth. Sitemap stage unblocked; it must treat progression-tree validation (Open Question 1) as unresolved."
     }
   ]
 }

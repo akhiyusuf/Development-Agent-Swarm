@@ -102,3 +102,33 @@ Preserved correctly: the accessibility section (changed only additively — new 
 4. Correct the scope note so it no longer claims unchanged preservation of content that was removed or altered.
 
 **Explicitly approved as-is (must NOT change in the next revision):** the Pilates audit section, both in-workout execution subsections, the portion-entry note, the updated Recommended Direction with tonal flex, and the (additively improved) accessibility section.
+
+## 2026-07-10 — Stage: research-product (SECOND PASS) — Verdict: APPROVED
+
+**Reviewed output:** `research/product-research.md` (revision after first-pass rejection)
+**Dependencies:** none (checked against `.claude/agents/researcher-product.md` output requirements, `docs/idea.md`, and the first-pass fix list above).
+
+### First-pass fix list: all five items verified DONE
+
+| Required change (pass 1) | Status in revision |
+|---|---|
+| 1. Rewrite workout coverage around calisthenics + Pilates bodyweight skill-tree with mastery gates; remove gym/weights framing | **Done.** Scope statement now states "no gym, no machines, and no external load" explicitly. Two on-concept workout personas (home/outdoor bodyweight trainer; Pilates-lean mobility/core trainer) replace the gym-goer. JTBD 3 is now the named-skill progression job. Feature requirements 6-11 specify a calisthenics+Pilates skill tree, objective time-hold/rep-threshold gates, per-user unlocked-tier state, placement onboarding, form cues, and session logging. Fitbod/Dr. Muscle/JEFIT and all "load/sets"/"weight"/"gym paths" language are gone; "external-load/gym tracking" is explicitly declared out of scope (req list, final paragraph). The only remaining "weight" mentions are body-weight goals and a criticism of Calistree's weight-vest drift — both legitimate. |
+| 2. On-category workout competitors with gaps/complaints | **Done.** Calistree and Calisthenics Mastery (skill-tree calisthenics), Thenx, Freeletics retained as the progression-gating analogue (with the sharp observation that its gates are self-rated — directly motivating the idea's objective-threshold differentiator), and Pilatesology + Pilates Anytime for Pilates. Each row carries specific complaints (beginner overwhelm, confusing layout, self-rated gates, "I don't know where to start") sourced to reviews/articles at the same standard as the nutrition table, plus a market-read paragraph synthesizing the wedge. |
+| 3. Micronutrient tracking in Core Feature Requirements | **Done.** Requirement 4: per-food and per-day vitamins/minerals (iron, zinc, calcium, vitamin A, folate, B12 named), tied to FCT sourcing feasibility, with graceful "no data" degradation; incomplete-FCT-coverage risk carried into Constraints and Open Question 4 as required. |
+| 4. Progression-tree validation carried into Open Questions | **Done.** Open Question 1 explicitly flags it as "unresolved, needs dedicated exercise-science validation — out of scope here, must not be assumed," names the owner type (qualified coach/physiotherapist/Pilates instructor) and timing (before sitemap/progression build), and rejects adopting Convict Conditioning as a shortcut. Also echoed in the injury-liability constraint and honest-weak-spots. |
+| 5. Remove stale brief-based disclaimer and old Open Q6 | **Done.** The doc now opens grounded directly in `docs/idea.md`; the generic reconcile-with-idea.md open question is gone, replaced by substantive questions. |
+
+### Preservation check (explicitly verified for silent thinning, given the research-design pass-2 failure mode)
+
+Compared against the first-pass review's recorded description of the approved content — depth, not just keyword presence:
+
+- **Diaspora persona:** intact as persona 2, including the dual-cuisine scope-multiplier insight ("serving them well requires the Western food database to also be solid — a scope multiplier, not a free extension"), the hard-currency willingness-to-pay point, and the Didiye/CalorieNaija-courting observation. The insight is additionally carried into Constraints & Risks and Open Question 7 (dual-cuisine IA implications). Not thinned.
+- **Recommendation on Priority Markets:** full section intact — Nigeria mandatory (population, documented pain, WAFCT + national FCT, Nigerian diaspora), Ghana second on shared-WAFCT low-marginal-data-cost rationale, Kenya third on its own lab-analyzed 2018 FCT (522 foods + 142 recipes) and East-African beachhead, with South Africa and Ethiopia explicitly held for v2 with per-country reasoning and the closing curation-cost-per-cuisine rationale. Not thinned.
+- **Unified-app vs. two-modules:** full rationale intact and improved — one app, two modules sharing account/profile/energy-balance layer, nutrition-first sequencing with justification (persona overlap only partial; workout module blocked on tree validation), shared calories-in/out model as the integration payoff, explicit warning against a split two-app architecture. Not a one-line reference.
+- **Everything else the first pass marked preserve-as-is** (nutrition competitive table with sourced complaint evidence, data-sourcing resolution with WAFCT/Nigerian FCT/Kenya FCT/USDA and the composite-dish + licensing caveats, Constraints & Risks incl. NDPR/GDPR, offline-first/low-end Android, curation-labor moat/cost, monetization realism, and the honest-weak-spots posture) is present at equal or greater depth.
+
+### Agent-spec coverage
+
+All five required sections present (Target Users, Competitive Landscape, Core Feature Requirements, Constraints & Risks, Open Questions); honesty requirement satisfied strongly (whitespace-closing finding, unvalidated-differentiator warning, bundle-risk warning); closing statement present.
+
+**Verdict: APPROVED.** No gaps found. Sitemap stage is unblocked; it must treat Open Question 1 (progression-tree validation) as an unresolved external dependency, not settled fact.
