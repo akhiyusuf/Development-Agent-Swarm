@@ -1,0 +1,42 @@
+{
+  "idea_doc": "docs/idea.md",
+  "stages": {
+    "research-product": {
+      "agent": "researcher-product",
+      "status": "pending",
+      "output": "research/product-research.md",
+      "depends_on": []
+    },
+    "research-design": {
+      "agent": "researcher-design",
+      "status": "pending",
+      "output": "research/design-research.md",
+      "depends_on": []
+    },
+    "sitemap": {
+      "agent": "sitemap-architect",
+      "status": "pending",
+      "output": "docs/sitemap.md",
+      "depends_on": ["research-product"]
+    },
+    "design-system": {
+      "agent": "design-system-architect",
+      "status": "pending",
+      "output": "docs/design-system.md",
+      "depends_on": ["research-design"]
+    },
+    "screens": {
+      "agent": "screen-designer",
+      "status": "pending",
+      "output": "docs/screens.md",
+      "depends_on": ["sitemap", "design-system"]
+    },
+    "build": {
+      "agent": "app-builder",
+      "status": "pending",
+      "output": "app/",
+      "depends_on": ["screens"]
+    }
+  },
+  "review_log": []
+}
