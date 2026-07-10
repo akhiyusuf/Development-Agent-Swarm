@@ -30,8 +30,11 @@ All colors below are solid, flat values — no gradients, no photographic-textur
 |---|---|---|
 | `color.primary.terracotta` | `#C1502E` | Primary brand color: primary buttons, active tab, key CTAs, nutrition-mode accent |
 | `color.primary.terracotta.dark` | `#96391F` | Pressed/active state of primary, text-on-light emphasis |
-| `color.primary.gold` | `#D9A441` | Secondary brand accent: highlights, streak/XP-adjacent UI (outside the fixed gamification vocabulary in §1.3), secondary buttons |
+| `color.primary.gold` | `#D9A441` | Secondary brand accent: highlights, streak/XP-adjacent UI (outside the fixed gamification vocabulary in §1.4, which uses its own dedicated hexes — see §1.4) |
+| `color.primary.gold-dark` | `#A9761E` | Contrast-safe gold variant, required wherever gold is used as an interactive/stateful UI component (button fill, icon stroke, ring/indicator) rather than a decorative background fill. Base `gold` (`#D9A441`) computes to roughly 2:1 against the light app background (`#F7F3EE`), which fails the WCAG 1.4.11 non-text/UI-component minimum of 3:1. `gold-dark` is verified above 3:1 against both light neutrals and must be used for any gold UI component subject to that rule (see §6.10). |
 | `color.primary.deepgreen` | `#1F5C42` | Tertiary brand accent: workout-mode / skill-tree section accent, success emphasis outside fixed semantic green |
+
+Note: the secondary button (§4.1) is terracotta-outlined, not gold — gold is reserved for highlight/streak/XP accents and decorative use, never as a button's primary color, so there is a single owner for "secondary button color" across this document.
 
 ### 1.2 Neutrals
 
@@ -61,17 +64,17 @@ Per the research's explicit requirement for a Duolingo-style **fixed** color voc
 
 ### 1.4 Fixed gamification color vocabulary (skill-tree node states)
 
-This is a **separate, fixed vocabulary** from the general semantic set above — scoped specifically to skill-tree/progression state, per the research's explicit requirement (Duolingo lesson: fixed meanings, not reused ad hoc elsewhere). These four colors are reserved exclusively for node/skill state and must not be reused for other UI purposes anywhere in the app.
+This is a **separate, fixed vocabulary** from the general semantic set above — scoped specifically to skill-tree/progression state, per the research's explicit requirement (Duolingo lesson: fixed meanings, not reused ad hoc elsewhere). All five states below use **dedicated hex values that do not appear anywhere else in this document** — in the brand palette (§1.1), the semantic vocabulary (§1.3), or the macro-ring palette (§4.10) — so a node's color can never be mistaken for a button, a system message, or a nutrition metric. These five colors are reserved exclusively for node/skill state and must not be reused for other UI purposes anywhere in the app.
 
 | State | Token | Hex | Icon/shape pairing (color is never the only signal) |
 |---|---|---|---|
 | Locked | `color.node.locked` | `#8A8578` (muted warm gray) | Closed padlock icon, node rendered flat/desaturated, reduced opacity (60%) |
-| Unlocked / available | `color.node.unlocked` | `#D9A441` (gold) | Outlined circle icon, node rendered at full opacity, subtle static ring |
-| In-progress | `color.node.inprogress` | `#2A6F97` (blue — borrowed from `info` but scoped to this vocabulary, acceptable because contexts never overlap) | Half-filled arc/ring around node, animated fill only if motion is not reduced |
-| Completed | `color.node.completed` | `#2E7D46` (green) | Filled checkmark icon inside node |
-| Mastered | `color.node.mastered` | `#C1502E` (terracotta, brand primary) with gold outline `#D9A441` | Star/badge icon, node rendered larger (per research: "boss"/milestone visual emphasis), subtle static glow — no particle/celebration effects (perf constraint) |
+| Unlocked / available | `color.node.unlocked` | `#C98A2E` (dedicated amber — distinct from brand `gold` `#D9A441`) | Outlined circle icon, node rendered at full opacity, subtle static ring |
+| In-progress | `color.node.inprogress` | `#3B7EA8` (dedicated blue — distinct from `semantic.info` `#2A6F97`) | Half-filled arc/ring around node, animated fill only if motion is not reduced |
+| Completed | `color.node.completed` | `#3D8B5C` (dedicated green — distinct from `semantic.success` `#2E7D46` and brand `deepgreen` `#1F5C42`) | Filled checkmark icon inside node |
+| Mastered | `color.node.mastered` | `#A8452A` (dedicated red-orange — distinct from brand `terracotta` `#C1502E`), outline in `color.node.unlocked` `#C98A2E` (an intra-vocabulary reuse — both hexes belong to this same node-state set, so it does not cross-contaminate with brand/semantic meaning) | Star/badge icon, node rendered larger (per research: "boss"/milestone visual emphasis), subtle static glow — no particle/celebration effects (perf constraint) |
 
-Reserve note: because `inprogress` reuses the `info` hex value, screen-designer must ensure node-state UI and general info-message UI never appear adjacent/ambiguous in the same view; if a conflict ever arises, `inprogress` gets a dedicated hex (`#3B7EA8`) rather than reusing `info`.
+Every value in this table was chosen specifically to avoid collision with §1.1/§1.3/§4.10; there is no shared-hex exception left to reason about, and no reserve/fallback hex is needed.
 
 ### 1.5 Dark mode
 
@@ -141,7 +144,7 @@ Unless noted, states below apply uniformly: **default, hover (or platform-equiva
   - Hover/press: `color.primary.terracotta.dark`.
   - Disabled: `color.neutral.warmgray-400` fill, `color.neutral.warmgray-700` text, no shadow — never conveyed by opacity alone if it would drop text below 4.5:1; use the disabled palette pairing above, which is pre-verified at sufficient contrast for state legibility (though disabled controls are exempt from the AA text-contrast requirement per WCAG, this pairing still keeps the label readable).
   - Error (as a rare state, e.g., a submit action that failed): border in `color.semantic.error`, retains fill, brief non-flashing shake-free error text below.
-- **Secondary button** — outlined, 1.5px `color.primary.terracotta` border, terracotta text, transparent fill.
+- **Secondary button** — outlined, 1.5px `color.primary.terracotta` border, terracotta text, transparent fill. (This is the single owner of "secondary button color" for the whole system — see the note at the end of §1.1; gold is never used as a button's own color.)
   - Hover/press: `color.neutral.warmgray-200` fill added.
   - Disabled: `color.neutral.warmgray-400` border/text.
   - Error: border swaps to `color.semantic.error`.
@@ -160,7 +163,7 @@ Unless noted, states below apply uniformly: **default, hover (or platform-equiva
 
 Per the research's explicit requirement, this — not a gram-weight stepper — is the **default** serving-size control for prepared-meal logging.
 
-- Structure: a horizontal set of large (min 56x56px) tappable unit chips (e.g., "1 ladle," "half plate," "1 wrap," "1 cup") with an icon/illustration cue per unit type, plus a stepper (−/+ ) to adjust quantity of the selected unit. Gram-weight/barcode entry is available as a clearly secondary, smaller "advanced/exact" link below the picker — never the default focus.
+- Structure: a horizontal set of large (min 56x56px) tappable unit chips (e.g., "1 ladle," "half plate," "1 wrap," "1 cup") with an icon/illustration cue per unit type, plus a stepper (−/+ ) to adjust quantity of the selected unit. Gram-weight entry is available as a clearly secondary, smaller "advanced/exact" link below the picker — never the default focus. Barcode-scan entry is explicitly **deferred per the approved sitemap's v1 scope** and is not a v1 component; it is not referenced further in this system, and if introduced in a later version it would extend this same secondary "advanced/exact" path rather than becoming a default.
 - Default: unit chips shown as outlined `color.neutral.warmgray-400`, selected chip filled `color.primary.terracotta` with white text/icon.
 - Hover/press: chip shows `color.neutral.warmgray-200` press-state fill before selection commits.
 - Disabled: used when a food item has no defined household-unit conversion yet — chips render in the disabled palette (§4.1) and the picker auto-falls-back to gram entry with a caption explaining why ("exact weight only for this item").
@@ -202,7 +205,7 @@ Per the research and the sitemap's flagged requirement, a photographic reference
 
 ### 4.8 Session player (shared component, tonal-flex — see §5 for full spec)
 
-One shared component: full-screen single-focus layout with a dominant timer/counter (`type.timer-xl`), minimal chrome, large primary control (pause/skip/log-rep), and a session-complete summary state. Mode-specific styling per §5.
+One shared component: full-screen single-focus layout with a dominant timer/counter (`type.timer-xl`), minimal chrome, large primary control (pause/skip/log-rep), a between-sets **rest-timer state** (calisthenics only — see §5.1), and a session-complete summary state. Mode-specific styling per §5.
 
 ### 4.9 Modals / sheets
 
@@ -213,7 +216,7 @@ One shared component: full-screen single-focus layout with a dominant timer/coun
 
 ### 4.10 Progress rings/bars (nutrition dashboard)
 
-- One accent color per macro/metric (YAZIO lesson — small, consistent color vocabulary), distinct from both the brand palette's decorative use and the gamification vocabulary in §1.4 to avoid cross-contaminating meanings: calories = terracotta, protein = deep green, carbs = gold, fat = info-blue. Fixed across the app once set.
+- One accent color per macro/metric (YAZIO lesson — small, consistent color vocabulary): calories = terracotta, protein = deep green, carbs = `gold-dark` (`#A9761E` — the contrast-safe gold variant from §1.1, required here because the ring is a graphical UI component subject to the WCAG 1.4.11 3:1 minimum; base gold fails that bar against the app's light backgrounds), fat = info-blue. These deliberately reuse the general brand/semantic accent hues (a small, memorable, YAZIO-style vocabulary) rather than inventing a sixth color family — but they are **distinct from the fixed gamification vocabulary in §1.4**, which (per §1.4) now uses five dedicated hexes shared with nothing else in the system. So macro-ring color and node-state color can never be confused for one another, even though macro-ring color does intentionally overlap with brand/semantic color elsewhere in the app. Fixed across the app once set.
 - Default: ring/bar shows filled progress vs. remaining in `color.neutral.warmgray-400` track.
 - Hover/press (tappable to expand detail): slight fill/track contrast increase.
 - Disabled: not applicable.
@@ -229,7 +232,8 @@ One shared session-player component, two mode-specific style presets, per the re
 
 - Background: dark mode (`color.neutral.dark-bg`), always, regardless of the user's app-wide light/dark preference — the high-contrast register is intentional here.
 - Dominant element: `type.timer-xl` numerals (rep count or hold-timer) in `color.neutral.white`, large tap target beneath for manual rep increment (min 96x96px — well above the 44pt floor, sized for one-handed, arm's-length use per the glanceability requirement).
-- Accent use: `color.primary.terracotta` or gold for active-state emphasis (e.g., "new PR" callout); gamification-vocabulary colors (§1.4) may appear only in the post-session summary when tying back to skill-tree node progress, never during the live counting/timer view (keeps the two vocabularies from visually colliding mid-session).
+- **Rest-timer state (between sets):** a distinct full-screen (or near-full-screen) state that auto-starts the instant a set is logged as complete. Dominant element switches to a countdown in `type.timer-xl`, still in `color.neutral.white` on `color.neutral.dark-bg` for glanceability at arm's length. Two secondary controls sit below the countdown — "skip rest" and "+15s add time" — each meeting the 44x44pt minimum floor per §3's no-exceptions rule (the research's "small touch target" framing for these controls is overridden by that floor, not an exception to it). On expiry, the player auto-transitions back to the rep/hold-timer state with a haptic pulse. Rest-timer state must persist to the OS lock screen/notification layer so the countdown remains visible if the device sleeps or the app backgrounds — this is a build-stage integration to carry forward, not a visual-only spec, but the countdown display itself uses the same `type.timer-xl` token so lock-screen and in-app rendering stay visually consistent.
+- Accent use: `color.primary.terracotta` or gold for active-state emphasis (e.g., "new PR" callout); gamification-vocabulary colors (§1.4) may appear only in the post-session summary when tying back to skill-tree node progress, never during the live counting/timer/rest view (keeps the two vocabularies from visually colliding mid-session).
 - Motion: unlock/PR celebration is a brief (≤400ms), non-flashing scale+fade only, with a full static-badge fallback under reduced-motion; paired with a haptic pulse and optional sound cue.
 - Session-complete: achievement-toned summary (sets/reps/time vs. thresholds hit, explicit "this unlocked/advanced [node]" callout), using gamification-vocabulary colors from §1.4 where node state is referenced.
 
@@ -242,7 +246,7 @@ One shared session-player component, two mode-specific style presets, per the re
 - Audio-first: cue text is supplementary, not primary — audio cues are the expected primary channel (per research), with captions available for accessibility (never audio-only for critical state, satisfying the "never color/sense alone" principle extended to audio).
 - Session-complete: reflective tone ("session complete, 12 minutes moved, held your plank 15s longer than last time"), still surfaces threshold/skill-tree progress using §1.4 colors, but presented in the calm surface rather than a high-contrast celebration screen — keeping both modes tied to the same underlying gamification loop without matching its visual intensity.
 
-Both presets share: identical component structure/layout grid, identical type scale, identical minimum touch-target sizing, identical fixed semantic/gamification color meanings when those colors do appear, and identical accessibility behaviors (§6). Only background luminance, accent saturation, motion intensity, and which secondary controls are visible differ.
+Both presets share: identical component structure/layout grid, identical type scale, identical minimum touch-target sizing, identical fixed semantic/gamification color meanings when those colors do appear, and identical accessibility behaviors (§6). Only background luminance, accent saturation, motion intensity, and which secondary controls (including the calisthenics-only rest-timer state) are visible differ.
 
 ---
 
@@ -250,13 +254,14 @@ Both presets share: identical component structure/layout grid, identical type sc
 
 1. **Contrast:** minimum 4.5:1 for normal text, 3:1 for large text (WCAG 1.4.3) in both light and dark mode for every token pairing defined in §1. In-workout timer/counter numerals (`type.timer-xl`) must exceed this minimum — target 7:1 where the background allows, given they're read at a distance or mid-exertion.
 2. **Dynamic type:** all text uses scalable units and must support OS-level scaling up to 200% without clipping or overlap, except `type.timer-xl`/`type.display` which may clamp growth (see §2) but never fall below the AA minimum effective size.
-3. **Touch targets:** minimum 44x44pt for every interactive element with no exceptions, including dense logging-form controls and skill-tree nodes (use invisible hit-area padding where visual size is smaller).
+3. **Touch targets:** minimum 44x44pt for every interactive element with no exceptions, including dense logging-form controls, skill-tree nodes, and in-session rest-timer skip/add-time controls (use invisible hit-area padding where visual size is smaller).
 4. **Motion:** every animated transition (skill-tree unlock, streak celebration, ring-fill animation, session-player crossfade) has a reduced-motion alternative that swaps animation for an instant state change; no flashing/strobing effects anywhere (WCAG 2.5.4).
 5. **Color is never the sole signal:** every stateful color use (skill-tree node states, error states, over-limit progress rings, sync-status badges) is paired with an icon, shape, or text label difference.
 6. **Audio/haptic parity:** critical state changes during workouts (rest over, set complete, session complete, PR/unlock) fire a haptic and/or audio cue alongside the visual change, supporting hands-occupied and audio-led (Pilates) use.
-7. **Cognitive load / single focus:** in-workout screens (both presets in §5) keep exactly one dominant timer/counter element; no dashboard-density UI is permitted inside the session player regardless of mode.
+7. **Cognitive load / single focus:** in-workout screens (both presets in §5) keep exactly one dominant timer/counter element at a time (including during the calisthenics rest-timer state); no dashboard-density UI is permitted inside the session player regardless of mode.
 8. **Performance-as-accessibility:** favor solid color fills over gradients/blur/shadow layering; lightweight vector iconography over illustration sets; no auto-playing video or GIF-style assets; compress and cache portion-photo and exercise-demo imagery for offline reuse; design every screen's default state to work offline (cached daily log, cached skill-tree view) rather than treating offline as an error condition. This is treated as an accessibility requirement, not just a performance nicety, given the target market's data-cost and low-end-device profile.
 9. **Text never in images:** all text (including numerals in the session player) is rendered as real text, never baked into image/icon assets.
+10. **Non-text/UI-component contrast (WCAG 1.4.11):** graphical UI components and state indicators (button fills/borders, node-state fills, progress-ring/bar fills, focus indicators) require a minimum 3:1 contrast against their adjacent background — a lower bar than body text, but not zero. Base `color.primary.gold` (`#D9A441`) fails this at roughly 2:1 against the light app background (`#F7F3EE`) and must not be used directly for any such component; use `color.primary.gold-dark` (`#A9761E`, verified above 3:1) instead wherever gold functions as a button, icon stroke, or state indicator rather than a decorative fill (see §1.1, §4.10).
 
 ---
 
