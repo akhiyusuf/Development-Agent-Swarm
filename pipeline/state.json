@@ -9,7 +9,7 @@
     },
     "research-design": {
       "agent": "researcher-design",
-      "status": "pending",
+      "status": "rejected",
       "output": "research/design-research.md",
       "depends_on": []
     },
@@ -38,5 +38,12 @@
       "depends_on": ["screens"]
     }
   },
-  "review_log": []
+  "review_log": [
+    {
+      "date": "2026-07-10",
+      "stage": "research-design",
+      "verdict": "rejected",
+      "summary": "All four required sections present and accessibility/competitor work is strong, but Pilates (half of workout differentiator #2 in docs/idea.md) is entirely absent, in-workout session execution conventions are missing, and portion-entry conventions for African prepared dishes are unaddressed. See pipeline/review-log.md for the actionable fix list."
+    }
+  ]
 }
