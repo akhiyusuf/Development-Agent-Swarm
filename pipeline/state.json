@@ -9,7 +9,7 @@
     },
     "research-design": {
       "agent": "researcher-design",
-      "status": "rejected",
+      "status": "approved",
       "output": "research/design-research.md",
       "depends_on": []
     },
@@ -77,6 +77,13 @@
       "verdict": "approved",
       "pass": 2,
       "summary": "Both first-pass fixes verified done. Fix 1: portion-photo reference now present at three levels — inline on Ingredient Detail alongside the household-unit picker, explicitly included in Composite Meal Detail's portion-selector pattern, and a new Portion Reference Guide sheet/modal (expanded photo set) reachable from both, listed in the modal inventory and navigation summary; traceability row 1 names all three surfaces. Fix 2: placement assessment is now structurally per-track — Assessment Intro states per-track placement up front, a Track Selection step supports one/other/both in either order, separate Calisthenics and Pilates Starting Tier Placement results replace the singular placement, deferral is supported with a re-entry point on Skill Tree Home, and a conditional Combined Assessment Summary covers the both-tracks case; traceability row 9 updated. Open Question 1 discipline held: Pilates placement steps are generic/TBD dimension categories at the same abstraction level as the approved calisthenics patterns, with no invented exercises, orderings, or thresholds. Preservation verified item by item against the first pass's approved-as-is list: five-tab nav, full onboarding sequence, all nutrition screens, the entire workout tier/node/gate set with placeholder discipline, Progress, Profile/Settings, modal inventory, Flags section (Req 13 handling, three justified requirement-less screens), deferred-features list, and the scope note are all intact; every change is additive or the required fix. Screens stage unblocked on the sitemap side (still gated on design-system); carry-forwards for screens recorded in pipeline/review-log.md."
+    },
+    {
+      "date": "2026-07-10",
+      "stage": "research-design",
+      "verdict": "approved",
+      "pass": 3,
+      "summary": "All four pass-2 restoration items verified done: Duolingo and Habitica gamification-audit entries restored with their concrete design lessons (fixed color-semantics mapping; full-game-skin contrast case), the named Flutterwave African-brand entry restored with its design lesson (the diaspora-food-brand paragraph now supplements rather than replaces it), YAZIO restored in the nutrition quadrant (Noom, never-approved intermediate content, correctly dropped per the either/or fix instruction), and the revision note now honestly acknowledges the intermediate pass mistakenly dropped content instead of claiming preservation. All four pass-1 fixes re-verified intact and unchanged per the do-not-touch instruction (Pilates audit with register-contrast takeaway, both in-workout execution subsections with the shared session-player implication, household-unit portion-entry note with sourcing deferred to product research, Recommended Direction confirmed with tonal-flex addendum). Originally-approved content re-verified: full nine-product audit matches the pass-1 recorded list, accessibility section intact with pass-2's approved additive improvements, cultural-identity open question still honestly flagged for the design-system-architect. Agent-spec sections and closing statement present. Design-system stage is unblocked; carry-forwards recorded in pipeline/review-log.md."
     }
   ]
 }
