@@ -3,7 +3,7 @@
   "stages": {
     "research-product": {
       "agent": "researcher-product",
-      "status": "pending",
+      "status": "rejected",
       "output": "research/product-research.md",
       "depends_on": []
     },
@@ -44,6 +44,12 @@
       "stage": "research-design",
       "verdict": "rejected",
       "summary": "All four required sections present and accessibility/competitor work is strong, but Pilates (half of workout differentiator #2 in docs/idea.md) is entirely absent, in-workout session execution conventions are missing, and portion-entry conventions for African prepared dishes are unaddressed. See pipeline/review-log.md for the actionable fix list."
+    },
+    {
+      "date": "2026-07-10",
+      "stage": "research-product",
+      "verdict": "rejected",
+      "summary": "All five required sections present; nutrition-side research, market prioritization (Nigeria+Ghana+Kenya), data sourcing, and unified-vs-module recommendation are strong and honest. Rejected because the workout side contradicts docs/idea.md: calisthenics and Pilates appear nowhere, and the bodyweight skill-tree concept is reframed as gym/weights progressive overload (Fitbod/JEFIT competitors, sets/reps/weight requirements). Micronutrient tracking (explicit idea requirement) is missing from Core Feature Requirements, and the idea's open question on validated progression trees is dropped. See pipeline/review-log.md for the actionable fix list."
     }
   ]
 }
