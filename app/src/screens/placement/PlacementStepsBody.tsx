@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { View } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import { Button, Card, ProgressBar, SingleSelectChips, useTheme } from '@fit-and-fed/design-system';
 import { AppText, Screen } from '../../ui/layout';
-import type { RootParamList } from '../../navigation/types';
+import { PreAuthLoginLink } from '../../components/PreAuthLoginLink';
+import type { PlacementContext, RootParamList } from '../../navigation/types';
 
 export type PlacementStep = { key: string; title: string; prompt: string };
 
@@ -24,6 +25,12 @@ const SELF_REPORT = [
  *
  * DATA CONTRACT: emits `Record<stepKey, 'none'|'some'|'comfortable'|'skipped'>`
  * into the draft (or straight to the account when run post-auth from A9).
+ *
+ * Dual-context: the §0.2 "Already have an account? Log in" affordance renders
+ * only in the pre-auth onboarding context (route param `context` absent or
+ * `'onboarding'`), NOT when Skill Tree Home re-enters this post-auth (`'account'`,
+ * A9). The context is threaded forward into the result route so a mid-flow
+ * navigation keeps the same lifecycle.
  */
 export function PlacementStepsBody({
   title,
@@ -36,6 +43,9 @@ export function PlacementStepsBody({
 }) {
   const theme = useTheme();
   const navigation = useNavigation();
+  const route = useRoute();
+  const context = (route.params as { context?: PlacementContext } | undefined)?.context;
+  const isPreAuth = context !== 'account';
   const [index, setIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
 
@@ -48,7 +58,7 @@ export function PlacementStepsBody({
       setAnswers((a) => ({ ...a, [step.key]: nextAnswer }));
     }
     if (isLast) {
-      navigation.navigate(resultRoute as never);
+      (navigation.navigate as (screen: string, params?: object) => void)(resultRoute, { context });
     } else {
       setIndex((i) => i + 1);
     }
@@ -84,6 +94,7 @@ export function PlacementStepsBody({
       {index > 0 ? (
         <Button variant="tertiary" label="Back" onPress={() => setIndex((i) => i - 1)} />
       ) : null}
+      {isPreAuth ? <PreAuthLoginLink /> : null}
     </Screen>
   );
 }

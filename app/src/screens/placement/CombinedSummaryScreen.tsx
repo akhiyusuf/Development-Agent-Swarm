@@ -1,7 +1,9 @@
 import React from 'react';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import { Button, Card, useTheme } from '@fit-and-fed/design-system';
 import { AppText, Screen } from '../../ui/layout';
+import { PreAuthLoginLink } from '../../components/PreAuthLoginLink';
+import type { PlacementContext } from '../../navigation/types';
 
 /**
  * Combined Assessment Summary — shown only when BOTH tracks were completed (A3).
@@ -10,10 +12,17 @@ import { AppText, Screen } from '../../ui/layout';
  * DATA CONTRACT: reads `{ calisthenicsTier: number; pilatesTier: number }`.
  * "Adjust a placement" routes back to that track's result in a review mode that
  * never recomputes/overwrites the stored tier (only an explicit Retake mutates).
+ *
+ * Dual-context: the §0.2 "Already have an account? Log in" affordance renders
+ * only in the pre-auth onboarding context (route param `context` absent or
+ * `'onboarding'`), NOT when reached post-auth via A9 (`'account'`).
  */
 export function CombinedSummaryScreen() {
   const theme = useTheme();
   const navigation = useNavigation();
+  const route = useRoute();
+  const context = (route.params as { context?: PlacementContext } | undefined)?.context;
+  const isPreAuth = context !== 'account';
 
   return (
     <Screen>
@@ -39,6 +48,7 @@ export function CombinedSummaryScreen() {
       <Button label="Continue" onPress={() => navigation.navigate('Auth', { mode: 'signup' })} />
       <Button variant="tertiary" label="Adjust calisthenics placement" onPress={() => navigation.navigate('CalisthenicsPlacementResult')} />
       <Button variant="tertiary" label="Adjust Pilates placement" onPress={() => navigation.navigate('PilatesPlacementResult')} />
+      {isPreAuth ? <PreAuthLoginLink /> : null}
     </Screen>
   );
 }

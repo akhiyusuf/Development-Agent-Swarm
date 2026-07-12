@@ -27,11 +27,11 @@ compile-checked.
 | Module Interest | `app/src/screens/onboarding/ModuleInterestScreen.tsx` | `{trackNutrition,trainWorkout}`; fork→Placement/Auth; injury-disclaimer blocking ack (E7) |
 | Assessment Intro | `app/src/screens/placement/AssessmentIntroScreen.tsx` | per-track intro; Begin/Skip(defer both)/Back |
 | Track Selection | `app/src/screens/placement/TrackSelectionScreen.tsx` | `{calisthenics,pilates:PlacementState}`; either/both/defer |
-| Calisthenics Placement — Steps | `app/src/screens/placement/CalisthenicsPlacementStepsScreen.tsx` | generic self-report per step; skip=distinct action (§G#18); restart-on-abandon |
-| Calisthenics Placement — Result | `app/src/screens/placement/CalisthenicsPlacementResultScreen.tsx` | `{startingTier}` generic; Continue/Retake |
-| Pilates Placement — Steps | `app/src/screens/placement/PilatesPlacementStepsScreen.tsx` | generic self-report (parallel, distinct criteria) |
-| Pilates Placement — Result | `app/src/screens/placement/PilatesPlacementResultScreen.tsx` | `{startingTier}` generic; Continue/Retake |
-| Combined Assessment Summary | `app/src/screens/placement/CombinedSummaryScreen.tsx` | both tiers recap; Adjust = review mode (no overwrite) |
+| Calisthenics Placement — Steps | `app/src/screens/placement/CalisthenicsPlacementStepsScreen.tsx` | generic self-report per step; skip=distinct action (§G#18); restart-on-abandon; dual-context `context?:'onboarding'\|'account'` param — §0.2 login link only pre-auth |
+| Calisthenics Placement — Result | `app/src/screens/placement/CalisthenicsPlacementResultScreen.tsx` | `{startingTier}` generic; Continue/Retake; dual-context `context` param — §0.2 login link only pre-auth |
+| Pilates Placement — Steps | `app/src/screens/placement/PilatesPlacementStepsScreen.tsx` | generic self-report (parallel, distinct criteria); dual-context `context` param — §0.2 login link only pre-auth |
+| Pilates Placement — Result | `app/src/screens/placement/PilatesPlacementResultScreen.tsx` | `{startingTier}` generic; Continue/Retake; dual-context `context` param — §0.2 login link only pre-auth |
+| Combined Assessment Summary | `app/src/screens/placement/CombinedSummaryScreen.tsx` | both tiers recap; Adjust = review mode (no overwrite); dual-context `context` param — §0.2 login link only pre-auth |
 | Sign Up / Log In | `app/src/screens/onboarding/AuthScreen.tsx` | signup attach-draft / login field-merge (§0.1); hard wall (§0.3); [CP-NETFAIL]; forgot-password sheet |
 | Onboarding Complete | `app/src/screens/onboarding/OnboardingCompleteScreen.tsx` | `{targets,region,workoutTiers?}`; workout recap omitted if not opted in |
 

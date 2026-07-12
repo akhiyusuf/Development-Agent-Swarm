@@ -73,7 +73,8 @@ export function SkillTreeHomeScreen() {
           A track with no placement yet shows "Complete placement" here — it launches that track's
           assessment directly and returns to the skill tree.
         </AppText>
-        <Button variant="secondary" label="Complete Pilates placement" onPress={() => navigation.navigate('PilatesPlacementSteps')} />
+        {/* A9 re-entry is post-auth: `context: 'account'` suppresses the §0.2 pre-auth login link. */}
+        <Button variant="secondary" label="Complete Pilates placement" onPress={() => navigation.navigate('PilatesPlacementSteps', { context: 'account' })} />
       </Card>
 
       <Button variant="tertiary" label="Progression status" onPress={() => navigation.navigate('ProgressionStatus')} />

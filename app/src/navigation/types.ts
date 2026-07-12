@@ -5,6 +5,16 @@ export type MealSlot = 'breakfast' | 'lunch' | 'dinner' | 'snack';
 export type { TrackId };
 
 /**
+ * Which lifecycle context a placement screen is being rendered in.
+ *  - `'onboarding'` (or absent) → pre-auth onboarding flow (§0.2 login link shown)
+ *  - `'account'`                → post-auth deferred-placement re-entry (A9), link hidden
+ * DATA CONTRACT: the calling navigator threads this; app-builder may instead
+ * derive it from onboarding-draft presence, but the observable contract is this param.
+ */
+export type PlacementContext = 'onboarding' | 'account';
+export type PlacementRouteParams = { context?: PlacementContext } | undefined;
+
+/**
  * One flat param list registered as ReactNavigation's global RootParamList
  * (see the `declare global` block below). Because every screen name across
  * every nested navigator is listed here, `useNavigation()` is typed app-wide
@@ -21,11 +31,16 @@ export type RootParamList = {
   ModuleInterest: undefined;
   AssessmentIntro: undefined;
   TrackSelection: undefined;
-  CalisthenicsPlacementSteps: undefined;
-  CalisthenicsPlacementResult: undefined;
-  PilatesPlacementSteps: undefined;
-  PilatesPlacementResult: undefined;
-  CombinedSummary: undefined;
+  // Placement Steps/Result/Summary are DUAL-CONTEXT: reached pre-auth in the
+  // onboarding flow AND post-auth via Skill Tree Home for deferred placement
+  // (flow A9). `context` distinguishes them — absent/`'onboarding'` = pre-auth
+  // (renders the §0.2 "Already have an account? Log in" affordance); `'account'`
+  // = re-entered while logged in (suppresses it). See PlacementContext.
+  CalisthenicsPlacementSteps: PlacementRouteParams;
+  CalisthenicsPlacementResult: PlacementRouteParams;
+  PilatesPlacementSteps: PlacementRouteParams;
+  PilatesPlacementResult: PlacementRouteParams;
+  CombinedSummary: PlacementRouteParams;
   Auth: { mode?: 'login' | 'signup' } | undefined;
   OnboardingComplete: undefined;
 
