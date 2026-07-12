@@ -114,10 +114,14 @@ between Log In and Home.
   fully serves the "welcome, here's your setup" moment for the case it's actually needed —
   immediately after finishing onboarding for the first time. Reusing that same pattern for
   every subsequent login would dilute its meaning as a first-time milestone.
-- A cached-session relaunch (app already logged in, Splash routes straight to Home per the
-  sitemap's own description) is materially the same destination as an active log-in; keeping
-  both paths land on Home avoids an inconsistent mental model of "sometimes login shows a
-  summary, sometimes it doesn't."
+- A cached-session relaunch (app already logged in, Splash routes straight to Home) is
+  materially the same destination as an active log-in; keeping both paths land on Home
+  avoids an inconsistent mental model of "sometimes login shows a summary, sometimes it
+  doesn't." **(Treating a cached session as a valid, non-error state and routing it straight
+  to Home is this document's own reasoned default, not a sitemap citation — the sitemap never
+  mentions cached sessions at all; its only returning-user statement is the Splash → Log In
+  short-circuit described below. See the Mechanism note immediately following, and Section
+  G.)**
 
 **What still happens on login, short of a full screen (default):** if data changed since the
 last local session (e.g., a field-level merge occurred per §0.1, or account-side sync pulled
@@ -130,6 +134,57 @@ is not a separate screen and does not block interaction with Home underneath it.
 address returning-user landing UX; if user testing later shows returning users want an
 explicit "here's what changed" recap (e.g., after a long absence), that would be a scoped
 addition to Home's first-paint state, not a new pre-nav screen.
+
+**Mechanism: what actually triggers the short-circuit, and where the "Log in" affordance
+lives.** This resolves an inconsistency the sitemap reviewer flagged: Flow A1 states "no
+cached session, no local draft → Profile Setup" while Flow A7b and Flow E2 state the
+*identical* precondition ("no cached session, no local draft") → Sign Up/Log In directly.
+Both cannot be automatic routing from the same precondition as originally stated. The actual
+mechanism — the pre-nav entry logic screen-designer should build from — is this:
+
+Splash's session-restore check evaluates **three** independent pieces of local device state,
+not two:
+1. **Cached account session** — a valid, active login token.
+2. **Local onboarding draft in progress** — per §0.1.
+3. **Device account-history marker** — a persisted local flag, set the first time this
+   device ever successfully completes Sign Up or Log In (Flows A4/A5), and left **untouched**
+   by an ordinary Log Out (Flow E2) — logging out clears the session, not this marker. It is
+   cleared only when local app storage itself is cleared (uninstall, an explicit "clear app
+   data," or a confirmed account deletion, Flow E2), the same lifecycle as the onboarding
+   draft described in §0.1.
+
+Splash's routing, evaluated in this order:
+- Valid cached session present → Home (Flow A7a). No intermediate screen.
+- No cached session, but a local onboarding draft exists → resume onboarding at the first
+  not-yet-completed screen (§0.1's abandonment recovery).
+- No cached session, no draft, but **the device account-history marker is set** (this device
+  has signed up or logged in before — most commonly a just-logged-out device per Flow E2, or
+  a device whose session simply expired) → route directly to Sign Up / Log In, with Log In
+  pre-selected, skipping Profile Setup through Placement entirely. This is the automatic
+  short-circuit Flow A7b describes.
+- No cached session, no draft, and the marker is **not** set → genuinely first launch on this
+  device → Profile Setup (Flow A1).
+
+**Where the manual "Log in" affordance lives, for the case the marker doesn't cover:** a user
+can also reach an existing account from a genuinely fresh device (new phone, reinstall, or
+any device where the marker was never set — e.g., they have an account but this is the first
+time they've ever opened the app on this particular device) without waiting for automatic
+routing. An explicit **"Already have an account? Log in"** link is placed on Profile Setup —
+the first pre-auth onboarding screen — and remains available as a persistent, low-emphasis
+affordance across every subsequent pre-auth screen through Workout Placement Assessment.
+Tapping it at any point jumps directly to Sign Up / Log In with Log In pre-selected, without
+discarding whatever onboarding draft exists so far (the draft persists per §0.1 and is
+reconciled by the field-level merge rule on successful login — this is exactly Flow A5's
+scenario). This manual affordance and the automatic marker-based short-circuit are two
+independent routes to the same Log In destination; no downstream screen needs to know or
+distinguish which one got the user there.
+
+**This entire mechanism — the account-history marker, its persistence lifecycle, and the
+Profile Setup "Log in" affordance — is a reasoned default, not a validated requirement.** The
+sitemap asserts that the returning-user short-circuit exists ("a returning user with an
+existing account can still short-circuit straight here from Splash") but does not specify
+what triggers it or where a manual login entry point lives; product research doesn't address
+multi-launch device state at all. See Section G.
 
 ### 0.3 Sign Up is a hard wall — no guest/skip mode
 
@@ -217,12 +272,19 @@ Quick-add Weight, Edit/Delete Entry, Portion Reference Guide, Mastery Gate Confi
 
 # A. Onboarding & Authentication Flows
 
-## A1. First Launch (brand-new user, no local draft, no account)
+## A1. First Launch (brand-new user, no local draft, no account, no device history)
 
-**Trigger:** app opens with no cached account session and no local onboarding draft.
+**Trigger:** app opens with no cached account session, no local onboarding draft, **and no
+device account-history marker set** (§0.2's routing mechanism) — i.e., genuinely first launch
+on this device, not merely "no active session right now."
 
 **Happy path:**
-1. Splash screen runs its session-restore check (finds nothing) → routes to Profile Setup.
+1. Splash screen runs its session-restore check; none of the three states in §0.2's
+   mechanism (cached session, local draft, device account-history marker) are present →
+   routes to Profile Setup. (Profile Setup also carries an "Already have an account? Log in"
+   affordance, per §0.2, that persists across every subsequent pre-auth screen — a user who
+   realizes mid-onboarding that they already have an account elsewhere can jump straight to
+   Log In, Flow A5, without waiting for automatic routing.)
 2. **Profile Setup:** user enters name, sex, height, current weight, activity level, primary
    goal (lose/maintain/gain). On Continue, this data commits to the local onboarding draft.
    → Goal & Target Setup.
@@ -239,7 +301,8 @@ Quick-add Weight, Edit/Delete Entry, Portion Reference Guide, Mastery Gate Confi
 6. **(Conditional) Workout Placement Assessment** completes (or is deferred — Flow A3) →
    Sign Up / Log In.
 7. **Sign Up / Log In (Flow A4/A5):** user creates an account or logs into an existing one.
-   Hard wall — no skip (§0.3).
+   Hard wall — no skip (§0.3). Successfully completing Sign Up or Log In here sets this
+   device's account-history marker (§0.2) for the first time.
 8. On successful account creation/attachment, the full local onboarding draft is attached to
    the new account server-side; local draft is then cleared (it's now durable account data).
 9. → **Onboarding Complete / Welcome Summary**, which recaps goal/target, region, and (if
@@ -333,10 +396,15 @@ reasoned default):**
    proceed directly to Sign Up / Log In with one track placed and one deferred (recorded in
    the draft as "deferred", not "failed" or "skipped forever").
 
-**Happy path — single track opted in:** Track Selection is skipped entirely (per sitemap:
-"If only one track was chosen, this step is skipped"); the user goes straight into that
-track's placement steps, then straight to Sign Up / Log In (no Combined Summary, since
-there's only one track to summarize).
+**Happy path — single track opted in:** Track Selection is skipped entirely — **this
+document's own inference, not a verbatim sitemap statement**, reasoned from the sitemap's
+conditional wording that Track Selection exists only "if the user opted into both tracks at
+Module Interest, they choose whether to complete Calisthenics placement, Pilates placement,
+or both" (i.e., the sitemap describes Track Selection as conditional on both tracks being
+opted into; it never states as a sentence that the step is skipped otherwise, so this
+document makes that inference explicit as its own reasoned default — see Section G); the
+user goes straight into that track's placement steps, then straight to Sign Up / Log In (no
+Combined Summary, since there's only one track to summarize).
 
 **Deferral (fork branch, explicit):**
 - At Assessment Intro: "Skip for now" defers **both** tracks entirely — the flow proceeds to
@@ -354,9 +422,10 @@ is local computation from self-reported inputs, not a network call).
 
 **Error states:**
 - [CP-VALIDATION] on self-report inputs (a step can't be left blank if it requires a value;
-  "Skip this step" is an explicit, distinct action from leaving it blank, and is allowed per
-  the sitemap's per-step actions — a skipped step is recorded as skipped, not defaulted to a
-  fabricated value).
+  "Skip this step" is an explicit, distinct action from leaving it blank — **this behavior is
+  this document's own reasoned default, not a sitemap-specified action: the sitemap defines
+  no per-step actions for Assessment Steps at all (see Section G)** — a skipped step is
+  recorded as skipped, not defaulted to a fabricated value).
 
 **Interruption / back-out (default — product research/sitemap don't specify this):**
 - **Mid-assessment-steps abandonment (e.g., app killed on step 2 of 4) is NOT resumed
@@ -466,19 +535,26 @@ entered email; reopening starts fresh.
 
 ## A7. Returning User Launch
 
-Two entry points converge on the same destination per §0.2.
+Two entry points converge on the same destination per §0.2. Both are driven by §0.2's
+three-way Splash routing mechanism; restated here in terms of this specific flow.
 
 **A7a — Cached session valid (app was already logged in):**
-1. Splash's session-restore check finds a valid cached session (online or offline — a cached
-   session is a valid, non-error state per the sitemap; offline just means Home renders from
-   cache until connectivity returns).
+1. Splash's session-restore check finds a valid cached session (online or offline). Treating
+   a cached session as a valid, non-error state, and routing it straight to Home, is this
+   document's own reasoned default per §0.2's mechanism — the sitemap itself never mentions
+   cached sessions. Offline just means Home renders from cache until connectivity returns.
 2. → routes directly to Home. No intermediate screen.
 
-**A7b — No cached session, user actively logs in from Splash → Sign Up/Log In (Flow A2's
-short-circuit path — "Splash → Log In skips onboarding steps"):**
-1. Splash finds no cached session and no in-progress local onboarding draft → routes to Sign
-   Up / Log In directly (skipping Profile Setup through Placement entirely — this is the
-   explicit short-circuit the sitemap describes for returning users).
+**A7b — No cached session, but this device has a known-account history (automatic
+short-circuit straight to Sign Up/Log In):**
+1. Splash finds no cached session and no in-progress local onboarding draft, but **the
+   device account-history marker (§0.2) is set** — this device has successfully signed up or
+   logged in before, most commonly because the user just logged out (Flow E2) or a session
+   simply expired. Splash routes directly to Sign Up / Log In, with Log In pre-selected,
+   skipping Profile Setup through Placement entirely — this is the automatic short-circuit
+   the sitemap describes for returning users. (This is distinct from the manual "Already
+   have an account? Log in" affordance a genuinely fresh device — no marker set — also
+   offers, from Profile Setup; see §0.2 and Flow A1.)
 2. User logs in successfully.
 3. Per §0.2 default: → routes directly to Home (no Welcome-back summary screen). A
    transient, dismissible sync banner may appear on Home's first paint if anything changed
@@ -1007,8 +1083,12 @@ to confirm identity).
    device is also purged** (default, reasoned: leaving stale local data around after a
    confirmed account deletion would be a discoverable privacy/trust problem, directly
    relevant to the regulatory constraints — NDPR/NDPA, GDPR/CCPA — product research flags).
+   This purge includes the device account-history marker introduced in §0.2's routing
+   mechanism, so the fresh-start routing in step 4 below is genuinely accurate: the device
+   retains no residual signal that it ever had an account.
 4. User is routed to a fully logged-out state — Splash → (no cached session, no local
-   onboarding draft) → Flow A1 fresh start, since there is nothing left to resume.
+   onboarding draft, no device account-history marker) → Flow A1 fresh start, since there is
+   nothing left to resume and nothing left to suggest this device has seen an account before.
 5. **[CP-NETFAIL]** applies to the deletion request itself; if it fails, the account and all
    data remain intact and the user is told deletion did not complete, with a retry option —
    this is a case where failing safe (nothing deleted) is clearly correct over any partial
@@ -1027,9 +1107,12 @@ logout):**
      silent-data-loss risk this document's charter calls out explicitly; a warning (not a
      hard block) is the proportionate response.
 3. **If nothing is queued**, log out proceeds immediately with no confirmation needed.
-4. On successful log-out, routes to Splash's no-session state → Sign Up / Log In (per Flow
-   A7b's short-circuit, since this device has no local onboarding draft either — it's a
-   previously fully-onboarded account logging out, not a fresh user).
+4. On successful log-out, the device account-history marker (§0.2) is left untouched — only
+   the cached session is cleared (ordinary log-out is not the same as account deletion, and
+   is not treated as one). Routes to Splash's no-session state → Sign Up / Log In (per Flow
+   A7b's automatic short-circuit: the marker is still set and this device has no local
+   onboarding draft either, so Splash correctly recognizes this as a previously
+   fully-onboarded account logging out, not a fresh device).
 
 ## E3. Data & Sync Settings (offline-mode status, manual sync, low-data-mode)
 
@@ -1233,6 +1316,23 @@ requirements and should be revisited if user research or product direction contr
 15. **Home's first-ever-arrival state shows the same first-run empty states as any other
     zero-data case, rather than a loading spinner**, since a fresh account genuinely has
     nothing to wait for (Flow F1).
+16. **The returning-user short-circuit's actual trigger is a persisted local "device
+    account-history" marker** — set the first time this device ever completes Sign Up or Log
+    In, left untouched by an ordinary Log Out, and cleared only by uninstall/clear-app-data
+    or a confirmed account deletion — combined with an explicit "Already have an account?
+    Log in" affordance on Profile Setup (persisting across every subsequent pre-auth screen)
+    for devices where the marker was never set. The sitemap only asserts that the
+    returning-user short-circuit exists; it does not specify what triggers it or where a
+    manual login entry point lives. This default reconciles Flow A1 (no marker → Profile
+    Setup), Flow A7b (marker set → automatic short-circuit to Sign Up/Log In), and Flow E2
+    (log-out preserves the marker; account deletion clears it) (§0.2).
+17. **Track Selection is skipped when only one workout track was opted into** — an inference
+    from the sitemap's conditional wording ("if the user opted into both tracks... they
+    choose..."), not a verbatim sitemap statement (Flow A3).
+18. **"Skip this step" on an Assessment Steps screen is an explicit, distinct action from
+    leaving a field blank**, recorded as skipped rather than defaulted to a fabricated value
+    — the sitemap defines no per-step actions at all for Assessment Steps; this behavior is
+    invented here, not sourced from the sitemap (Flow A3).
 
 ---
 
