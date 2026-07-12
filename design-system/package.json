@@ -1,9 +1,12 @@
 {
   "name": "@fit-and-fed/design-system",
   "version": "1.0.0",
-  "description": "Standalone, previewable design-system package for Fit & Fed (tokens, components, ComponentGallery). Consumers import from the package root (see \"main\"); the Expo preview app itself boots from ./index.ts (see app.json \"expo.entryPoint\").",
-  "main": "src/index.ts",
+  "description": "Standalone, previewable design-system package for Fit & Fed (tokens, components, ComponentGallery). \"main\" boots the standalone Expo preview app (Metro/Expo CLI's own entry resolution only reads \"main\"); consumer packages importing this package BY NAME (e.g. `app/`) resolve through \"exports\" instead, which points at the library's real barrel file — the two are intentionally different files so the same package can be both a runnable Expo app and an importable library.",
+  "main": "index.ts",
   "types": "src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
   "dependencies": {
     "@expo/vector-icons": "^15.1.1",
     "expo": "~57.0.4",
