@@ -1212,3 +1212,102 @@ optional polish, but note it has now bitten twice).
 
 **build stage: REJECTED.** `pipeline/state.json` updated. This remains the final gate; the
 pipeline is NOT complete until these three items pass a live re-verification.
+
+## 2026-07-12 — Stage: build (SECOND PASS, final gate) — Verdict: REJECTED
+
+**Reviewed output:** the pass-1 fix commit `f8d81f1` ("Fix custom-food nutrition math gap and
+two dead-navigation CTAs"), diffed against the pass-1-rejection commit `d877b3c` and verified
+live, against the pass-1 three-item fix list.
+
+**Verification performed (all re-run by this reviewer; nothing taken from BUILD_NOTES or the
+fix agent's own scripts/screenshots, which were present in the shared scratchpad and ignored):**
+- `cd app && npx tsc --noEmit` — clean, exit 0.
+- `git diff d877b3c f8d81f1` read hunk-by-hunk: exactly 10 files, all within fix scope
+  (compute.ts, foods.ts, selectors.ts, ConfirmLog/EditDeleteEntry/FoodDiary/MicronutrientDetail/
+  CombinedProgressDashboard/MasteryGateConfirmation screens, BUILD_NOTES.md). Nothing from the
+  pass-1 "what passes" list touched.
+- Fresh `npx expo export --platform web`, served on 127.0.0.1:8899, driven end-to-end with this
+  reviewer's own Playwright script (23 screenshots + DOM-state assertions), plus a dedicated
+  stack-structure probe after the residue finding. Zero console errors/warnings captured.
+
+### Pass-1 fix list: items 1 and 2 verified genuinely DONE (live, multiple surfaces)
+
+1. **Custom foods now included in ALL derived nutrition math.** `findFoodWithCustom(id,
+   customFoods)` added in `app/src/data/foods.ts`; `totalsForEntries`/`microRows` take and use
+   `customFoods`; `useDayTotals`/`useMicroRows` in selectors.ts pass `state.customFoods`;
+   CombinedProgressDashboard's 7-day trend and MicronutrientDetail's today+trend rows pass it
+   explicitly. Grep-swept the whole tree: the only remaining bare `findFood` call sites
+   (FoodDetailBody, PortionReferenceGuide, ConfirmLog) all carry the inline
+   `?? customFoods.find(...)` fallback; NutritionHistory only marks dates (no food resolution);
+   no other diary readers exist. **Live-verified on more than one surface:** logged Jollof
+   (290 kcal) + custom "Test Stew" (200 kcal · 1 bowl · 100 g) → Food Diary header 490/2211
+   (= 290+200 exactly), Daily Summary 490, Home energy card 490, Progress dashboard trend
+   point 490 — all four moved by the custom food's kcal.
+2. **Custom-food rows show the real name.** FoodDiaryScreen and EditDeleteEntryScreen now use
+   `findFoodWithCustom`. Live-verified: diary row reads "Test Stew"; no `custom-<digits>` raw
+   id anywhere in the DOM.
+3. BUILD_NOTES' false navigation paragraph is honestly corrected (it now states the old claim
+   was false and why) — that part of fix item 3 is done.
+
+### Why rejected — the two "fixed" CTAs dismiss only visually; each press pushes a DUPLICATE
+### MainTabs instead of popping the modal, and the zombie stack grows without bound
+
+The chosen fix — `navigate('Main', { screen: 'NutritionTab'|'WorkoutTab', params: ... })` from
+the root-modal screens — does land the user on Food Diary / Tier Node Map (screenshots look
+perfect, and my functional assertions passed: gate map shows Wall Push-Up aria-label "Mastered",
+Incline Push-Up "Unlocked" and interactive). But under React Navigation 7, `navigate` to a
+route that exists lower in the stack does NOT pop back to it — it pushes a NEW instance (the
+exact RN7 semantic the screens pass-3/4 cycle established; pass-4 even recorded "RN7
+navigate('TrackSelection') pushes a duplicate instance" as a known nit). DOM-probed live:
+
+- After ONE "Save to diary": hidden-screen count 0 → 4; TWO mounted tab bars; the ConfirmLog
+  "Save to diary" text still in the DOM inside a `div[aria-hidden][display:none]` container.
+  Root stack is now [Main, AddEntry, FoodDetail, ConfirmLog, **Main#2**].
+- After a SECOND save: hidden screens 8, FOUR tab bars, two retained ConfirmLogs, two mounted
+  Food Diary instances — and opening Add Entry again surfaced TWO search inputs (the stale
+  first instance still holding the previous query; my Playwright run failed strict-mode on it).
+  Growth is unbounded: +4 retained screens and +1 full duplicate MainTabs per meal logged.
+- MasteryGateConfirmation "Continue" has the identical signature (hidden "Now unlocked"
+  residue after Continue) — same +duplicate-Main per node mastered.
+- Consequences: (a) every meal log and every mastery unlock — the app's two highest-frequency
+  actions — permanently grows the navigator tree, on a product whose research mandates low-end
+  Android performance; (b) on native Android, hardware-back from the landing screen pops to the
+  RETAINED stale ConfirmLog, where pressing "Save to diary" again double-logs the entry and
+  pushes Main#3. This is precisely the duplicate-mounted-instance false-negative the screens
+  review warned screenshots cannot catch. (Mitigating honesty note: pass-1's own fix list
+  offered this nested-navigate form as an acceptable option — that suggestion was wrong, and
+  the acceptance bar below replaces it. The builder's stated reason for rejecting bare
+  `popTo('Main')` — it would land on whatever the tab last showed instead of guaranteeing
+  Food Diary — is a legitimate concern the fix must still honor.)
+
+### Required change for approval (ONE item; everything else verified and must not change)
+
+Replace both CTAs' navigation with a POP-based dismissal of the root-modal chain that still
+lands on the required nested screen. Candidate shapes (builder's choice, but it must be proven):
+`popTo('Main' as never)` followed by dispatching the nested navigate to the now-focused Main
+(`navigate('Main', { screen: 'NutritionTab', params: { screen: 'FoodDiary' } })` — navigating
+to the focused route delivers the nested action without pushing); or a single dispatched
+`StackActions.popTo('Main', { screen: ..., params: ... })` if params-through-popTo proves to
+drive the tab; or popToTop + tab targeting. **Acceptance criteria, verified live in the web
+export with DOM counts (per the screens pass-3/4 precedent — a screenshot is NOT sufficient):**
+after each CTA fires, (a) zero "Save to diary" / "Now unlocked" text nodes remain anywhere in
+the DOM (hidden included); (b) exactly ONE tab bar / MainTabs instance mounted; (c) repeating
+the flow twice does not grow the hidden-screen count; (d) ConfirmLog still lands on Food Diary
+from BOTH entry points (Home "Log Meal" and Food Diary "Add"), and Mastery Gate Continue still
+lands on Tier Node Map with the newly-unlocked node visible/interactive (re-check the
+aria-labels: "Wall Push-Up, Mastered" / "Incline Push-Up, Unlocked").
+
+### Pass-1 "what passes" list re-verified untouched (diff + live)
+
+Diff-confirmed no changes outside the 10 fix-scope files; live re-verified in the same run:
+Mifflin-St Jeor (male/80kg/175cm/moderate/lose → exactly 2211 kcal on Goal Setup), mastery-gate
+engine (25 reps vs 2×20 gate fired correctly; map states updated), A9 account-context placement
+Continue (screens pass-4 popTo fix still lands on Skill Tree Home), full-reload persistence
+(auth + 490-kcal diary + placement + attempts all restored), real account deletion (post-delete
+reload lands on pristine Profile Setup, zero residual data), honest micronutrient no-data rows,
+custom-food "user-entered" labeling, no permission APIs. All intact.
+
+**build stage: REJECTED (pass 2).** `pipeline/state.json` remains/updated `rejected`. This is
+still the final gate; the pipeline is NOT complete. The one remaining item is narrow and
+mechanical, but this join-point family has now produced FOUR looks-right-but-wrong navigations
+across two stages — the revision MUST ship with the DOM-count evidence above, not screenshots.
