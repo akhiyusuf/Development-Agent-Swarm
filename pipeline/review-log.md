@@ -957,3 +957,61 @@ pass-1 approved list. Per this pipeline's history: make the one-line fix, thin n
 
 Build stage remains blocked (screens rejected; data-research approved). The pass-3 re-review should
 be minutes: re-run tsc, re-drive the A9 Continue, done.
+
+## 2026-07-12 — Stage: screens (THIRD PASS) — Verdict: REJECTED
+
+**Reviewed output:** `app/` (revision after second-pass rejection, commit 466b577)
+**Scope:** re-review of the single pass-2 fix item (context-aware "Continue" on
+`PlacementResultBody.tsx`), change isolation, and a fresh live drive of both Continue paths.
+
+### Verification performed (not taken on trust)
+- `cd app && npx tsc --noEmit` — **clean, exit 0** (re-run by this reviewer).
+- `git diff c6901f0..HEAD` — touches exactly `app/src/screens/placement/PlacementResultBody.tsx`
+  plus the two pipeline log files. Change isolation **PASS**: nothing from the pass-1/pass-2
+  approved lists altered; the source diff is exactly the described conditional
+  (`context === 'account' ? navigate('SkillTreeHome') : navigate('TrackSelection')`) plus an
+  accurate docstring update.
+- Fresh `npx expo export --platform web` from a clean `dist/`, served on 127.0.0.1:8899, driven
+  with Playwright/Chromium through both lifecycles end to end.
+- **Onboarding-context path: PASS (no regression).** Profile → Goal → Region → Module Interest
+  (opt-in + disclaimer) → Assessment Intro → Begin → Track Selection → Pilates Steps 1–3 →
+  Result → Continue → lands on "Which placement first?" (Track Selection), screenshot-confirmed.
+- **Account-context A9 path: FAIL.** Skip placement → sign up → Main → Workout tab → Skill Tree
+  Home → "Complete Pilates placement" → Steps 1–3 → Result → **Continue does NOTHING.**
+  Before/after screenshots are pixel-identical: still the Pilates placement result, no tab bar,
+  no navigation. The A9 join to Skill Tree Home is still not reached.
+
+### Root cause (why the described fix compiles but cannot work)
+`SkillTreeHome` is registered only inside the **nested** WorkoutStack of `MainTabs`
+(`app/src/navigation/MainTabs.tsx` line 68), while all five placement screens live on the **root**
+stack (`app/src/navigation/RootNavigator.tsx`). React Navigation resolves `navigate('SkillTreeHome')`
+against the current navigator and then bubbles **up** to parents — it never searches **down** into
+nested child navigators — so the action dispatched from the root-stack Result screen is unhandled
+and silently dropped (the "action was not handled" warning is dev-only and swallowed in the
+production web export). `tsc` passes only because `types.ts`'s `RootParamList` flattens all route
+names, including nested ones, into one param list — the type system cannot see navigator nesting.
+Net effect: pass 2's wrong-destination bug has been traded for a dead button. The user is stranded
+on the result screen with no in-screen exit (only Retake), which still violates user-flows A9's
+join ("returns to Skill Tree Home") — arguably worse UX than pass 2's misroute.
+
+### Required change for approval (single item, same file, same line)
+1. In `PlacementResultBody.tsx`, make the account branch dispatch an action the root stack can
+   actually handle. In this A9 flow `Main` is always on the root stack beneath the placement
+   screens (entry was Skill Tree Home → Steps → Result), so the simplest correct forms are:
+   - `navigation.popTo('Main' as never)` (React Navigation 7; pops back to Main, whose Workout
+     tab is already sitting on SkillTreeHome), or
+   - `navigation.navigate('Main', { screen: 'WorkoutTab', params: { screen: 'SkillTreeHome' } } as never)`
+     (explicit nested-navigator form).
+   Keep the onboarding branch (→ TrackSelection) byte-identical. Keep `tsc --noEmit` clean.
+   **This time the fix must be verified live before handoff** — drive the A9 path in the web
+   export and confirm Continue actually lands on Skill Tree Home; a fix that only typechecks has
+   now failed review twice at this exact join point.
+
+Non-blocking nits carried forward unchanged from pass 2 (Combined Summary "Adjust" buttons don't
+thread `{ context }`; MicroBar `gap: 4`; Home's double "Today").
+
+**Explicitly approved as-is (must NOT change in revision):** everything on the pass-1 and pass-2
+approved lists, the `PlacementContext` plumbing, all conditional-link renderings, and the
+onboarding Continue branch. This is a one-line revision to the account branch of one `onPress`.
+
+Build stage remains blocked (screens rejected; data-research approved).
