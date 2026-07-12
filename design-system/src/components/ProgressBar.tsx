@@ -7,10 +7,19 @@ export type ProgressBarProps = {
   progress: number;
   color: string;
   height?: number;
+  /**
+   * Optional explicit track color, overriding the app-wide theme's
+   * `neutrals.border`. Needed by callers (e.g. SessionPlayer's Pilates
+   * preset) that lock their surface to a fixed light/dark scheme regardless
+   * of the ambient app-wide theme — without this override the track would
+   * silently follow the ambient theme via this component's own `useTheme()`
+   * call even when the fill color was deliberately fixed.
+   */
+  trackColor?: string;
 };
 
 /** Simple linear progress-bar fill on the standard track color. */
-export function ProgressBar({ progress, color, height = 8 }: ProgressBarProps) {
+export function ProgressBar({ progress, color, height = 8, trackColor }: ProgressBarProps) {
   const theme = useTheme();
   const clamped = Math.max(0, Math.min(progress, 1));
 
@@ -21,7 +30,7 @@ export function ProgressBar({ progress, color, height = 8 }: ProgressBarProps) {
         {
           height,
           borderRadius: height / 2,
-          backgroundColor: theme.neutrals.border,
+          backgroundColor: trackColor ?? theme.neutrals.border,
         },
       ]}
     >

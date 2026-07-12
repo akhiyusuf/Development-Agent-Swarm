@@ -45,12 +45,18 @@ must be held **locally on the device** and attached to the account at the point 
    backgrounds, force-quits, or uninstalls-and-reinstalls-without-clearing-data... actually
    only backgrounding/force-quit/kill are recoverable; uninstall clears local storage and is
    equivalent to a fresh install (no draft to recover — expected platform behavior, not a bug).
-2. On relaunch, Splash's session-restore check runs two checks in this order: (a) is there a
-   valid cached **account** session? If yes → Flow A7 (returning user). (b) If no account
-   session, is there a local onboarding draft in progress? If yes → **resume onboarding at
-   the first not-yet-completed screen**, not screen one. Previously entered fields are
-   pre-filled from the draft if the user navigates back.
-3. If neither exists, this is a genuine first launch → Flow A1 from the top.
+2. On relaunch, Splash's session-restore check evaluates the same **three** independent
+   pieces of local device state as §0.2's Mechanism note (cached account session, local
+   onboarding draft, device account-history marker), in priority order: (a) is there a valid
+   cached **account** session? If yes → Flow A7a (returning user), straight to Home. (b) If
+   no account session, is there a local onboarding draft in progress? If yes →
+   **resume onboarding at the first not-yet-completed screen**, not screen one. Previously
+   entered fields are pre-filled from the draft if the user navigates back.
+3. If neither a session nor a draft exists, routing depends on §0.2's third check, the device
+   account-history marker: if the marker **is set** (this device has signed up or logged in
+   before — most commonly a just-logged-out device, Flow E2) → route to Sign Up / Log In
+   directly (Flow A7b), **not** Flow A1. Only if the marker is **also** absent is this a
+   genuine first launch → Flow A1 from the top.
 4. **Reasoning:** the sitemap itself frames Sign Up's new position as "the point where
    there's now real progress worth saving." Silently discarding that same progress on an
    ordinary app-kill would contradict the stated rationale for moving Sign Up later. Recovery,
@@ -150,8 +156,10 @@ not two:
    device ever successfully completes Sign Up or Log In (Flows A4/A5), and left **untouched**
    by an ordinary Log Out (Flow E2) — logging out clears the session, not this marker. It is
    cleared only when local app storage itself is cleared (uninstall, an explicit "clear app
-   data," or a confirmed account deletion, Flow E2), the same lifecycle as the onboarding
-   draft described in §0.1.
+   data," or a confirmed account deletion, Flow E2) — a **narrower** set of clearing
+   conditions than the onboarding draft in §0.1, which is also cleared on successful
+   attachment to an account at Sign Up and on explicit "Start over"; neither of those two
+   events clears the marker.
 
 Splash's routing, evaluated in this order:
 - Valid cached session present → Home (Flow A7a). No intermediate screen.

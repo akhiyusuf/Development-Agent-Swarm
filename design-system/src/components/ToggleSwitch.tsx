@@ -8,6 +8,16 @@ export type ToggleSwitchProps = {
   onChange: (value: boolean) => void;
   label?: string;
   disabled?: boolean;
+  /**
+   * Optional explicit color overrides, bypassing the ambient app-wide theme.
+   * Needed by callers (e.g. SessionPlayer's Pilates preset) that lock their
+   * whole surface to a fixed light/dark scheme regardless of app-wide dark
+   * mode — without these, the track/knob/label would silently keep
+   * following the ambient theme via this component's own `useTheme()` call.
+   */
+  trackOffColor?: string;
+  knobColor?: string;
+  labelColor?: string;
 };
 
 /**
@@ -16,7 +26,15 @@ export type ToggleSwitchProps = {
  * flagged repeatedly by the sitemap. Rendered with its own visible track/
  * knob geometry (not just a color swap) so on/off is legible without color.
  */
-export function ToggleSwitch({ value, onChange, label, disabled }: ToggleSwitchProps) {
+export function ToggleSwitch({
+  value,
+  onChange,
+  label,
+  disabled,
+  trackOffColor,
+  knobColor,
+  labelColor,
+}: ToggleSwitchProps) {
   const theme = useTheme();
   const reducedMotion = useReducedMotion();
 
@@ -27,7 +45,7 @@ export function ToggleSwitch({ value, onChange, label, disabled }: ToggleSwitchP
       style={[
         styles.track,
         {
-          backgroundColor: value ? theme.brand.terracotta : theme.neutrals.border,
+          backgroundColor: value ? theme.brand.terracotta : trackOffColor ?? theme.neutrals.border,
           opacity: disabled ? 0.5 : 1,
         },
       ]}
@@ -36,7 +54,7 @@ export function ToggleSwitch({ value, onChange, label, disabled }: ToggleSwitchP
         style={[
           styles.knob,
           {
-            backgroundColor: theme.neutrals.white,
+            backgroundColor: knobColor ?? theme.neutrals.white,
             alignSelf: value ? 'flex-end' : 'flex-start',
             // Reduced motion: knob position change is instant either way in RN
             // (no animation library used here), satisfying the reduced-motion
@@ -78,7 +96,7 @@ export function ToggleSwitch({ value, onChange, label, disabled }: ToggleSwitchP
         style={{
           flex: 1,
           fontSize: theme.type.body.fontSize,
-          color: disabled ? theme.neutrals.placeholder : theme.neutrals.ink,
+          color: disabled ? theme.neutrals.placeholder : labelColor ?? theme.neutrals.ink,
         }}
       >
         {label}
