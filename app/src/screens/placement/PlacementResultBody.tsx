@@ -11,9 +11,11 @@ import type { PlacementContext, RootParamList } from '../../navigation/types';
  * an explainer that it adjusts as attempts are logged.
  *
  * DATA CONTRACT: reads `{ startingTier: number }` computed locally from the
- * self-report answers. Continue routes back to Track Selection to complete or
- * defer the other track; Retake discards this result and re-enters this track's
- * steps from step 1 (A3 back-out rule).
+ * self-report answers. Continue is context-aware: in onboarding it routes back to
+ * Track Selection to complete or defer the other track; in the post-auth A9
+ * deferred-placement flow (`context === 'account'`) it returns to Skill Tree Home
+ * — never back into onboarding (per user-flows.md A9 join). Retake discards this
+ * result and re-enters this track's steps from step 1 (A3 back-out rule).
  *
  * Dual-context: the §0.2 "Already have an account? Log in" affordance renders
  * only in the pre-auth onboarding context (route param `context` absent or
@@ -51,7 +53,14 @@ export function PlacementResultBody({
         </AppText>
       </Card>
 
-      <Button label="Continue" onPress={() => navigation.navigate('TrackSelection')} />
+      <Button
+        label="Continue"
+        onPress={() =>
+          context === 'account'
+            ? navigation.navigate('SkillTreeHome')
+            : navigation.navigate('TrackSelection')
+        }
+      />
       <Button variant="tertiary" label="Retake" onPress={() => (navigation.navigate as (screen: string, params?: object) => void)(stepsRoute, { context })} />
       {isPreAuth ? <PreAuthLoginLink /> : null}
     </Screen>
