@@ -3,7 +3,7 @@ import { Animated, Pressable, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../theme/ThemeContext';
-import { clampedTypeMaxScale } from '../theme/tokens';
+import { clampedTypeMaxScale, darkNeutrals } from '../theme/tokens';
 import { useReducedMotion } from '../hooks/useReducedMotion';
 import { fireHaptic } from '../hooks/useHapticFeedback';
 import { ProgressBar } from './ProgressBar';
@@ -79,9 +79,9 @@ export function SessionPlayer(props: SessionPlayerProps) {
   // Calisthenics is always dark, regardless of app-wide light/dark preference.
   // Pilates is always light/muted, even if the user has app-wide dark mode on.
   // Both are intentional per the research's tonal-flex requirement.
-  const bg = isCalisthenics ? '#17181A' : theme.neutrals.background;
+  const bg = isCalisthenics ? darkNeutrals.background : theme.neutrals.background;
   const timerColor = isCalisthenics ? theme.neutrals.white : theme.neutrals.charcoal;
-  const secondaryColor = isCalisthenics ? '#C9C0B2' : theme.neutrals.charcoal;
+  const secondaryColor = isCalisthenics ? darkNeutrals.charcoal : theme.neutrals.charcoal;
 
   return (
     <View
@@ -175,14 +175,14 @@ export function SessionPlayer(props: SessionPlayerProps) {
               <Pressable
                 onPress={props.onSkipRest}
                 accessibilityLabel="Skip rest"
-                style={[styles.secondaryControl, { minWidth: theme.minTouchTarget, minHeight: theme.minTouchTarget, backgroundColor: '#232427' }]}
+                style={[styles.secondaryControl, { minWidth: theme.minTouchTarget, minHeight: theme.minTouchTarget, backgroundColor: darkNeutrals.surface }]}
               >
                 <Text style={{ color: theme.neutrals.white, fontSize: theme.type.caption.fontSize }}>Skip</Text>
               </Pressable>
               <Pressable
                 onPress={props.onAddTime}
                 accessibilityLabel="Add 15 seconds"
-                style={[styles.secondaryControl, { minWidth: theme.minTouchTarget, minHeight: theme.minTouchTarget, backgroundColor: '#232427' }]}
+                style={[styles.secondaryControl, { minWidth: theme.minTouchTarget, minHeight: theme.minTouchTarget, backgroundColor: darkNeutrals.surface }]}
               >
                 <Text style={{ color: theme.neutrals.white, fontSize: theme.type.caption.fontSize }}>+15s</Text>
               </Pressable>

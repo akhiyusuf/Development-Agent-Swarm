@@ -1,7 +1,9 @@
 {
   "name": "@fit-and-fed/design-system",
   "version": "1.0.0",
-  "main": "index.ts",
+  "description": "Standalone, previewable design-system package for Fit & Fed (tokens, components, ComponentGallery). Consumers import from the package root (see \"main\"); the Expo preview app itself boots from ./index.ts (see app.json \"expo.entryPoint\").",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
   "dependencies": {
     "@expo/vector-icons": "^15.1.1",
     "expo": "~57.0.4",

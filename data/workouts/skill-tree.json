@@ -1,0 +1,177 @@
+{
+  "_meta": {
+    "purpose": "A real, cited calisthenics + Pilates progression synthesis for the Fit & Fed workout module, replacing the [Skill Node]/TBD placeholders sitemap.md deliberately left in place pending this research.",
+    "confidenceStatement": "This is a well-sourced SYNTHESIS of multiple independently published, publicly documented calisthenics coaching systems and the classical Pilates mat curriculum. It is NOT a clinically validated program: no qualified strength coach, physiotherapist, or certified Pilates instructor reviewed or signed off on this specific tree, its exact ordering, or its exact thresholds. research/product-research.md Open Question 1 explicitly requires that validation before this ships to real users; this document is the strong, cited starting point that validation step works from, not a substitute for it.",
+    "primarySources": [
+      { "name": "Paul Wade — Convict Conditioning (\"Big Six\" 10-step bodyweight progressions: push-ups, squats, pull-ups, leg raises, bridges, handstand push-ups)", "note": "A single opinionated system (as research/product-research.md flags), used here for its well-documented step names/ordering, not as an independently peer-reviewed standard." },
+      { "name": "GMB Fitness — Handstand and L-Sit progression guides", "url": "https://gmb.io/handstand/" },
+      { "name": "Calisthenics Association — Handstand Training: Complete Progression Guide", "url": "https://calisthenicsassociation.org/blog/handstand-training-complete-guide" },
+      { "name": "Multiple independently-published pistol-squat progression guides (EvolveYou, PowerliftingTechnique, LiftStrong, Calisthenics Association)", "note": "Cited jointly because the box/assisted/counterbalance/elevated pistol sequence is convergent across sources rather than owned by one author." },
+      { "name": "Multiple independently-published muscle-up progression guides (CrossFit, WODprep, BULLBAR)", "note": "Strict pull-up/dip rep thresholds before muscle-up attempts are convergent (roughly 10 strict pull-ups + 8-10 strict dips) across sources." },
+      { "name": "Pilatesology — Classical Mat Exercises: Basic, Intermediate, Advanced (Joseph Pilates' original 34, as taught by his direct-lineage instructors)", "url": "https://pilatesology.com/2022/08/classical-pilates-exercise-order-exercise-lists-sequences/" }
+    ],
+    "confidenceLegend": {
+      "high": "Rep/hold threshold or ordering is convergent across 3+ independently authored sources.",
+      "medium": "Sourced to a single well-documented named system (most often Convict Conditioning) or the classical Pilates curriculum; a real, citable ordering, but not independently cross-validated across multiple authors.",
+      "estimate": "No single source gave an exact number; a reasoned estimate is used and flagged as such, not presented as a sourced fact."
+    }
+  },
+  "tracks": [
+    {
+      "id": "calisthenics",
+      "name": "Calisthenics",
+      "lines": [
+        {
+          "id": "push",
+          "name": "Push-Up Line",
+          "sourceSystem": "Convict Conditioning push-up progression (10 steps) + general convergent volume standard for progressing steps",
+          "nodes": [
+            { "id": "push-1", "name": "Wall Push-Up", "tier": 1, "prerequisites": [], "threshold": { "type": "reps", "value": 20, "sets": 2, "confidence": "medium" } },
+            { "id": "push-2", "name": "Incline Push-Up", "tier": 1, "prerequisites": ["push-1"], "threshold": { "type": "reps", "value": 15, "sets": 3, "confidence": "medium" } },
+            { "id": "push-3", "name": "Kneeling Push-Up", "tier": 2, "prerequisites": ["push-2"], "threshold": { "type": "reps", "value": 12, "sets": 3, "confidence": "medium" } },
+            { "id": "push-4", "name": "Half Push-Up (partial range)", "tier": 2, "prerequisites": ["push-3"], "threshold": { "type": "reps", "value": 10, "sets": 3, "confidence": "medium" } },
+            { "id": "push-5", "name": "Full Push-Up", "tier": 3, "prerequisites": ["push-4"], "threshold": { "type": "reps", "value": 12, "sets": 3, "confidence": "high", "note": "3x12 clean full-range reps as the widely-cited bar for branching into harder push variations." } },
+            { "id": "push-6", "name": "Close (Diamond/Triceps) Push-Up", "tier": 4, "prerequisites": ["push-5"], "threshold": { "type": "reps", "value": 10, "sets": 3, "confidence": "medium" } },
+            { "id": "push-7", "name": "Uneven (Archer) Push-Up", "tier": 4, "prerequisites": ["push-6"], "threshold": { "type": "reps", "value": 8, "sets": 3, "confidence": "medium" } },
+            { "id": "push-8", "name": "Half One-Arm Push-Up (lever)", "tier": 5, "prerequisites": ["push-7"], "threshold": { "type": "reps", "value": 6, "sets": 3, "confidence": "medium" } },
+            { "id": "push-9", "name": "Lever Push-Up", "tier": 5, "prerequisites": ["push-8"], "threshold": { "type": "reps", "value": 5, "sets": 3, "confidence": "medium" } },
+            { "id": "push-10", "name": "One-Arm Push-Up (Master)", "tier": 6, "prerequisites": ["push-9"], "threshold": { "type": "reps", "value": 3, "sets": 2, "confidence": "medium" } }
+          ]
+        },
+        {
+          "id": "pull",
+          "name": "Pull-Up Line",
+          "sourceSystem": "Convict Conditioning pull-up progression (10 steps)",
+          "nodes": [
+            { "id": "pull-1", "name": "Vertical Pull-Up (band/table row)", "tier": 1, "prerequisites": [], "threshold": { "type": "reps", "value": 15, "sets": 2, "confidence": "medium" } },
+            { "id": "pull-2", "name": "Horizontal Pull-Up (inverted row)", "tier": 1, "prerequisites": ["pull-1"], "threshold": { "type": "reps", "value": 12, "sets": 3, "confidence": "medium" } },
+            { "id": "pull-3", "name": "Jackknife Pull-Up", "tier": 2, "prerequisites": ["pull-2"], "threshold": { "type": "reps", "value": 10, "sets": 3, "confidence": "medium" } },
+            { "id": "pull-4", "name": "Half Pull-Up", "tier": 2, "prerequisites": ["pull-3"], "threshold": { "type": "reps", "value": 8, "sets": 3, "confidence": "medium" } },
+            { "id": "pull-5", "name": "Full Pull-Up", "tier": 3, "prerequisites": ["pull-4"], "threshold": { "type": "reps", "value": 8, "sets": 3, "confidence": "high", "note": "8-10 strict full-range pull-ups is a widely convergent baseline strength benchmark across sources." } },
+            { "id": "pull-6", "name": "Close (Chin-Up Grip) Pull-Up", "tier": 4, "prerequisites": ["pull-5"], "threshold": { "type": "reps", "value": 8, "sets": 3, "confidence": "medium" } },
+            { "id": "pull-7", "name": "Uneven Pull-Up (Archer)", "tier": 4, "prerequisites": ["pull-6"], "threshold": { "type": "reps", "value": 6, "sets": 3, "confidence": "medium" } },
+            { "id": "pull-8", "name": "Half One-Arm Pull-Up", "tier": 5, "prerequisites": ["pull-7"], "threshold": { "type": "reps", "value": 5, "sets": 3, "confidence": "medium" } },
+            { "id": "pull-9", "name": "Assisted One-Arm Pull-Up", "tier": 5, "prerequisites": ["pull-8"], "threshold": { "type": "reps", "value": 4, "sets": 3, "confidence": "medium" } },
+            { "id": "pull-10", "name": "One-Arm Pull-Up (Master)", "tier": 6, "prerequisites": ["pull-9"], "threshold": { "type": "reps", "value": 2, "sets": 2, "confidence": "medium" } },
+            { "id": "pull-muscleup", "name": "Muscle-Up", "tier": 5, "prerequisites": ["pull-5", "dip-4"], "threshold": { "type": "compound", "value": "10 strict pull-ups (or 5 chest-to-bar) AND 8-10 strict dips with full depth", "confidence": "high", "note": "Convergent across CrossFit, WODprep, and BULLBAR coaching guides as the pulling/pressing-strength gate before attempting the transition; the false-grip transition itself is a separate skill practiced once the strength gate is met." } }
+          ]
+        },
+        {
+          "id": "dip",
+          "name": "Dip Line (supports Muscle-Up gate)",
+          "sourceSystem": "Convergent strict-dip benchmark cited across muscle-up coaching guides",
+          "nodes": [
+            { "id": "dip-1", "name": "Bench/Box Dip", "tier": 1, "prerequisites": [], "threshold": { "type": "reps", "value": 12, "sets": 3, "confidence": "estimate" } },
+            { "id": "dip-2", "name": "Assisted Bar/Ring Dip (band)", "tier": 2, "prerequisites": ["dip-1"], "threshold": { "type": "reps", "value": 10, "sets": 3, "confidence": "estimate" } },
+            { "id": "dip-3", "name": "Partial Bar/Ring Dip", "tier": 2, "prerequisites": ["dip-2"], "threshold": { "type": "reps", "value": 8, "sets": 3, "confidence": "estimate" } },
+            { "id": "dip-4", "name": "Full Strict Bar/Ring Dip (shoulders below elbows)", "tier": 3, "prerequisites": ["dip-3"], "threshold": { "type": "reps", "value": 9, "sets": 1, "confidence": "high", "note": "8-10 strict full-depth dips is the convergent muscle-up-readiness benchmark." } }
+          ]
+        },
+        {
+          "id": "squat-legs",
+          "name": "Squat / Single-Leg Line",
+          "sourceSystem": "Convict Conditioning squat progression (steps 1-7) continuing into the convergent modern pistol-squat progression (steps 8-10)",
+          "nodes": [
+            { "id": "squat-1", "name": "Shoulderstand Squat", "tier": 1, "prerequisites": [], "threshold": { "type": "reps", "value": 20, "sets": 2, "confidence": "medium" } },
+            { "id": "squat-2", "name": "Jackknife Squat", "tier": 1, "prerequisites": ["squat-1"], "threshold": { "type": "reps", "value": 15, "sets": 3, "confidence": "medium" } },
+            { "id": "squat-3", "name": "Supported Squat", "tier": 2, "prerequisites": ["squat-2"], "threshold": { "type": "reps", "value": 15, "sets": 3, "confidence": "medium" } },
+            { "id": "squat-4", "name": "Half Squat", "tier": 2, "prerequisites": ["squat-3"], "threshold": { "type": "reps", "value": 12, "sets": 3, "confidence": "medium" } },
+            { "id": "squat-5", "name": "Full (Bodyweight) Squat", "tier": 3, "prerequisites": ["squat-4"], "threshold": { "type": "reps", "value": 15, "sets": 3, "confidence": "high" } },
+            { "id": "squat-6", "name": "Close (Narrow-Stance) Squat", "tier": 3, "prerequisites": ["squat-5"], "threshold": { "type": "reps", "value": 12, "sets": 3, "confidence": "medium" } },
+            { "id": "squat-7", "name": "Uneven (Bulgarian Split) Squat", "tier": 4, "prerequisites": ["squat-6"], "threshold": { "type": "reps", "value": 10, "sets": 3, "per": "leg", "confidence": "medium" } },
+            { "id": "squat-8", "name": "Box Pistol Squat (knee-height, progressively lowered)", "tier": 4, "prerequisites": ["squat-7"], "threshold": { "type": "reps", "value": 8, "sets": 3, "per": "leg", "confidence": "high", "note": "Box-height regression to a full pistol is convergent across EvolveYou, PowerliftingTechnique, LiftStrong, and Calisthenics Association." } },
+            { "id": "squat-9", "name": "Assisted / Counterbalance Pistol Squat", "tier": 5, "prerequisites": ["squat-8"], "threshold": { "type": "reps", "value": 6, "sets": 3, "per": "leg", "confidence": "high" } },
+            { "id": "squat-10", "name": "Pistol Squat (full, unassisted)", "tier": 5, "prerequisites": ["squat-9"], "threshold": { "type": "reps", "value": 5, "sets": 3, "per": "leg", "confidence": "high", "note": "First full unassisted pistol typically reached in 8-16 weeks of dedicated training per multiple independently published progressions." } }
+          ]
+        },
+        {
+          "id": "core",
+          "name": "Core / Leg-Raise Line",
+          "sourceSystem": "Convict Conditioning leg-raise progression (10 steps), with an L-sit branch sourced from GMB Fitness and multiple independently-published L-sit guides",
+          "nodes": [
+            { "id": "core-1", "name": "Knee Tuck", "tier": 1, "prerequisites": [], "threshold": { "type": "reps", "value": 20, "sets": 2, "confidence": "medium" } },
+            { "id": "core-2", "name": "Knee Raise", "tier": 1, "prerequisites": ["core-1"], "threshold": { "type": "reps", "value": 15, "sets": 3, "confidence": "medium" } },
+            { "id": "core-3", "name": "Bent Leg Raise", "tier": 2, "prerequisites": ["core-2"], "threshold": { "type": "reps", "value": 15, "sets": 3, "confidence": "medium" } },
+            { "id": "core-4", "name": "Frog Leg Raise", "tier": 2, "prerequisites": ["core-3"], "threshold": { "type": "reps", "value": 12, "sets": 3, "confidence": "medium" } },
+            { "id": "core-5", "name": "Flat (Straight) Leg Raise", "tier": 3, "prerequisites": ["core-4"], "threshold": { "type": "reps", "value": 12, "sets": 3, "confidence": "medium" } },
+            { "id": "core-6", "name": "Hanging Knee Raise", "tier": 3, "prerequisites": ["core-5"], "threshold": { "type": "reps", "value": 12, "sets": 3, "confidence": "medium" } },
+            { "id": "core-7", "name": "Hanging Bent Leg Raise", "tier": 4, "prerequisites": ["core-6"], "threshold": { "type": "reps", "value": 10, "sets": 3, "confidence": "medium" } },
+            { "id": "core-8", "name": "Hanging Frog Raise", "tier": 4, "prerequisites": ["core-7"], "threshold": { "type": "reps", "value": 10, "sets": 3, "confidence": "medium" } },
+            { "id": "core-9", "name": "Partial (Bent-Knee) Hanging Leg Raise", "tier": 5, "prerequisites": ["core-8"], "threshold": { "type": "reps", "value": 8, "sets": 3, "confidence": "medium" } },
+            { "id": "core-10", "name": "Hanging (Straight) Leg Raise (Master)", "tier": 6, "prerequisites": ["core-9"], "threshold": { "type": "reps", "value": 6, "sets": 3, "confidence": "medium" } },
+            { "id": "core-lsit-1", "name": "Tuck L-Sit Hold", "tier": 3, "prerequisites": ["core-4"], "threshold": { "type": "hold_seconds", "value": 30, "confidence": "high", "note": "Convergent 10-15s starting hold building to a clean 30s tuck hold (no shoulder shrug / elbow bend) as the gate to one-leg extension, per GMB and multiple independent L-sit guides." } },
+            { "id": "core-lsit-2", "name": "One-Leg-Extended L-Sit", "tier": 4, "prerequisites": ["core-lsit-1"], "threshold": { "type": "hold_seconds", "value": 15, "per": "side", "confidence": "medium" } },
+            { "id": "core-lsit-3", "name": "Full L-Sit", "tier": 5, "prerequisites": ["core-lsit-2"], "threshold": { "type": "hold_seconds", "value": 20, "confidence": "high" } },
+            { "id": "core-lsit-4", "name": "Straddle L-Sit", "tier": 6, "prerequisites": ["core-lsit-3"], "threshold": { "type": "hold_seconds", "value": 15, "confidence": "medium" } }
+          ]
+        },
+        {
+          "id": "handstand",
+          "name": "Handstand / Skill Line",
+          "sourceSystem": "GMB Fitness and Calisthenics Association handstand progression guides (convergent across multiple independently-published sources)",
+          "nodes": [
+            { "id": "hs-1", "name": "Wall Handstand (chest-to-wall, wrist conditioning)", "tier": 1, "prerequisites": [], "threshold": { "type": "hold_seconds", "value": 15, "confidence": "high" } },
+            { "id": "hs-2", "name": "Wall Handstand (extended hold)", "tier": 2, "prerequisites": ["hs-1"], "threshold": { "type": "hold_seconds", "value": 45, "confidence": "high", "note": "Convergent 30-60s wall-hold range before attempting freestanding balance work; 45s used as the midpoint gate." } },
+            { "id": "hs-3", "name": "Freestanding Handstand (brief)", "tier": 3, "prerequisites": ["hs-2"], "threshold": { "type": "hold_seconds", "value": 10, "confidence": "high", "note": "This is docs/idea.md's own illustrative example node." } },
+            { "id": "hs-4", "name": "Freestanding Handstand (consolidated)", "tier": 4, "prerequisites": ["hs-3"], "threshold": { "type": "hold_seconds", "value": 30, "confidence": "high", "note": "The specific 30s freestanding-hold gate cited by the Calisthenics Association guide before recommending handstand push-up work." } },
+            { "id": "hs-handstand-pushup", "name": "Handstand Push-Up", "tier": 5, "prerequisites": ["hs-4", "push-5", "pull-5", "core-lsit-3"], "threshold": { "type": "compound", "value": "30s freestanding handstand hold AND 20 push-ups AND 10 pull-ups AND 15s L-sit", "confidence": "high", "note": "Full compound gate as documented by the Calisthenics Association's handstand push-up progression guide — directly validates (with real sourcing) the exact illustrative example docs/idea.md flagged as unvalidated." } }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "pilates",
+      "name": "Pilates (Classical Mat)",
+      "sourceSystem": "Joseph Pilates' original 34 mat exercises (Return to Life Through Contrology), as classified into Basic/Intermediate/Advanced tiers by Pilatesology's direct-lineage classical teacher training materials",
+      "gatingModel": "Classical Pilates is conventionally taught as three ORDERED TIERS (Basic -> Intermediate -> Advanced) rather than an exercise-by-exercise prerequisite tree like calisthenics — this reflects how the source material actually teaches it, not a simplification invented for this app. Exact positions 5-34 of the master sequence were not independently confirmed at high resolution in this research pass (only the opening sequence — Hundred, Roll-Up, Single Leg Circle, Rolling Like a Ball — was directly corroborated); the tier-level groupings below are drawn from Pilatesology's published Basic/Intermediate/Advanced classification, which is a real, citable secondary source, not an invented ordering.",
+      "tiers": [
+        {
+          "id": "pilates-basic",
+          "name": "Basic Mat",
+          "tier": 1,
+          "prerequisites": [],
+          "unlockThreshold": { "type": "form_check", "value": "All Basic-tier exercises performed with correct breath/neutral-spine form for the stated hold/rep count, confirmed via session logging.", "confidence": "medium" },
+          "exercises": [
+            { "id": "pil-hundred", "name": "The Hundred", "order": 1, "threshold": { "type": "reps", "value": "100 arm pumps (10 breath cycles of 10)", "confidence": "high", "note": "Confirmed as exercise #1 of the classical sequence across all sourced references." } },
+            { "id": "pil-rollup", "name": "Roll-Up", "order": 2, "threshold": { "type": "reps", "value": 5, "confidence": "high", "note": "Confirmed as exercise #2, directly following The Hundred." } },
+            { "id": "pil-single-leg-circle", "name": "Single Leg Circle", "order": 3, "threshold": { "type": "reps", "value": 5, "per": "direction/leg", "confidence": "high", "note": "Confirmed as exercise #3." } },
+            { "id": "pil-rolling-like-ball", "name": "Rolling Like a Ball", "order": 4, "threshold": { "type": "reps", "value": 6, "confidence": "medium", "note": "Confirmed as immediately following Single Leg Circle in the classical order." } },
+            { "id": "pil-single-leg-stretch", "name": "Single Leg Stretch", "order": 5, "threshold": { "type": "reps", "value": 10, "per": "leg", "confidence": "medium" } },
+            { "id": "pil-double-leg-stretch", "name": "Double Leg Stretch", "order": 6, "threshold": { "type": "reps", "value": 6, "confidence": "medium" } },
+            { "id": "pil-spine-stretch-forward", "name": "Spine Stretch Forward", "order": 7, "threshold": { "type": "reps", "value": 5, "confidence": "medium" } }
+          ]
+        },
+        {
+          "id": "pilates-intermediate",
+          "name": "Intermediate Mat",
+          "tier": 2,
+          "prerequisites": ["pilates-basic"],
+          "unlockThreshold": { "type": "form_check", "value": "All Basic-tier exercises cleanly demonstrated; Intermediate exercises layer on top rather than gating one another individually.", "confidence": "medium" },
+          "exercises": [
+            { "id": "pil-single-straight-leg-stretch", "name": "Single Straight Leg Stretch (Scissors)", "threshold": { "type": "reps", "value": 10, "per": "leg", "confidence": "medium" } },
+            { "id": "pil-double-straight-leg-stretch", "name": "Double Straight Leg Stretch", "threshold": { "type": "reps", "value": 6, "confidence": "medium" } },
+            { "id": "pil-criss-cross", "name": "Criss-Cross", "threshold": { "type": "reps", "value": 10, "per": "side", "confidence": "medium" } },
+            { "id": "pil-spine-twist", "name": "Spine Twist", "threshold": { "type": "reps", "value": 5, "per": "side", "confidence": "medium" } },
+            { "id": "pil-swan-prep", "name": "Swan Dive Prep", "threshold": { "type": "reps", "value": 5, "confidence": "medium" } },
+            { "id": "pil-side-kick-series", "name": "Side Kick Series", "threshold": { "type": "reps", "value": 10, "per": "side", "confidence": "medium" } },
+            { "id": "pil-teaser-prep", "name": "Teaser Prep", "threshold": { "type": "reps", "value": 3, "confidence": "estimate" } }
+          ]
+        },
+        {
+          "id": "pilates-advanced",
+          "name": "Advanced Mat",
+          "tier": 3,
+          "prerequisites": ["pilates-intermediate"],
+          "unlockThreshold": { "type": "form_check", "value": "All Intermediate-tier exercises cleanly demonstrated.", "confidence": "medium" },
+          "exercises": [
+            { "id": "pil-teaser", "name": "Teaser (full)", "threshold": { "type": "reps", "value": 3, "confidence": "medium" } },
+            { "id": "pil-swimming", "name": "Swimming", "threshold": { "type": "duration_seconds", "value": 20, "confidence": "estimate" } },
+            { "id": "pil-control-balance", "name": "Control Balance", "threshold": { "type": "reps", "value": 3, "per": "side", "confidence": "estimate" } },
+            { "id": "pil-boomerang", "name": "Boomerang", "threshold": { "type": "reps", "value": 3, "confidence": "estimate" } },
+            { "id": "pil-mat-pushup", "name": "Push-Up (classical closing sequence)", "threshold": { "type": "reps", "value": 5, "confidence": "medium", "note": "Documented as the closing exercise of the classical 34, per Pilates Bridge's 'From The Hundred To Push Up in 34 Connected Moves'." } }
+          ]
+        }
+      ]
+    }
+  ]
+}
