@@ -98,7 +98,21 @@ export function ConfirmLogScreen() {
                 kcal: macros?.kcal ?? 0,
               },
             });
-            navigation.navigate('FoodDiary');
+            // DEVIATION (build fix, logged in BUILD_NOTES.md): this screen is
+            // registered in the RootStack's modal group (RootNavigator.tsx),
+            // while `FoodDiary` only exists inside MainTabs' nested
+            // NutritionStack (MainTabs.tsx). A bare `navigate('FoodDiary')`
+            // typechecks (RootParamList is a flat, app-wide list) but is a
+            // runtime no-op — React Navigation's `navigate` bubbles UP to an
+            // ancestor navigator, never down into a sibling's nested stack, so
+            // the modal never dismissed. Use the explicit nested-navigate form
+            // to target Main -> NutritionTab -> FoodDiary regardless of which
+            // screen launched Add Entry (Home's "Log Meal" vs. Food Diary's
+            // "Add"), so "Save to diary" always actually lands on the diary.
+            (navigation as unknown as { navigate: (screen: string, params?: object) => void }).navigate('Main', {
+              screen: 'NutritionTab',
+              params: { screen: 'FoodDiary' },
+            });
           }
         }}
       />

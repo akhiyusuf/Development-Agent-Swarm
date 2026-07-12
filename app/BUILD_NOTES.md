@@ -112,21 +112,74 @@ shipped contract turned out to be incomplete once actually wired.
    Settings' "Needs attention" list will only ever show "queued, waiting"
    items, never a genuinely failed one. This is an honest reflection of
    "no backend to fail against," not a fabricated failure simulation.
+10. **Build-review fix pass (2026-07-12, first re-review of the new
+    real-code contract) — three items, all live-verified after fixing:**
+    - `data/foods.ts` gained `findFoodWithCustom(id, customFoods)`, resolving
+      an id against the curated 32-food dataset **and** `state.customFoods`.
+      `data/compute.ts`'s `totalsForEntries` and `microRows` now take an
+      explicit `customFoods` parameter and use this resolver instead of the
+      static-only `findFood`; every caller (`state/selectors.ts`'s
+      `useDayTotals`/`useMicroRows`, `CombinedProgressDashboardScreen`,
+      `MicronutrientDetailScreen`) was updated to pass `state.customFoods`
+      through. Previously a logged custom food was silently excluded from
+      every derived total (diary header, Home card, Daily Summary, Progress
+      calorie trend) even though the row itself displayed correctly — a
+      false "honest numbers" violation. Live-verified: logging a 200-kcal
+      custom food alongside a 290-kcal real food now moves the Food Diary
+      header, Home widget, Daily Summary, and Progress calorie-trend point
+      to 490 in every surface, not just the row list.
+    - `FoodDiaryScreen.tsx` and `EditDeleteEntryScreen.tsx` had bare
+      `findFood(e.foodId)` calls with no custom-food fallback, so a custom
+      food's diary row/edit-screen title rendered the raw id (e.g.
+      `custom-1783828344644`) instead of its name — same root cause as
+      above. Both now call `findFoodWithCustom(id, customFoods)`.
+      Live-verified: both surfaces now render the real user-entered name.
 
-## Navigation typing (non-blocking note from screens pass-4, addressed by inspection)
+## Navigation typing (corrected — the prior paragraph here was wrong)
 
-`RootParamList` remains one flat list (not restructured into per-navigator
-param lists) — every `navigate()` call added while wiring state targets a
-screen registered at the `RootStack` level (placement screens, modals), which
-React Navigation resolves correctly via parent-hierarchy bubbling regardless
-of which nested tab/stack the call originates from. I did not find a new
-instance of the nested-navigator bug the pass-4 review flagged (a `navigate()`
-call that typechecks but targets a screen that only exists in a *different*
-nested navigator than the caller's). Tightening `RootParamList` into
-per-navigator param lists remains optional polish, left for a future pass —
-doing it now would mean editing `navigation/types.ts` and every screen's
-`useRoute<RouteProp<...>>` generic far beyond "wiring data," which is out of
-scope for this stage.
+The previous revision of this file claimed every `navigate()` call added
+while wiring state "targets a screen registered at the `RootStack` level ...
+which React Navigation resolves correctly via parent-hierarchy bubbling."
+That claim was **false** and was caught by build re-review: `ConfirmLogScreen`
+(`navigate('FoodDiary')`) and `MasteryGateConfirmationScreen`
+(`navigate('TierNodeMap', { track })`) are both registered in the
+`RootStack`'s modal group, but `FoodDiary` and `TierNodeMap` only exist inside
+`MainTabs`' nested `NutritionStack`/`WorkoutStack` (`MainTabs.tsx`). Because
+`RootParamList` is one flat, app-wide param list, both calls typechecked
+cleanly under `tsc --noEmit` while being runtime no-ops — `navigate()` bubbles
+**up** to an ancestor navigator, never **down** into a sibling's nested stack.
+Live-verified before the fix: "Save to diary" saved the entry but never
+dismissed the modal; Mastery Gate's "Continue" did nothing at all.
+
+Fixed by using the explicit nested-navigate form at both call sites,
+targeting the tab shell directly:
+```ts
+(navigation as unknown as { navigate: (screen: string, params?: object) => void }).navigate('Main', {
+  screen: 'NutritionTab',
+  params: { screen: 'FoodDiary' },
+});
+```
+and, for the Mastery Gate, `Main` -> `WorkoutTab` -> `TierNodeMap` (with the
+`track` param nested one level deeper). The cast mirrors the precedent already
+established in `PlacementResultBody.tsx`'s `popTo('Main')` fix for the
+analogous A9 case. `popTo('Main')` alone was considered but rejected for
+`ConfirmLogScreen` specifically: it would only land on whatever screen the
+current tab's nested stack last showed, which is correct if the flow started
+from Food Diary but wrong if it started from Home's "Log Meal" — the explicit
+nested form guarantees "Save to diary" always lands on Food Diary regardless
+of entry point. Both fixes were live-verified end to end (see Verification
+below): the modal now actually dismisses to Food Diary on save, and "Continue"
+on the Mastery Gate now actually returns to the Tier/Node Map with the newly
+unlocked node visible and interactive.
+
+`RootParamList` itself remains one flat list (not restructured into
+per-navigator param lists) — this is the structural root cause that let both
+bugs typecheck, and it has now bitten three times across this pipeline
+(twice in screens, once here). Tightening it into per-navigator param lists
+so cross-navigator `navigate()` calls fail to typecheck instead of silently
+no-op-ing remains valuable follow-up work, but is out of scope for a "wire
+the data" pass — it would mean editing `navigation/types.ts` and every
+screen's `useRoute<RouteProp<...>>` generic.
 
 ## Verification
 
@@ -135,6 +188,39 @@ $ npx tsc --noEmit
 (clean, exit 0)
 
 $ npx expo export --platform web
-Web Bundled 3123ms app/index.ts (800 modules)
+Web Bundled 1188ms app/index.ts (800 modules)
 ... Exported: dist
 ```
+
+### Re-verification after the 2026-07-12 build-review fix pass (three items above)
+
+`dist/` served on `127.0.0.1:8899` and driven with Playwright
+(`executablePath: /opt/pw-browsers/chromium`), seeding `localStorage`'s
+`fitandfed:v1:appstate` directly to skip re-running the already-approved
+onboarding flow and jump straight to authenticated in-app state:
+
+- **Custom food included in derived totals:** seeded a real food (Jollof
+  Rice, 290 kcal) + built/logged a custom food ("Test Stew", 200 kcal) via
+  Add Entry -> Custom -> Custom Food Builder -> "Save & log now" -> Confirm &
+  Log -> "Save to diary". Food Diary header went from 290 to **490 / 2211
+  kcal**, with both rows correctly named ("Jollof Rice", "Test Stew"). Home
+  screen's calorie widget, Daily Nutrition Summary, and the Progress
+  dashboard's 7-day calorie trend (peak point at 490 on today's date) all
+  independently reflected the same 490 total, confirmed by screenshot.
+- **Custom-food name resolution:** `EditDeleteEntryScreen` opened on a seeded
+  custom-food diary row and rendered its real name ("Seeded Custom Stew"),
+  not the raw `custom-...` id.
+- **ConfirmLogScreen "Save to diary" dismiss:** confirmed the modal actually
+  dismisses and lands on Food Diary (not a dead button) — verified both from
+  Food Diary's own "Add" entry point and structurally via the nested-navigate
+  fix that targets `NutritionTab` regardless of entry screen.
+- **Mastery Gate "Continue" navigation:** placed at calisthenics Tier 1,
+  navigated Workout tab -> Skill Tree Home -> Continue -> Node Map -> Wall
+  Push-Up -> Log attempt (25 reps against the 2×20 gate) -> Mastery Gate
+  Confirmation ("Mastered!" + "Now unlocked: Incline Push-Up") -> tapped
+  "Continue" -> landed back on the Tier/Node Map with Incline Push-Up now
+  shown unlocked (star icon replacing the lock, no "Requires:" caption),
+  confirmed by screenshot.
+
+`npx tsc --noEmit` re-run clean after all fixes; `npx expo export
+--platform web` re-run clean and re-served for the above click-through.

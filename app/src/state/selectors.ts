@@ -19,13 +19,15 @@ export function useDiaryEntries(date: string): DiaryEntry[] {
 }
 
 export function useDayTotals(date: string): DayTotals {
+  const state = useAppState();
   const entries = useDiaryEntries(date);
-  return useMemo(() => totalsForEntries(entries), [entries]);
+  return useMemo(() => totalsForEntries(entries, state.customFoods), [entries, state.customFoods]);
 }
 
 export function useMicroRows(date: string): MicroRow[] {
+  const state = useAppState();
   const entries = useDiaryEntries(date);
-  return useMemo(() => microRows(entries), [entries]);
+  return useMemo(() => microRows(entries, state.customFoods), [entries, state.customFoods]);
 }
 
 export function useCalisthenicsStartingTier(): number {

@@ -4,7 +4,7 @@
  * (`app/src/state`) — the math itself is unchanged from what screen-designer
  * shipped, just now fed genuine per-user entries instead of samples.
  */
-import { FoodItem, findFood, Micros, REQ4_MICROS, scaleMacros } from './foods';
+import { FoodItem, findFoodWithCustom, Micros, REQ4_MICROS, scaleMacros } from './foods';
 import type { DiaryEntry } from '../state/types';
 
 export type DayTotals = {
@@ -14,10 +14,16 @@ export type DayTotals = {
   fat_g: number;
 };
 
-export function totalsForEntries(entries: DiaryEntry[]): DayTotals {
+/**
+ * `customFoods` MUST be passed by every caller that has state access — it
+ * resolves user-entered custom foods alongside the curated dataset so
+ * derived totals actually include them (build-review finding, see
+ * `findFoodWithCustom` in `./foods`).
+ */
+export function totalsForEntries(entries: DiaryEntry[], customFoods: FoodItem[] = []): DayTotals {
   return entries.reduce<DayTotals>(
     (acc, e) => {
-      const food = findFood(e.foodId);
+      const food = findFoodWithCustom(e.foodId, customFoods);
       if (!food) return acc;
       const grams = e.grams * e.quantity;
       const m = scaleMacros(food.per100g, grams);
@@ -56,12 +62,12 @@ export type MicroRow = {
  * honest "no data" signal Req 4 requires (never a misleading false zero). This
  * is exactly where the dataset's documented B12/zinc/vitA/folate gap surfaces.
  */
-export function microRows(entries: DiaryEntry[]): MicroRow[] {
+export function microRows(entries: DiaryEntry[], customFoods: FoodItem[] = []): MicroRow[] {
   return REQ4_MICROS.map(({ key, label, unit }) => {
     let sum = 0;
     let any = false;
     for (const e of entries) {
-      const food: FoodItem | undefined = findFood(e.foodId);
+      const food: FoodItem | undefined = findFoodWithCustom(e.foodId, customFoods);
       const raw = food?.micronutrients?.[key];
       if (raw != null) {
         any = true;

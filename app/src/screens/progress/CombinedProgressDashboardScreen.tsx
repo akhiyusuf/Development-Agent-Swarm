@@ -25,7 +25,7 @@ import { CALISTHENICS_LINES, PILATES_TIERS } from '../../data/skillTree';
 export function CombinedProgressDashboardScreen() {
   const theme = useTheme();
   const navigation = useNavigation();
-  const { weights, diary, targets, moduleInterest, placement } = useAppState();
+  const { weights, diary, targets, moduleInterest, placement, customFoods } = useAppState();
   const nodeState = useNodeStateResolver();
   const date = todayKey();
   const totals = useDayTotals(date);
@@ -35,7 +35,7 @@ export function CombinedProgressDashboardScreen() {
     d.setDate(d.getDate() - (6 - i));
     return d.toISOString().slice(0, 10);
   });
-  const calTrend = last7Dates.map((d) => ({ label: d.slice(5), value: totalsForEntries(diary[d] ?? []).kcal }));
+  const calTrend = last7Dates.map((d) => ({ label: d.slice(5), value: totalsForEntries(diary[d] ?? [], customFoods).kcal }));
 
   const showWorkout = moduleInterest.trainWorkout && (placement.calisthenics.status === 'done' || placement.pilates.status === 'done');
 

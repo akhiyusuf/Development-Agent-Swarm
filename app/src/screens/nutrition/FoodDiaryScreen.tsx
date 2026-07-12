@@ -3,7 +3,7 @@ import { View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Button, Card, ListRow, useTheme } from '@fit-and-fed/design-system';
 import { AppText, Row, Screen } from '../../ui/layout';
-import { findFood } from '../../data/foods';
+import { findFoodWithCustom } from '../../data/foods';
 import { MEAL_SLOTS, MEAL_SLOT_LABELS } from '../../data/sampleData';
 import { useAppState } from '../../state/AppStateContext';
 import { todayKey, useDayTotals, useDiaryEntries } from '../../state/selectors';
@@ -20,7 +20,7 @@ import type { MealSlot } from '../../navigation/types';
 export function FoodDiaryScreen() {
   const theme = useTheme();
   const navigation = useNavigation();
-  const { targets } = useAppState();
+  const { targets, customFoods } = useAppState();
   const date = todayKey();
   const entries = useDiaryEntries(date);
   const totals = useDayTotals(date);
@@ -50,7 +50,7 @@ export function FoodDiaryScreen() {
             ) : (
               <View>
                 {rows.map((e) => {
-                  const food = findFood(e.foodId);
+                  const food = findFoodWithCustom(e.foodId, customFoods);
                   return (
                     <ListRow
                       key={e.id}

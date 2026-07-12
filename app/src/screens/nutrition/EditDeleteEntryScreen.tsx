@@ -3,7 +3,7 @@ import { View } from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { Button, Card, SingleSelectChips, useTheme } from '@fit-and-fed/design-system';
 import { AppText, Row, Screen, Section } from '../../ui/layout';
-import { findFood } from '../../data/foods';
+import { findFoodWithCustom } from '../../data/foods';
 import { MEAL_SLOT_LABELS } from '../../data/sampleData';
 import { useAppDispatch, useAppState } from '../../state/AppStateContext';
 import { todayKey } from '../../state/selectors';
@@ -20,7 +20,7 @@ export function EditDeleteEntryScreen() {
   const theme = useTheme();
   const navigation = useNavigation();
   const dispatch = useAppDispatch();
-  const { diary } = useAppState();
+  const { diary, customFoods } = useAppState();
   const route = useRoute<RouteProp<RootParamList, 'EditDeleteEntry'>>();
 
   // The data contract is `{ entryId }` only (no date); the diary is keyed by
@@ -43,7 +43,7 @@ export function EditDeleteEntryScreen() {
     );
   }
 
-  const food = findFood(entry.foodId);
+  const food = findFoodWithCustom(entry.foodId, customFoods);
 
   return (
     <Screen>

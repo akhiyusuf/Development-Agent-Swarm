@@ -60,6 +60,18 @@ export function findFood(id: string): FoodItem | undefined {
   return FOODS.find((f) => f.id === id);
 }
 
+/**
+ * Resolve a food id against BOTH the curated 32-food dataset AND a user's
+ * custom (user-entered) foods. Every place that turns a `foodId` into
+ * derived numbers or display text must go through this (or an equivalent
+ * `findFood(id) ?? customFoods.find(...)` inline check) — a bare `findFood`
+ * silently drops custom-logged foods from totals/micros/labels (build-review
+ * finding: 2026-07-12 build pass 1).
+ */
+export function findFoodWithCustom(id: string, customFoods: FoodItem[] = []): FoodItem | undefined {
+  return findFood(id) ?? customFoods.find((f) => f.id === id);
+}
+
 /** Composite prepared dishes route to Composite Meal Detail; the rest to Ingredient Detail. */
 export function isComposite(food: FoodItem): boolean {
   return food.category === 'composite-dish';

@@ -20,10 +20,10 @@ export function MicronutrientDetailScreen() {
   const theme = useTheme();
   const route = useRoute<RouteProp<RootParamList, 'MicronutrientDetail'>>();
   const { nutrientKey, label, unit } = route.params;
-  const { diary } = useAppState();
+  const { diary, customFoods } = useAppState();
   const today = todayKey();
 
-  const row = microRows(diary[today] ?? []).find((r) => r.key === nutrientKey);
+  const row = microRows(diary[today] ?? [], customFoods).find((r) => r.key === nutrientKey);
   const hasToday = row?.value != null;
 
   // B12 has documented near-zero African-food coverage -> genuine trend gap.
@@ -39,7 +39,7 @@ export function MicronutrientDetailScreen() {
   });
   const trendPoints = last7Dates
     .map((date) => {
-      const dayRow = microRows(diary[date] ?? []).find((r) => r.key === nutrientKey);
+      const dayRow = microRows(diary[date] ?? [], customFoods).find((r) => r.key === nutrientKey);
       if (dayRow?.value == null) return null;
       return { label: date.slice(5), value: dayRow.value };
     })

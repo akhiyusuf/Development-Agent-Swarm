@@ -73,7 +73,23 @@ export function MasteryGateConfirmationScreen() {
         </Section>
       ) : null}
 
-      <Button label="Continue" onPress={() => navigation.navigate('TierNodeMap', { track })} />
+      <Button
+        label="Continue"
+        onPress={() =>
+          // DEVIATION (build fix, logged in BUILD_NOTES.md): same root cause as
+          // ConfirmLogScreen's dead "Save to diary" CTA — this screen lives in
+          // the RootStack modal group while `TierNodeMap` only exists inside
+          // MainTabs' nested WorkoutStack. A bare `navigate('TierNodeMap', ...)`
+          // typechecks against the flat RootParamList but silently no-ops at
+          // runtime (navigate bubbles up, never down into a sibling's nested
+          // stack). Use the explicit nested-navigate form so "Continue"
+          // actually returns to the Workout tab's node map with the right track.
+          (navigation as unknown as { navigate: (screen: string, params?: object) => void }).navigate('Main', {
+            screen: 'WorkoutTab',
+            params: { screen: 'TierNodeMap', params: { track } },
+          })
+        }
+      />
     </Screen>
   );
 }
