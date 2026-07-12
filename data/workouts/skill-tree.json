@@ -12,7 +12,7 @@
     ],
     "confidenceLegend": {
       "high": "Rep/hold threshold or ordering is convergent across 3+ independently authored sources.",
-      "medium": "Sourced to a single well-documented named system (most often Convict Conditioning) or the classical Pilates curriculum; a real, citable ordering, but not independently cross-validated across multiple authors.",
+      "medium": "The STEP ORDERING is sourced to a single well-documented named system (most often Convict Conditioning's 10-step Big Six sequence) or the classical Pilates curriculum. The REP/HOLD VOLUME at each step, however, is a reasoned, generalized progression standard convergent with common bodyweight-coaching practice for pacing steps like these — it is NOT lifted verbatim from that named system's own published rep targets, which in Convict Conditioning's case run systematically higher (e.g. its own wall push-up standard is 3 sets of 50, not the lower generalized volume used on these nodes). This is a real, citable ordering with a reasoned (not verbatim-sourced) volume, not independently cross-validated across multiple authors either way. Every line whose steps carry this tier discloses the substitution explicitly in its `sourceSystem` field.",
       "estimate": "No single source gave an exact number; a reasoned estimate is used and flagged as such, not presented as a sourced fact."
     }
   },
@@ -24,7 +24,7 @@
         {
           "id": "push",
           "name": "Push-Up Line",
-          "sourceSystem": "Convict Conditioning push-up progression (10 steps) + general convergent volume standard for progressing steps",
+          "sourceSystem": "Convict Conditioning push-up progression (10 steps) for step naming/ordering; rep/set VOLUMES on `medium`-confidence steps are a general convergent progression-pacing standard, not Convict Conditioning's own published rep targets (its actual published standard for step 1, wall push-up, is 3 sets of 50 — substantially higher than the 2x20 used here).",
           "nodes": [
             { "id": "push-1", "name": "Wall Push-Up", "tier": 1, "prerequisites": [], "threshold": { "type": "reps", "value": 20, "sets": 2, "confidence": "medium" } },
             { "id": "push-2", "name": "Incline Push-Up", "tier": 1, "prerequisites": ["push-1"], "threshold": { "type": "reps", "value": 15, "sets": 3, "confidence": "medium" } },
@@ -41,7 +41,7 @@
         {
           "id": "pull",
           "name": "Pull-Up Line",
-          "sourceSystem": "Convict Conditioning pull-up progression (10 steps)",
+          "sourceSystem": "Convict Conditioning pull-up progression (10 steps) for step naming/ordering; rep/set VOLUMES on `medium`-confidence steps are a general convergent progression-pacing standard substituted in place of Convict Conditioning's own published rep targets (which run higher at the early steps), same substitution as disclosed on the push line.",
           "nodes": [
             { "id": "pull-1", "name": "Vertical Pull-Up (band/table row)", "tier": 1, "prerequisites": [], "threshold": { "type": "reps", "value": 15, "sets": 2, "confidence": "medium" } },
             { "id": "pull-2", "name": "Horizontal Pull-Up (inverted row)", "tier": 1, "prerequisites": ["pull-1"], "threshold": { "type": "reps", "value": 12, "sets": 3, "confidence": "medium" } },
@@ -70,7 +70,7 @@
         {
           "id": "squat-legs",
           "name": "Squat / Single-Leg Line",
-          "sourceSystem": "Convict Conditioning squat progression (steps 1-7) continuing into the convergent modern pistol-squat progression (steps 8-10)",
+          "sourceSystem": "Convict Conditioning squat progression (steps 1-7) for step naming/ordering, continuing into the convergent modern pistol-squat progression (steps 8-10); rep/set VOLUMES on steps 1-7 (`medium`-confidence) are a general convergent progression-pacing standard substituted in place of Convict Conditioning's own published rep targets (which run higher at the early steps), same substitution as disclosed on the push line. Steps 8-10 are `high`-confidence because their volumes are independently cross-source-convergent, not part of this substitution.",
           "nodes": [
             { "id": "squat-1", "name": "Shoulderstand Squat", "tier": 1, "prerequisites": [], "threshold": { "type": "reps", "value": 20, "sets": 2, "confidence": "medium" } },
             { "id": "squat-2", "name": "Jackknife Squat", "tier": 1, "prerequisites": ["squat-1"], "threshold": { "type": "reps", "value": 15, "sets": 3, "confidence": "medium" } },
@@ -87,7 +87,7 @@
         {
           "id": "core",
           "name": "Core / Leg-Raise Line",
-          "sourceSystem": "Convict Conditioning leg-raise progression (10 steps), with an L-sit branch sourced from GMB Fitness and multiple independently-published L-sit guides",
+          "sourceSystem": "Convict Conditioning leg-raise progression (10 steps) for step naming/ordering; rep/set VOLUMES on the leg-raise steps (`medium`-confidence) are a general convergent progression-pacing standard substituted in place of Convict Conditioning's own published rep targets (which run higher at the early steps), same substitution as disclosed on the push line. The L-sit branch is sourced separately from GMB Fitness and multiple independently-published L-sit guides and is not part of this substitution (its `high`/`medium` tiers reflect genuine cross-source convergence or single-branch sourcing respectively).",
           "nodes": [
             { "id": "core-1", "name": "Knee Tuck", "tier": 1, "prerequisites": [], "threshold": { "type": "reps", "value": 20, "sets": 2, "confidence": "medium" } },
             { "id": "core-2", "name": "Knee Raise", "tier": 1, "prerequisites": ["core-1"], "threshold": { "type": "reps", "value": 15, "sets": 3, "confidence": "medium" } },

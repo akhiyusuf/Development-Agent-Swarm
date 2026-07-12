@@ -192,6 +192,7 @@
       "per100g": { "kcal": 167, "protein_g": 7.0, "carbs_g": 34.0, "fat_g": 3.0, "fiber_g": 5.0 },
       "micronutrients": { "sodium_mg": 291 },
       "confidence": "compiled-estimate",
+      "valueSpread": "Independent trackers show roughly 167-194 kcal/100g for cooked waakye depending on rice:beans ratio, oil quantity, and whether stew/accompaniments are folded into the tracked entry; packaged/commercial waakye products and accompaniment-inclusive meals run higher still. 167 kcal/100g is used here and is corroborated by a second, independently-listed serving entry (379.1 kcal per 227g serving on a USDA-linked database, which is ~167 kcal/100g) — i.e. two independent sources converge on this figure at the bean/rice-only (no heavy accompaniments) end of the range.",
       "source": {
         "name": "Ayo/MyNetDiary — Waakye Beans & Rice Nutrition Facts",
         "url": "https://www.mynetdiary.com/food/calories-in-waakye-beans-rice-by-ayo-serving-29100466-0.html"
@@ -225,6 +226,7 @@
       "per100g": { "kcal": 166, "protein_g": 1.5, "carbs_g": 33.6, "fat_g": 0.2, "fiber_g": 3.1 },
       "micronutrients": {},
       "confidence": "compiled-estimate",
+      "valueSpread": "Fufu's calorie density varies substantially by base starch and preparation: cassava-heavy or flour-reconstituted fufu runs denser (up to roughly 250-300+ kcal/100g), while plantain-forward, freshly-pounded fufu runs lower (as low as ~150 kcal/100g, reflecting more fiber/water). 166 kcal/100g is used here for a mixed cassava-and-plantain, freshly-pounded preparation (the most commonly logged household form), and is corroborated across NutriScan and general fufu-nutrition guides that converge in the ~150-170 kcal/100g band for that preparation style specifically.",
       "source": {
         "name": "NutriScan App — Fufu: Calories, Nutrition and Health Benefits",
         "url": "https://nutriscan.app/calories-nutrition/fufu"
@@ -425,9 +427,13 @@
         { "unit": "1 breast, cooked", "grams": 172 }
       ],
       "per100g": { "kcal": 165, "protein_g": 31.0, "carbs_g": 0.0, "fat_g": 3.6 },
-      "micronutrients": {},
+      "micronutrients": { "iron_mg": 0.4, "zinc_mg": 0.9, "folate_mcg": 4, "vitaminA_mcg_RAE": 6, "vitaminB12_mcg": 0.3, "calcium_mg": 15 },
       "confidence": "usda",
-      "source": { "name": "USDA FoodData Central — Chicken, broiler or fryers, breast, meat only, cooked", "url": "https://fdc.nal.usda.gov/" }
+      "source": {
+        "name": "USDA FoodData Central — Chicken, broiler or fryers, breast, meat only, cooked",
+        "url": "https://fdc.nal.usda.gov/",
+        "note": "Micronutrient panel added in this revision (the previous pass left this near-empty despite FoodData Central publishing full micronutrient values for this exact food); cross-checked via myfooddata.com and dietandfitnesstoday.com FDC-derived entries for roasted skinless chicken breast."
+      }
     },
     {
       "id": "diaspora-egg-boiled",
@@ -438,9 +444,13 @@
         { "unit": "1 large egg", "grams": 50 }
       ],
       "per100g": { "kcal": 155, "protein_g": 13.0, "carbs_g": 1.1, "fat_g": 11.0 },
-      "micronutrients": {},
+      "micronutrients": { "iron_mg": 1.2, "zinc_mg": 1.1, "folate_mcg": 44, "vitaminA_mcg_RAE": 149, "vitaminB12_mcg": 1.1, "calcium_mg": 50 },
       "confidence": "usda",
-      "source": { "name": "USDA FoodData Central — Egg, whole, cooked, hard-boiled", "url": "https://fdc.nal.usda.gov/" }
+      "source": {
+        "name": "USDA FoodData Central — Egg, whole, cooked, hard-boiled",
+        "url": "https://fdc.nal.usda.gov/",
+        "note": "Micronutrient panel added in this revision (previously near-empty); cross-checked via nutritionvalue.org and myfooddata.com FDC-derived entries for whole hard-boiled egg."
+      }
     },
     {
       "id": "diaspora-white-rice",
@@ -451,9 +461,13 @@
         { "unit": "1 cup, cooked", "grams": 158 }
       ],
       "per100g": { "kcal": 130, "protein_g": 2.7, "carbs_g": 28.0, "fat_g": 0.3 },
-      "micronutrients": {},
+      "micronutrients": { "iron_mg": 1.2, "zinc_mg": 0.5, "folate_mcg": 58, "vitaminA_mcg_RAE": 0, "vitaminB12_mcg": 0, "calcium_mg": 10 },
       "confidence": "usda",
-      "source": { "name": "USDA FoodData Central — Rice, white, long-grain, cooked", "url": "https://fdc.nal.usda.gov/" }
+      "source": {
+        "name": "USDA FoodData Central — Rice, white, long-grain, cooked (enriched, the typical commercially-milled form)",
+        "url": "https://fdc.nal.usda.gov/",
+        "note": "Micronutrient panel added in this revision. Iron and folate are elevated because standard US-milled white rice is enrichment-fortified; vitamin A and B12 are genuinely absent (0), not missing data — rice contains neither. Cross-checked via myfooddata.com FDC-derived entries for cooked enriched long-grain white rice."
+      }
     },
     {
       "id": "diaspora-oats-cooked",
@@ -464,9 +478,13 @@
         { "unit": "1 cup, cooked", "grams": 234 }
       ],
       "per100g": { "kcal": 71, "protein_g": 2.5, "carbs_g": 12.0, "fat_g": 1.5, "fiber_g": 1.7 },
-      "micronutrients": {},
+      "micronutrients": { "iron_mg": 0.9, "zinc_mg": 0.7, "folate_mcg": 4, "vitaminA_mcg_RAE": 0, "vitaminB12_mcg": 0, "calcium_mg": 7 },
       "confidence": "usda",
-      "source": { "name": "USDA FoodData Central — Oats, regular and quick, cooked with water", "url": "https://fdc.nal.usda.gov/" }
+      "source": {
+        "name": "USDA FoodData Central — Oats, regular and quick, cooked with water",
+        "url": "https://fdc.nal.usda.gov/",
+        "note": "Micronutrient panel added in this revision, computed on the as-cooked (water-diluted) basis to stay consistent with this entry's as-cooked kcal/macros, cross-checked against myfooddata.com's cooked-oatmeal entry; vitamin A and B12 are genuinely absent (0), not missing data."
+      }
     },
     {
       "id": "diaspora-banana",
@@ -477,9 +495,13 @@
         { "unit": "1 medium", "grams": 118 }
       ],
       "per100g": { "kcal": 89, "protein_g": 1.1, "carbs_g": 22.8, "fat_g": 0.3 },
-      "micronutrients": { "potassium_mg": 358, "vitaminC_mg": 8.7 },
+      "micronutrients": { "potassium_mg": 358, "vitaminC_mg": 8.7, "iron_mg": 0.3, "zinc_mg": 0.15, "folate_mcg": 20, "vitaminA_mcg_RAE": 3, "vitaminB12_mcg": 0, "calcium_mg": 5 },
       "confidence": "usda",
-      "source": { "name": "USDA FoodData Central — Bananas, raw", "url": "https://fdc.nal.usda.gov/" }
+      "source": {
+        "name": "USDA FoodData Central — Bananas, raw",
+        "url": "https://fdc.nal.usda.gov/",
+        "note": "Micronutrient panel extended in this revision (previously only potassium/vitamin C); B12 is genuinely absent (0), not missing data — bananas contain none."
+      }
     },
     {
       "id": "diaspora-peanut-butter",
@@ -490,9 +512,13 @@
         { "unit": "1 tbsp", "grams": 16 }
       ],
       "per100g": { "kcal": 588, "protein_g": 25.0, "carbs_g": 20.0, "fat_g": 50.0 },
-      "micronutrients": {},
+      "micronutrients": { "iron_mg": 1.9, "zinc_mg": 2.5, "folate_mcg": 57, "vitaminA_mcg_RAE": 0, "vitaminB12_mcg": 0, "calcium_mg": 43 },
       "confidence": "usda",
-      "source": { "name": "USDA FoodData Central — Peanut butter, smooth style", "url": "https://fdc.nal.usda.gov/" }
+      "source": {
+        "name": "USDA FoodData Central — Peanut butter, smooth style",
+        "url": "https://fdc.nal.usda.gov/",
+        "note": "Micronutrient panel added in this revision, cross-checked via vegnt.com and nutritionvalue.org FDC-derived entries for smooth (unfortified) peanut butter; vitamin A and B12 are genuinely absent (0), not missing data — peanut butter contains neither unless fortified."
+      }
     },
     {
       "id": "diaspora-whole-milk",
@@ -503,9 +529,13 @@
         { "unit": "1 cup", "grams": 244 }
       ],
       "per100g": { "kcal": 61, "protein_g": 3.2, "carbs_g": 4.8, "fat_g": 3.3 },
-      "micronutrients": { "calcium_mg": 113 },
+      "micronutrients": { "calcium_mg": 113, "vitaminB12_mcg": 0.45, "zinc_mg": 0.37, "folate_mcg": 5, "vitaminA_mcg_RAE": 46, "iron_mg": 0.0 },
       "confidence": "usda",
-      "source": { "name": "USDA FoodData Central — Milk, whole, 3.25% milkfat", "url": "https://fdc.nal.usda.gov/" }
+      "source": {
+        "name": "USDA FoodData Central — Milk, whole, 3.25% milkfat",
+        "url": "https://fdc.nal.usda.gov/",
+        "note": "Micronutrient panel extended in this revision (previously only calcium); iron is genuinely negligible/near-zero in milk, not missing data. Cross-checked via nutritionvalue.org and milkfacts.info FDC-derived figures."
+      }
     },
     {
       "id": "diaspora-whole-wheat-bread",
@@ -516,9 +546,13 @@
         { "unit": "1 slice", "grams": 28 }
       ],
       "per100g": { "kcal": 247, "protein_g": 13.0, "carbs_g": 41.0, "fat_g": 3.4, "fiber_g": 7.0 },
-      "micronutrients": {},
+      "micronutrients": { "iron_mg": 2.4, "zinc_mg": 1.8, "folate_mcg": 50, "vitaminA_mcg_RAE": 0, "vitaminB12_mcg": 0, "calcium_mg": 73 },
       "confidence": "usda",
-      "source": { "name": "USDA FoodData Central — Bread, whole-wheat, commercially prepared", "url": "https://fdc.nal.usda.gov/" }
+      "source": {
+        "name": "USDA FoodData Central — Bread, whole-wheat, commercially prepared",
+        "url": "https://fdc.nal.usda.gov/",
+        "note": "Micronutrient panel added in this revision; iron/folate reflect standard US flour enrichment/fortification. Vitamin A and B12 are genuinely absent (0), not missing data. Cross-checked via foodstruct.com and recipal.com FDC-derived entries."
+      }
     }
   ]
 }

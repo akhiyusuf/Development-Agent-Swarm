@@ -74,6 +74,24 @@ Pilates progression synthesis.
    no source gave an exact number and a reasoned estimate was used instead
    (flagged as such, per the agent's instructions on genuinely unsourceable
    content).
+   **Important provenance correction (this revision):** on the push, pull,
+   squat/single-leg, and core/leg-raise lines, `confidence: "medium"` means
+   the STEP ORDERING (which exercise comes before which) is Convict
+   Conditioning's real, named, published sequence, but the REP/SET VOLUME
+   attached to each step is a reasoned, generalized pacing standard, NOT
+   Convict Conditioning's own published rep targets — CC's own standards run
+   systematically higher (its wall push-up standard, for example, is 3 sets
+   of 50, not the 2x20 used on `push-1`). Previously only the push line's
+   `sourceSystem` field disclosed this substitution; the pull, squat, and
+   core lines carried the same substituted volumes without disclosing it,
+   which overclaimed provenance the numbers didn't have. All four lines'
+   `sourceSystem` fields now disclose the substitution identically, and the
+   JSON's `confidenceLegend.medium` entry defines the distinction explicitly
+   (step ordering sourced to the named system; volume is a reasoned
+   generalized standard, not verbatim-lifted). This is a labeling fix, not a
+   safety fix — the generalized volumes are still a defensible, conservative
+   starting progression; they are just not literally Convict Conditioning's
+   numbers, and now say so everywhere they apply.
 3. The handstand line's `hs-handstand-pushup` node directly sources
    `docs/idea.md`'s own illustrative example (freestanding handstand hold
    before handstand push-ups unlock) to the Calisthenics Association's
@@ -155,12 +173,53 @@ Pilates progression synthesis.
    `research/product-research.md`'s recommendation to hold those markets for
    v2, but it means diaspora users from those countries have zero coverage
    at launch.
-4. **Diaspora/Western coverage is intentionally thin** (8 items) — enough to
+
+4. **Req-4 micronutrient coverage gap (B12 / zinc / vitamin A / folate) —
+   read this before wiring the Micronutrient Detail screen.**
+   `research/product-research.md` Core Feature Req 4 names iron, zinc,
+   calcium, vitamin A, folate, and B12 "at minimum," and the sitemap builds a
+   Micronutrient Detail screen (weekly trends for exactly those six), a Home
+   micronutrient snapshot, and a Daily Summary micronutrient panel on them.
+   This revision populated the six Req-4 nutrients for all 8 USDA-confidence
+   items directly from FoodData-Central-derived values (previously those
+   panels were near-empty despite the source data being available — that was
+   an omission, now fixed). After that fix, machine-counted coverage across
+   all 32 foods is:
+   - **Vitamin B12: 8 of 32 foods (25%) — every single one is a
+     Diaspora/Western USDA item. Zero of the 24 African-sourced foods carry
+     a B12 value**, including meat- and egg-containing African dishes (suya,
+     nyama choma, moin moin, egusi soup) where B12 is plausibly present but
+     no compiled secondary source in this pass published a figure for it.
+     **The B12 trend on the Micronutrient Detail screen will render data
+     only for diaspora/Western foods and will show a permanent gap for
+     African-dish-only logging days.**
+   - **Zinc: 9 of 32 foods (28%) — 8 diaspora items plus one African item
+     (`ke-githeri`).** 23 of 24 African-sourced foods have no zinc value.
+   - **Vitamin A: 10 of 32 foods (31%) — 8 diaspora items plus two African
+     items (`ke-managu`, `ke-terere`), both leafy greens).** 22 of 24
+     African-sourced foods have no vitamin A value.
+   - **Folate: 9 of 32 foods (28%) — 8 diaspora items plus one African item
+     (`ng-egusi-soup`).** 23 of 24 African-sourced foods have no folate
+     value.
+   This is a genuine source-availability gap, not a laziness gap: the
+   African-food secondary compilations used here (FitNigerian, Fit Savanna,
+   NutriScan, SnapCalorie, etc.) generally do not publish full micronutrient
+   panels the way FoodData Central does, and this research pass could not get
+   direct WebFetch access to the primary FCTs (WAFCT/Nigerian FCT/KFCT PDFs)
+   that likely do carry these values (see limitation 1 below). The nulls on
+   the 24 African-sourced foods are left as genuine, honestly-labeled gaps —
+   they are not deleted or backfilled with invented numbers. **Before the
+   Micronutrient Detail / B12 trend screens ship, someone with direct FCT
+   access (or a paid nutrition API with African food coverage) needs to
+   close this specific gap** — it is the single largest disparity between
+   what Req 4 promises and what this dataset can currently deliver for the
+   product's primary African-market users.
+5. **Diaspora/Western coverage is intentionally thin** (8 items) — enough to
    validate the data model handles non-African foods, not a real Western food
    database. `research/product-research.md` already flags the full diaspora
    Western database as a scope multiplier requiring its own dedicated
    sourcing effort.
-5. **The workout tree is a synthesis, not a validated program.** Every
+6. **The workout tree is a synthesis, not a validated program.** Every
    `confidence: "medium"` or `"estimate"` node (roughly half the calisthenics
    tree, and most of the Pilates intermediate/advanced tiers) should be
    reviewed by a qualified strength coach and/or certified Pilates instructor
@@ -169,8 +228,14 @@ Pilates progression synthesis.
    requires and this document does not claim to discharge. Wrong prerequisite
    ordering on skills like the handstand line or muscle-up carries real
    injury risk, as the product research's Constraints & Risks section
-   already flags.
-6. **Rep/hold thresholds are progression *gates* for unlocking the next node
+   already flags. As of this revision, `medium`-confidence rep/set volumes on
+   the push, pull, squat, and core lines are explicitly disclosed (in both
+   the JSON's `sourceSystem` fields and the methodology section above) as
+   generalized pacing standards substituted for Convict Conditioning's own
+   (higher) published rep targets — see the Workout progression methodology
+   section for the full explanation. This disclosure fix does not by itself
+   discharge Open Question 1.
+7. **Rep/hold thresholds are progression *gates* for unlocking the next node
    in the app's UI, not medical or training prescriptions** — the app's
    copy should make clear these are a synthesized starting point, not a
    certified program, consistent with the confidence statement embedded in
