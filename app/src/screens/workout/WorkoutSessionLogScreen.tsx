@@ -1,103 +1,67 @@
 import React, { useState } from 'react';
 import { View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { ScreenContainer } from '../../components/ScreenContainer';
-import { Text } from '../../components/Typography';
-import { Card } from '../../components/Card';
-import { Button } from '../../components/Button';
-import { SegmentedControl } from '../../components/SegmentedControl';
-import { Input } from '../../components/Input';
-import { StatusBadge } from '../../components/StatusBadge';
-import { color, space } from '../../theme/tokens';
-import { useAppState } from '../../state/AppStateContext';
-import { nodesForTrack, getNodeDef } from '../../data/skillTree';
-import type { Track } from '../../data/skillTree';
+import { Button, Card, ListRow, StatusBadge, useTheme } from '@fit-and-fed/design-system';
+import { AppText, Row, Screen } from '../../ui/layout';
+import { CALISTHENICS_LINES, describeThreshold, nodeState } from '../../data/skillTree';
+import { SAMPLE_SESSION_ROWS, SessionRow } from '../../data/sampleData';
 
 /**
- * W7. Workout Session Log — FREEFORM logging only (nodes attempted,
- * reps/holds recorded). Per the build's explicit carry-forward: no guided/
- * timed Session Player is built here (see BUILD_NOTES.md, deviation #3) —
- * the design-system's §4.8/§5 shared session-player component has no
- * sitemap destination, so it's intentionally not built.
+ * Workout Session Log (W7, modal) — FREEFORM logging only. Per the pipeline
+ * carry-forward, there is deliberately NO guided Session Player screen here
+ * (the design system's SessionPlayer has no sitemap destination; W7 stays
+ * freeform-logging-only). Req 11.
+ *
+ * DATA CONTRACT: `{ rows: SessionRow[] }`. Each attempt row reuses the Log
+ * Attempt entry pattern against a chosen actionable node. Save records the
+ * whole session as one unit ([CP-OFFLINE] at session AND row level). The whole
+ * in-progress session is discarded on back-out (C4) — unlike per-node Log
+ * Attempt (C2) which commits immediately. Save is blocked until ≥1 row exists.
  */
 export function WorkoutSessionLogScreen() {
-  const nav = useNavigation<any>();
-  const { state, dispatch, isOnline, uid, todayStr } = useAppState();
-  const [track, setTrack] = useState<Track>('calisthenics');
-  const [note, setNote] = useState('');
-  const [sessionId] = useState(() => uid());
+  const theme = useTheme();
+  const navigation = useNavigation();
+  const [rows, setRows] = useState<SessionRow[]>(SAMPLE_SESSION_ROWS);
 
-  const actionableNodes = nodesForTrack(track).filter((n) => {
-    const s = state.nodeStates[n.id] ?? n.defaultState;
-    return s !== 'locked';
-  });
+  // Actionable nodes the user could add an attempt against.
+  const actionable = CALISTHENICS_LINES.flatMap((l) => l.nodes).filter((n) => nodeState(n.id) !== 'locked');
 
-  const attemptsForSession = state.attempts.filter((a) => a.sessionId === sessionId);
-
-  const addAttempt = (nodeId: string) => {
-    nav.navigate('LogAttempt', { nodeId, sessionId });
-  };
-
-  const save = () => {
-    dispatch({
-      type: 'SAVE_SESSION',
-      session: {
-        id: sessionId,
-        date: todayStr(),
-        track,
-        attemptIds: attemptsForSession.map((a) => a.id),
-        note,
-        queued: !isOnline,
-      },
-    });
-    nav.goBack();
-  };
+  function addRow() {
+    const next = actionable[rows.length % actionable.length];
+    setRows((r) => [...r, { nodeId: next.id, nodeName: next.name, result: describeThreshold(next.threshold) }]);
+  }
 
   return (
-    <ScreenContainer density="relaxed">
-      <Text variant="h1">Log a session</Text>
-      <SegmentedControl
-        options={[
-          { value: 'calisthenics', label: 'Calisthenics' },
-          { value: 'pilates', label: 'Pilates' },
-        ]}
-        value={track}
-        onChange={(v) => setTrack(v as Track)}
-      />
+    <Screen>
+      <AppText variant="h2">Session log</AppText>
+      <AppText variant="caption" color={theme.neutrals.charcoal}>
+        A freeform journal of what you trained. Attempts here don't need to hit a gate.
+      </AppText>
 
       <Card>
-        <Text variant="h3">Attempts this session</Text>
-        {attemptsForSession.length === 0 ? (
-          <Text variant="caption" colorToken={color.neutral.warmgray700}>
-            No attempts logged yet — add one below.
-          </Text>
+        {rows.length === 0 ? (
+          <StatusBadge tone="info" label="Add at least one attempt to save a session" />
         ) : (
-          <View style={{ gap: space[8], marginTop: space[8] }}>
-            {attemptsForSession.map((a) => (
-              <Text key={a.id} variant="body">
-                {getNodeDef(a.nodeId)?.name}: {a.value} {a.gateType === 'reps' ? 'reps' : 'sec hold'}
-              </Text>
+          <View>
+            {rows.map((r, i) => (
+              <ListRow key={`${r.nodeId}-${i}`} title={r.nodeName} subtitle={r.result} />
             ))}
           </View>
         )}
       </Card>
 
-      <Text variant="h3">Actionable nodes</Text>
-      <View style={{ gap: space[8] }}>
-        {actionableNodes.map((n) => (
-          <Card key={n.id} onPress={() => addAttempt(n.id)}>
-            <Text variant="body">{n.name}</Text>
-            <Text variant="caption" colorToken={color.neutral.warmgray700}>
-              {state.nodeStates[n.id] ?? n.defaultState} · tap to log an attempt
-            </Text>
-          </Card>
-        ))}
-      </View>
+      <Row style={{ justifyContent: 'space-between' }}>
+        <AppText variant="bodyEmphasis">{rows.length} attempts</AppText>
+        <Button variant="tertiary" label="Add attempt" onPress={addRow} />
+      </Row>
 
-      <Input label="Session note (optional)" value={note} onChangeText={setNote} placeholder="How did it feel?" />
-      {!isOnline ? <StatusBadge tone="info" label="Offline — session will queue and sync later" /> : null}
-      <Button label="Save session" onPress={save} />
-      <Button label="Discard" variant="tertiary" onPress={() => nav.goBack()} />
-    </ScreenContainer>
+      <Button
+        label="Save session"
+        onPress={() => {
+          if (rows.length > 0) navigation.goBack();
+        }}
+      />
+      <Button variant="tertiary" label="Discard" onPress={() => navigation.goBack()} />
+    </Screen>
   );
 }

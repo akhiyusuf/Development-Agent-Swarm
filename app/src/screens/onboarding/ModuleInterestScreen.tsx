@@ -2,73 +2,110 @@ import React, { useState } from 'react';
 import { View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
-import { ScreenContainer } from '../../components/ScreenContainer';
-import { Text } from '../../components/Typography';
-import { Button } from '../../components/Button';
-import { Card } from '../../components/Card';
-import { ProgressBar } from '../../components/ProgressBar';
-import { StatusBadge } from '../../components/StatusBadge';
-import { color, space } from '../../theme/tokens';
-import { useAppState } from '../../state/AppStateContext';
+import { Button, Card, StatusBadge, ToggleSwitch, useTheme } from '@fit-and-fed/design-system';
+import { AppText, Row, Screen } from '../../ui/layout';
+import { OnboardingProgress } from '../../components/OnboardingProgress';
+import { PreAuthLoginLink } from '../../components/PreAuthLoginLink';
 
 /**
- * A6. Module Interest Screen — nutrition always on; workout module selectable.
- * WORKOUT_MODULE_LIVE simulates the sitemap's rollout note: the tab may ship
- * disabled/"coming soon" at nutrition-only launch, then activate fast-follow.
- * Set to true here since this build implements the full workout mechanism.
+ * Module Interest — nutrition always on; workout (calisthenics/Pilates) optional.
+ *
+ * DATA CONTRACT: commits `{ trackNutrition: true; trainWorkout: boolean }`.
+ * Fork (user-flows A2): if workout is selected AND live -> AssessmentIntro;
+ * otherwise -> Auth (join). `workoutLive` gates the "coming soon" branch (A2a):
+ * when false, selecting workout registers interest only and skips placement.
+ * The injury-liability disclaimer is a one-time BLOCKING acknowledgment at
+ * first workout opt-in (user-flows E7 default) — modeled here by the required
+ * toggle before placement can begin.
  */
-const WORKOUT_MODULE_LIVE = true;
-
 export function ModuleInterestScreen() {
-  const nav = useNavigation<any>();
-  const { dispatch } = useAppState();
-  const [wantsWorkout, setWantsWorkout] = useState(false);
+  const theme = useTheme();
+  const navigation = useNavigation();
 
-  const onContinue = () => {
-    dispatch({ type: 'SET_MODULE_INTEREST', payload: { workout: wantsWorkout && WORKOUT_MODULE_LIVE } });
-    if (wantsWorkout && WORKOUT_MODULE_LIVE) {
-      nav.navigate('AssessmentIntro');
+  // PLACEHOLDER: workout module is live at this preview build.
+  const workoutLive = true;
+
+  const [train, setTrain] = useState(false);
+  const [ack, setAck] = useState(false);
+  const [needAck, setNeedAck] = useState(false);
+
+  function onContinue() {
+    if (train && workoutLive) {
+      if (!ack) {
+        setNeedAck(true);
+        return;
+      }
+      navigation.navigate('AssessmentIntro');
     } else {
-      nav.navigate('Welcome');
+      navigation.navigate('Auth', { mode: 'signup' });
     }
-  };
+  }
 
   return (
-    <ScreenContainer density="relaxed">
-      <ProgressBar progress={5 / 8} label="Step 5 of 8" />
-      <Text variant="h1">What do you want to track?</Text>
+    <Screen>
+      <OnboardingProgress step={4} total={5} />
+      <AppText variant="h1">What do you want to track?</AppText>
+      <AppText variant="caption" color={theme.neutrals.charcoal}>
+        Nutrition is the flagship and always on. Add the workout skill tree now or later.
+      </AppText>
+
       <Card>
-        <View style={{ flexDirection: 'row', gap: space[12], alignItems: 'center' }}>
-          <Ionicons name="checkmark-circle" size={22} color={color.semantic.success} />
+        <Row style={{ justifyContent: 'space-between' }}>
           <View style={{ flex: 1 }}>
-            <Text variant="h3">Track nutrition</Text>
-            <Text variant="caption" colorToken={color.neutral.warmgray700}>
-              Our flagship — always on.
-            </Text>
+            <AppText variant="h3">Track nutrition</AppText>
+            <AppText variant="caption" color={theme.neutrals.charcoal}>
+              Regional foods, macros and micronutrients.
+            </AppText>
           </View>
-        </View>
+          <StatusBadge tone="success" label="Always on" />
+        </Row>
       </Card>
-      <Card
-        onPress={WORKOUT_MODULE_LIVE ? () => setWantsWorkout((w) => !w) : undefined}
-        state={WORKOUT_MODULE_LIVE ? 'default' : 'disabled'}
-      >
-        <View style={{ flexDirection: 'row', gap: space[12], alignItems: 'center' }}>
+
+      <Card onPress={() => setTrain((t) => !t)}>
+        <Row style={{ justifyContent: 'space-between' }}>
+          <View style={{ flex: 1 }}>
+            <AppText variant="h3">Train (calisthenics / Pilates)</AppText>
+            <AppText variant="caption" color={theme.neutrals.charcoal}>
+              Progression-gated skill tree with objective mastery gates.
+            </AppText>
+            {!workoutLive ? (
+              <View style={{ marginTop: theme.spacing.space8 }}>
+                <StatusBadge tone="info" label="Coming soon" />
+              </View>
+            ) : null}
+          </View>
           <Ionicons
-            name={wantsWorkout ? 'checkmark-circle' : 'ellipse-outline'}
-            size={22}
-            color={wantsWorkout ? color.semantic.success : color.neutral.warmgray700}
+            name={train ? 'checkmark-circle' : 'ellipse-outline'}
+            size={26}
+            color={train ? theme.brand.terracotta : theme.neutrals.placeholder}
           />
-          <View style={{ flex: 1 }}>
-            <Text variant="h3">Train (calisthenics / Pilates)</Text>
-            <Text variant="caption" colorToken={color.neutral.warmgray700}>
-              Bodyweight skill-tree training, fast-follow module.
-            </Text>
-          </View>
-          {!WORKOUT_MODULE_LIVE ? <StatusBadge tone="neutral" label="Coming soon" /> : null}
-        </View>
+        </Row>
       </Card>
+
+      {train && workoutLive ? (
+        <Card error={needAck && !ack}>
+          <ToggleSwitch
+            label="I acknowledge the workout injury-liability disclaimer"
+            value={ack}
+            onChange={(v) => {
+              setAck(v);
+              if (v) setNeedAck(false);
+            }}
+          />
+          {needAck && !ack ? (
+            <AppText variant="caption" color={theme.semantic.error}>
+              Please acknowledge before starting the placement assessment.
+            </AppText>
+          ) : (
+            <AppText variant="caption" color={theme.neutrals.charcoal}>
+              The full disclaimer is always available later under Profile → Legal &amp; Disclaimers.
+            </AppText>
+          )}
+        </Card>
+      ) : null}
+
       <Button label="Continue" onPress={onContinue} />
-      <Button label="Back" variant="tertiary" onPress={() => nav.goBack()} />
-    </ScreenContainer>
+      <PreAuthLoginLink />
+    </Screen>
   );
 }

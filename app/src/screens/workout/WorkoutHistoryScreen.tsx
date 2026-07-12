@@ -1,59 +1,48 @@
 import React, { useState } from 'react';
-import { View } from 'react-native';
-import { Calendar, DayCompleteness } from '../../components/Calendar';
-import { ScreenContainer } from '../../components/ScreenContainer';
-import { Text } from '../../components/Typography';
-import { Card } from '../../components/Card';
-import { color, space } from '../../theme/tokens';
-import { useAppState } from '../../state/AppStateContext';
-import { getNodeDef } from '../../data/skillTree';
+import { useNavigation } from '@react-navigation/native';
+import { CalendarDatePicker, Card, ListRow, useTheme } from '@fit-and-fed/design-system';
+import { AppText, Screen, Section } from '../../ui/layout';
+import { SAMPLE_MARKED_DAYS } from '../../data/sampleData';
 
-/** W8. Workout History / Session Calendar. */
+// PLACEHOLDER past sessions (real session history is app-builder's job).
+const SAMPLE_SESSIONS = [
+  { id: 's1', date: 'Fri, Jul 11', summary: '3 attempts · push + handstand lines' },
+  { id: 's2', date: 'Wed, Jul 09', summary: '2 attempts · pull + core lines' },
+];
+
+/**
+ * Workout History / Session Calendar (W8) — past sessions (Req 8, 11).
+ *
+ * DATA CONTRACT: `{ markedDates; sessions: Session[] }`. Tapping a day/session
+ * opens that session's logged attempts (read view). Zero sessions shows an
+ * explanatory empty state with a CTA into Log Workout Session (C5).
+ */
 export function WorkoutHistoryScreen() {
-  const { state } = useAppState();
-  const [selected, setSelected] = useState<Date | undefined>();
-
-  const getCompleteness = (date: Date): DayCompleteness => {
-    const dateStr = date.toISOString().slice(0, 10);
-    return state.sessions.some((s) => s.date === dateStr) ? 'logged' : 'none';
-  };
-
-  const selectedStr = selected?.toISOString().slice(0, 10);
-  const sessionsForDay = state.sessions.filter((s) => s.date === selectedStr);
+  const theme = useTheme();
+  const navigation = useNavigation();
+  const [month, setMonth] = useState(new Date(2026, 6, 1));
+  const [selected, setSelected] = useState<Date | undefined>(undefined);
 
   return (
-    <ScreenContainer density="relaxed">
-      <Text variant="h1">Workout history</Text>
-      <Calendar getCompleteness={getCompleteness} onSelectDay={setSelected} selectedDate={selected} />
-      {selected ? (
-        <View style={{ gap: space[8] }}>
-          <Text variant="h3">{selected.toDateString()}</Text>
-          {sessionsForDay.length === 0 ? (
-            <Text variant="caption" colorToken={color.neutral.warmgray700}>
-              No sessions logged this day.
-            </Text>
-          ) : (
-            sessionsForDay.map((s) => {
-              const attempts = state.attempts.filter((a) => s.attemptIds.includes(a.id));
-              return (
-                <Card key={s.id}>
-                  <Text variant="h3">{s.track === 'calisthenics' ? 'Calisthenics' : 'Pilates'} session</Text>
-                  {attempts.map((a) => (
-                    <Text key={a.id} variant="body">
-                      {getNodeDef(a.nodeId)?.name}: {a.value} {a.gateType === 'reps' ? 'reps' : 'sec'}
-                    </Text>
-                  ))}
-                  {s.note ? (
-                    <Text variant="caption" colorToken={color.neutral.warmgray700}>
-                      "{s.note}"
-                    </Text>
-                  ) : null}
-                </Card>
-              );
-            })
-          )}
-        </View>
-      ) : null}
-    </ScreenContainer>
+    <Screen>
+      <AppText variant="h2">Session history</AppText>
+      <Card>
+        <CalendarDatePicker
+          month={month}
+          selectedDate={selected}
+          markedDates={SAMPLE_MARKED_DAYS}
+          onChangeMonth={setMonth}
+          onSelectDay={setSelected}
+        />
+      </Card>
+
+      <Section title="Recent sessions">
+        {SAMPLE_SESSIONS.map((s) => (
+          <Card key={s.id}>
+            <ListRow title={s.date} subtitle={s.summary} showChevron onPress={() => navigation.navigate('WorkoutSessionLog')} />
+          </Card>
+        ))}
+      </Section>
+    </Screen>
   );
 }

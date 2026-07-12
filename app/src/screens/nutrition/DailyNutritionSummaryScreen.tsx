@@ -1,84 +1,49 @@
 import React from 'react';
 import { View } from 'react-native';
-import { useNavigation, useRoute } from '@react-navigation/native';
-import { ScreenContainer } from '../../components/ScreenContainer';
-import { Text } from '../../components/Typography';
-import { Card } from '../../components/Card';
-import { ProgressRing } from '../../components/ProgressRing';
-import { ProgressBar } from '../../components/ProgressBar';
-import { Button } from '../../components/Button';
-import { macroColor, color, space } from '../../theme/tokens';
-import { useAppState } from '../../state/AppStateContext';
-import { MICRONUTRIENT_LABELS, MICRONUTRIENT_TARGETS, Micronutrients } from '../../data/foodDatabase';
+import { useNavigation } from '@react-navigation/native';
+import { Button, Card, ProgressRing, useTheme } from '@fit-and-fed/design-system';
+import { AppText, Row, Screen, Section } from '../../ui/layout';
+import { MicroBar } from '../../components/MicroBar';
+import { microRows, totalsForEntries } from '../../data/compute';
+import { SAMPLE_DIARY, SAMPLE_TARGETS } from '../../data/sampleData';
 
-/** N10. Daily Nutrition Summary. */
+/**
+ * Daily Nutrition Summary (N10) — calories, macro breakdown, full micronutrient
+ * panel with graceful per-nutrient "no data" states (Req 3, Req 4).
+ *
+ * DATA CONTRACT: `{ entries: DiaryEntry[]; targets: Targets; date }`. Each
+ * nutrient row taps into Micronutrient Detail. First-run zero-logged shows the
+ * target-only state (B5), not empty rings.
+ */
 export function DailyNutritionSummaryScreen() {
-  const nav = useNavigation<any>();
-  const route = useRoute<any>();
-  const { state, todayStr } = useAppState();
-  const today = route.params?.date ?? todayStr();
-  const entries = state.diary.filter((d) => d.date === today);
-
-  const calories = entries.reduce((s, e) => s + e.calories, 0);
-  const protein = entries.reduce((s, e) => s + e.proteinG, 0);
-  const carbs = entries.reduce((s, e) => s + e.carbsG, 0);
-  const fat = entries.reduce((s, e) => s + e.fatG, 0);
-
-  const microTotals: Micronutrients = {};
-  entries.forEach((e) => {
-    (Object.keys(e.micronutrients) as (keyof Micronutrients)[]).forEach((k) => {
-      microTotals[k] = (microTotals[k] ?? 0) + (e.micronutrients[k] ?? 0);
-    });
-  });
+  const theme = useTheme();
+  const navigation = useNavigation();
+  const totals = totalsForEntries(SAMPLE_DIARY);
+  const micros = microRows(SAMPLE_DIARY);
 
   return (
-    <ScreenContainer>
-      <Text variant="h1">Daily Summary</Text>
-      <Text variant="caption" colorToken={color.neutral.warmgray700}>
-        {today}
-      </Text>
-      <Card>
-        <View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
-          <ProgressRing progress={calories / state.goals.calorieTarget} fillColor={macroColor.calories} centerLabel={`${calories}`} centerSubLabel="kcal" />
-        </View>
-        <View style={{ gap: space[8], marginTop: space[12] }}>
-          <ProgressBar progress={protein / state.goals.proteinG} label="Protein" valueLabel={`${protein}g / ${state.goals.proteinG}g`} fillColor={macroColor.protein} />
-          <ProgressBar progress={carbs / state.goals.carbsG} label="Carbs" valueLabel={`${carbs}g / ${state.goals.carbsG}g`} fillColor={macroColor.carbs} />
-          <ProgressBar progress={fat / state.goals.fatG} label="Fat" valueLabel={`${fat}g / ${state.goals.fatG}g`} fillColor={macroColor.fat} />
-        </View>
-      </Card>
+    <Screen>
+      <AppText variant="h2">Daily summary</AppText>
 
       <Card>
-        <Text variant="h2">Micronutrient panel</Text>
-        <View style={{ gap: space[12], marginTop: space[8] }}>
-          {(Object.keys(MICRONUTRIENT_LABELS) as (keyof Micronutrients)[]).map((k) => {
-            const meta = MICRONUTRIENT_LABELS[k];
-            const value = microTotals[k];
-            return (
-              <View key={k}>
-                {value === undefined ? (
-                  <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-                    <Text variant="body" onPress={() => nav.navigate('MicronutrientDetail', { nutrient: k })}>
-                      {meta.label}
-                    </Text>
-                    <Text variant="caption" colorToken={color.neutral.warmgray700}>
-                      No data for this food
-                    </Text>
-                  </View>
-                ) : (
-                  <ProgressBar
-                    progress={value / MICRONUTRIENT_TARGETS[k]}
-                    label={meta.label}
-                    valueLabel={`${Math.round(value * 10) / 10}${meta.unit}`}
-                    fillColor={color.primary.deepgreen}
-                  />
-                )}
-              </View>
-            );
-          })}
-        </View>
+        <Row style={{ justifyContent: 'space-around', alignItems: 'flex-start' }}>
+          <ProgressRing progress={totals.kcal / SAMPLE_TARGETS.kcal} color={theme.macro.calories} label="Calories" valueText={`${totals.kcal}`} size={110} />
+          <View style={{ gap: theme.spacing.space8 }}>
+            <ProgressRing progress={totals.protein_g / SAMPLE_TARGETS.protein_g} color={theme.macro.protein} label="Protein" valueText={`${Math.round(totals.protein_g)}g`} size={68} />
+            <ProgressRing progress={totals.fat_g / SAMPLE_TARGETS.fat_g} color={theme.macro.fat} label="Fat" valueText={`${Math.round(totals.fat_g)}g`} size={68} />
+          </View>
+        </Row>
       </Card>
-      <Button label="View history / calendar" variant="secondary" onPress={() => nav.navigate('NutritionHistory')} />
-    </ScreenContainer>
+
+      <Section title="Micronutrients" caption="Tap a nutrient for its weekly trend. Uncoded foods read 'no data', never zero.">
+        {micros.map((row) => (
+          <Card key={String(row.key)} onPress={() => navigation.navigate('MicronutrientDetail', { nutrientKey: row.key, label: row.label, unit: row.unit })}>
+            <MicroBar row={row} />
+          </Card>
+        ))}
+      </Section>
+
+      <Button variant="tertiary" label="View history" onPress={() => navigation.navigate('NutritionHistory')} />
+    </Screen>
   );
 }

@@ -1,55 +1,56 @@
-import React from 'react';
-import { ScreenContainer } from '../../components/ScreenContainer';
-import { Text } from '../../components/Typography';
-import { Button } from '../../components/Button';
-import { color, space } from '../../theme/tokens';
-import { useAppState } from '../../state/AppStateContext';
+import React, { useState } from 'react';
+import { Button, Card, StatusBadge, useTheme } from '@fit-and-fed/design-system';
+import { AppText, Screen, Section } from '../../ui/layout';
 
-/** S7. Legal & Disclaimers — health-data privacy notice, workout injury-liability disclaimer. */
+/**
+ * Legal & Disclaimers (S7) — health-data privacy, injury liability, and the
+ * "tracking/education, not medical advice" positioning (risk mitigation).
+ *
+ * DATA CONTRACT: the injury-liability disclaimer is a one-time BLOCKING
+ * acknowledgment at first workout opt-in (E7 default, handled at Module
+ * Interest); this screen is the passively-available full text plus an Acknowledge
+ * action for that gate. Fully readable offline.
+ */
 export function LegalDisclaimersScreen() {
-  const { state, dispatch } = useAppState();
+  const theme = useTheme();
+  const [acknowledged, setAcknowledged] = useState(false);
 
   return (
-    <ScreenContainer>
-      <Text variant="h1">Legal & Disclaimers</Text>
+    <Screen>
+      <Section title="Not medical advice">
+        <Card>
+          <AppText variant="body" color={theme.neutrals.charcoal}>
+            Fit &amp; Fed is a tracking and education tool. Nutrition figures are compiled from cited food
+            composition tables and USDA data and are starting estimates, not lab-precise values. Consult a
+            qualified professional before making significant dietary or training changes.
+          </AppText>
+        </Card>
+      </Section>
 
-      <Text variant="h3">Health-data privacy notice</Text>
-      <Text variant="body" colorToken={color.neutral.charcoal}>
-        Your nutrition, weight, and workout-attempt data is treated as sensitive health-adjacent
-        data. It is stored on your device and, when connected, synced to your account for backup
-        and cross-device access. We do not sell your personal data. Depending on your region, this
-        processing may be governed by Nigeria's NDPA, Ghana's Data Protection Act, or similar
-        frameworks, as well as GDPR/CCPA where applicable to diaspora users.
-      </Text>
+      <Section title="Workout injury liability">
+        <Card>
+          <AppText variant="body" color={theme.neutrals.charcoal}>
+            The skill-tree progressions are a well-sourced synthesis of published calisthenics and classical
+            Pilates systems. They have not been reviewed by a certified coach or physiotherapist. Train within
+            your ability, warm up, and stop if you feel pain. You assume the risk of exercise.
+          </AppText>
+        </Card>
+      </Section>
 
-      <Text variant="h3">Workout injury-liability disclaimer</Text>
-      <Text variant="body" colorToken={color.neutral.charcoal}>
-        The calisthenics and Pilates skill-tree content in this app is for tracking and education
-        purposes only. Placement results, node thresholds, and form cues are not medical or
-        professional-training advice. Stop any exercise that causes pain and consult a qualified
-        professional before beginning a new training program, especially if you have a pre-existing
-        condition.
-      </Text>
+      <Section title="Health-data privacy">
+        <Card>
+          <AppText variant="body" color={theme.neutrals.charcoal}>
+            Your data is tied to your account and handled per our privacy notice (NDPR/NDPA, GDPR, CCPA as
+            applicable). Deleting your account purges server and local data.
+          </AppText>
+        </Card>
+      </Section>
 
-      <Text variant="h3">Tracking / education, not medical advice</Text>
-      <Text variant="body" colorToken={color.neutral.charcoal}>
-        Nutrition targets, macro/micronutrient estimates, and workout progression in this app are
-        general tracking and educational tools. They do not diagnose, treat, or replace guidance
-        from a doctor, registered dietitian, or physiotherapist.
-      </Text>
-
-      <Text variant="caption" colorToken={color.neutral.warmgray700} style={{ marginTop: space[8] }}>
-        This build's copy is illustrative placeholder legal language, not reviewed legal counsel
-        text — see BUILD_NOTES.md.
-      </Text>
-
-      {!state.legalAcknowledged ? (
-        <Button label="Acknowledge" onPress={() => dispatch({ type: 'ACKNOWLEDGE_LEGAL' })} />
+      {acknowledged ? (
+        <StatusBadge tone="success" label="Acknowledged" />
       ) : (
-        <Text variant="caption" colorToken={color.semantic.success}>
-          Acknowledged.
-        </Text>
+        <Button label="Acknowledge" onPress={() => setAcknowledged(true)} />
       )}
-    </ScreenContainer>
+    </Screen>
   );
 }

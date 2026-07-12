@@ -1,92 +1,132 @@
 import React, { useState } from 'react';
-import { View } from 'react-native';
+import { useWindowDimensions, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { ScreenContainer } from '../../components/ScreenContainer';
-import { Text } from '../../components/Typography';
-import { Input } from '../../components/Input';
-import { Button } from '../../components/Button';
-import { SingleSelect } from '../../components/SingleSelect';
-import { Card } from '../../components/Card';
-import { ProgressBar } from '../../components/ProgressBar';
-import { space } from '../../theme/tokens';
-import { useAppState } from '../../state/AppStateContext';
+import { Button, Card, SingleSelectChips, TextField, useTheme } from '@fit-and-fed/design-system';
+import { AppText, Screen, Section } from '../../ui/layout';
+import { OnboardingProgress } from '../../components/OnboardingProgress';
+import { PreAuthLoginLink } from '../../components/PreAuthLoginLink';
 
-/** A3. Profile Setup — name, sex, height, current weight, activity level, primary goal. */
+/**
+ * Profile Setup — name, sex, height, current weight, activity level, primary goal.
+ *
+ * DATA CONTRACT: on Continue, commit the form values below to the local
+ * onboarding draft (user-flows §0.1). Expected shape:
+ *   { name: string; sex: string; heightCm: string; weightKg: string;
+ *     activity: string; goal: 'lose'|'maintain'|'gain' }
+ * [CP-VALIDATION]: Continue is disabled until name + sex + goal + numeric
+ * height/weight are present.
+ */
 export function ProfileSetupScreen() {
-  const nav = useNavigation<any>();
-  const { state, dispatch } = useAppState();
-  const [name, setName] = useState(state.profile.name);
-  const [sex, setSex] = useState(state.profile.sex);
-  const [height, setHeight] = useState(state.profile.heightCm?.toString() ?? '');
-  const [weight, setWeight] = useState(state.profile.weightKg?.toString() ?? '');
-  const [activity, setActivity] = useState(state.profile.activityLevel);
-  const [goal, setGoal] = useState(state.profile.goal);
+  const theme = useTheme();
+  const navigation = useNavigation();
+  const { width } = useWindowDimensions();
+  const wide = width >= 700;
 
-  const valid = name.trim().length > 0 && height && weight && sex && activity && goal;
+  const [name, setName] = useState('');
+  const [sex, setSex] = useState<string | null>(null);
+  const [height, setHeight] = useState('');
+  const [weight, setWeight] = useState('');
+  const [activity, setActivity] = useState<string | null>(null);
+  const [goal, setGoal] = useState<string | null>(null);
+  const [touched, setTouched] = useState(false);
 
-  const onContinue = () => {
-    dispatch({
-      type: 'SET_PROFILE',
-      payload: {
-        name,
-        sex,
-        heightCm: Number(height),
-        weightKg: Number(weight),
-        activityLevel: activity,
-        goal,
-      },
-    });
-    nav.navigate('GoalSetup');
-  };
+  const numeric = (v: string) => v.trim() !== '' && !Number.isNaN(Number(v));
+  const valid = name.trim() !== '' && !!sex && numeric(height) && numeric(weight) && !!activity && !!goal;
 
   return (
-    <ScreenContainer density="relaxed">
-      <ProgressBar progress={2 / 8} label="Step 2 of 8" />
-      <Text variant="h1">Tell us about you</Text>
-      <Card style={{ gap: space[16] }}>
-        <Input label="Name" value={name} onChangeText={setName} placeholder="Your name" />
-        <SingleSelect
-          label="Sex"
-          value={sex}
-          onChange={(v) => setSex(v as any)}
-          options={[
-            { value: 'female', label: 'Female' },
-            { value: 'male', label: 'Male' },
-            { value: 'prefer_not_to_say', label: 'Prefer not to say' },
-          ]}
-        />
-        <View style={{ flexDirection: 'row', gap: space[12] }}>
-          <View style={{ flex: 1 }}>
-            <Input label="Height (cm)" keyboardType="numeric" value={height} onChangeText={setHeight} placeholder="170" />
+    <Screen contentStyle={{ maxWidth: wide ? 560 : undefined, alignSelf: 'center', width: '100%' }}>
+      <OnboardingProgress step={1} total={5} />
+      <AppText variant="h1">Set up your profile</AppText>
+      <AppText variant="caption" color={theme.neutrals.charcoal}>
+        We use this to estimate your calorie and macro targets. You can change it any time.
+      </AppText>
+
+      <Card>
+        <View style={{ gap: theme.spacing.space16 }}>
+          <TextField
+            label="Name"
+            value={name}
+            onChangeText={setName}
+            placeholder="Your name"
+            error={touched && name.trim() === ''}
+            errorMessage="Name is required"
+          />
+
+          <Section title="Sex">
+            <SingleSelectChips
+              value={sex}
+              onChange={setSex}
+              options={[
+                { value: 'female', label: 'Female' },
+                { value: 'male', label: 'Male' },
+                { value: 'other', label: 'Prefer not to say' },
+              ]}
+              error={touched && !sex}
+              errorMessage="Select one"
+            />
+          </Section>
+
+          <View style={{ flexDirection: wide ? 'row' : 'column', gap: theme.spacing.space16 }}>
+            <View style={{ flex: 1 }}>
+              <TextField
+                label="Height (cm)"
+                value={height}
+                onChangeText={setHeight}
+                keyboardType="numeric"
+                placeholder="170"
+                error={touched && !numeric(height)}
+                errorMessage="Enter a number"
+              />
+            </View>
+            <View style={{ flex: 1 }}>
+              <TextField
+                label="Current weight (kg)"
+                value={weight}
+                onChangeText={setWeight}
+                keyboardType="numeric"
+                placeholder="80"
+                error={touched && !numeric(weight)}
+                errorMessage="Enter a number"
+              />
+            </View>
           </View>
-          <View style={{ flex: 1 }}>
-            <Input label="Weight (kg)" keyboardType="numeric" value={weight} onChangeText={setWeight} placeholder="70" />
-          </View>
+
+          <Section title="Activity level">
+            <SingleSelectChips
+              value={activity}
+              onChange={setActivity}
+              options={[
+                { value: 'sedentary', label: 'Sedentary' },
+                { value: 'light', label: 'Light' },
+                { value: 'moderate', label: 'Moderate' },
+                { value: 'active', label: 'Active' },
+              ]}
+            />
+          </Section>
+
+          <Section title="Primary goal">
+            <SingleSelectChips
+              value={goal}
+              onChange={setGoal}
+              options={[
+                { value: 'lose', label: 'Lose weight' },
+                { value: 'maintain', label: 'Maintain' },
+                { value: 'gain', label: 'Gain weight' },
+              ]}
+            />
+          </Section>
         </View>
-        <SingleSelect
-          label="Activity level"
-          value={activity}
-          onChange={(v) => setActivity(v as any)}
-          options={[
-            { value: 'sedentary', label: 'Sedentary' },
-            { value: 'light', label: 'Light' },
-            { value: 'moderate', label: 'Moderate' },
-            { value: 'active', label: 'Active' },
-          ]}
-        />
-        <SingleSelect
-          label="Primary goal"
-          value={goal}
-          onChange={(v) => setGoal(v as any)}
-          options={[
-            { value: 'lose', label: 'Lose weight' },
-            { value: 'maintain', label: 'Maintain' },
-            { value: 'gain', label: 'Gain' },
-          ]}
-        />
       </Card>
-      <Button label="Continue" onPress={onContinue} state={valid ? 'default' : 'disabled'} />
-      <Button label="Back" variant="tertiary" onPress={() => nav.goBack()} />
-    </ScreenContainer>
+
+      <Button
+        label="Continue"
+        onPress={() => {
+          // [CP-VALIDATION]: surface field errors rather than submitting invalid data.
+          setTouched(true);
+          if (valid) navigation.navigate('GoalSetup');
+        }}
+      />
+      <PreAuthLoginLink />
+    </Screen>
   );
 }

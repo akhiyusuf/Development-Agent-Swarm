@@ -1,99 +1,73 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 import { View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { ScreenContainer } from '../../components/ScreenContainer';
-import { Text } from '../../components/Typography';
-import { Card } from '../../components/Card';
-import { Button } from '../../components/Button';
-import { TrendChart, TrendPoint } from '../../components/TrendChart';
-import { Ionicons } from '@expo/vector-icons';
-import { macroColor, color, space } from '../../theme/tokens';
-import { useAppState } from '../../state/AppStateContext';
-import { nodesForTrack } from '../../data/skillTree';
+import { Card, NodeStateBadge, ProgressRing, TrendChart, useTheme } from '@fit-and-fed/design-system';
+import { AppText, Row, Screen, Section } from '../../ui/layout';
+import { SAMPLE_CAL_TREND, SAMPLE_TARGETS, SAMPLE_WEIGHTS } from '../../data/sampleData';
+import { totalsForEntries } from '../../data/compute';
+import { SAMPLE_DIARY } from '../../data/sampleData';
 
 /**
- * P1. Combined Progress Dashboard — three separately-titled sections
- * (carry-forward #6): weight trend, calorie-balance trend, workout
- * tier-progression summary. Carbs ring (gold-dark) and unlocked-node
- * indicator (node.unlocked) are kept in separate sections, each always
- * carrying its icon/label pairing, so the two never read as adjacent.
+ * Combined Progress Dashboard (P1) — the cross-module payoff: weight trend,
+ * calorie-balance trend, and workout tier-progression in three clearly SEPARATE
+ * titled sections (Req 8, Req 12).
+ *
+ * Carry-forward #6: the carbs macro (gold-dark #A9761E) and the unlocked-node
+ * indicator (#A85F12) are perceptually close, so they live in different titled
+ * sections AND each carries its icon/label pairing (ProgressRing label /
+ * NodeStateBadge) — never bare adjacent colored dots.
+ *
+ * DATA CONTRACT: `{ weights[], calTrend[], targets, workoutTiers[] }`. The whole
+ * workout section is OMITTED for users who never opted in / fully deferred both
+ * tracks (D1, §G #9) — not shown as a locked placeholder.
  */
 export function CombinedProgressDashboardScreen() {
-  const nav = useNavigation<any>();
-  const { state } = useAppState();
-
-  const weightTrend: TrendPoint[] = useMemo(() => {
-    const points: TrendPoint[] = [];
-    for (let i = 13; i >= 0; i--) {
-      const d = new Date();
-      d.setDate(d.getDate() - i);
-      const dateStr = d.toISOString().slice(0, 10);
-      const entry = state.weightLog.find((w) => w.date === dateStr);
-      points.push({ label: d.toLocaleDateString(undefined, { day: 'numeric', month: 'short' }), value: entry ? entry.kg : null });
-    }
-    return points;
-  }, [state.weightLog]);
-
-  const calorieTrend: TrendPoint[] = useMemo(() => {
-    const points: TrendPoint[] = [];
-    for (let i = 6; i >= 0; i--) {
-      const d = new Date();
-      d.setDate(d.getDate() - i);
-      const dateStr = d.toISOString().slice(0, 10);
-      const dayEntries = state.diary.filter((e) => e.date === dateStr);
-      const total = dayEntries.reduce((s, e) => s + e.calories, 0);
-      points.push({ label: d.toLocaleDateString(undefined, { weekday: 'short' }), value: dayEntries.length ? total : null });
-    }
-    return points;
-  }, [state.diary]);
-
-  const carbsToday = state.diary
-    .filter((d) => d.date === new Date().toISOString().slice(0, 10))
-    .reduce((s, e) => s + e.carbsG, 0);
+  const theme = useTheme();
+  const navigation = useNavigation();
+  const totals = totalsForEntries(SAMPLE_DIARY);
 
   return (
-    <ScreenContainer density="relaxed">
-      <Text variant="h1">Progress</Text>
+    <Screen>
+      <AppText variant="h2">Your progress</AppText>
 
-      <Card>
-        <Text variant="h2">Weight trend</Text>
-        <TrendChart data={weightTrend} unit="kg" lineColor={color.primary.terracotta} />
-        <Button label="View weight log" variant="tertiary" onPress={() => nav.navigate('WeightLog')} />
-      </Card>
+      <Section title="Weight trend">
+        <Card onPress={() => navigation.navigate('WeightLog')}>
+          <TrendChart points={SAMPLE_WEIGHTS.map((w) => ({ label: w.date, value: w.kg }))} color={theme.brand.deepGreen} unit="kg" />
+        </Card>
+      </Section>
 
-      <Card>
-        <Text variant="h2">Calorie-balance trend</Text>
-        <TrendChart data={calorieTrend} unit="kcal" targetValue={state.goals.calorieTarget} lineColor={macroColor.calories} />
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: space[8], marginTop: space[8] }}>
-          <Ionicons name="pie-chart-outline" size={16} color={macroColor.carbs} />
-          <Text variant="caption">Carbs today: {carbsToday}g</Text>
-        </View>
-        <Button label="View daily summary" variant="tertiary" onPress={() => nav.navigate('Nutrition', { screen: 'DailyNutritionSummary' })} />
-      </Card>
+      <Section title="Calorie balance">
+        <Card onPress={() => navigation.navigate('DailyNutritionSummary')}>
+          <TrendChart points={SAMPLE_CAL_TREND} color={theme.macro.calories} unit="kcal" />
+          <Row style={{ justifyContent: 'space-around', marginTop: theme.spacing.space12 }}>
+            <ProgressRing progress={totals.carbs_g / SAMPLE_TARGETS.carbs_g} color={theme.macro.carbs} label="Carbs" valueText={`${Math.round(totals.carbs_g)}g`} size={72} />
+            <ProgressRing progress={totals.protein_g / SAMPLE_TARGETS.protein_g} color={theme.macro.protein} label="Protein" valueText={`${Math.round(totals.protein_g)}g`} size={72} />
+          </Row>
+        </Card>
+      </Section>
 
-      <Card>
-        <Text variant="h2">Workout tier progression</Text>
-        {(['calisthenics', 'pilates'] as const).map((track) => {
-          const nodes = nodesForTrack(track);
-          const unlocked = nodes.filter((n) => (state.nodeStates[n.id] ?? n.defaultState) === 'unlocked');
-          const mastered = nodes.filter((n) => (state.nodeStates[n.id] ?? n.defaultState) === 'mastered');
-          return (
-            <View key={track} style={{ marginTop: space[8] }}>
-              <Text variant="h3">{track === 'calisthenics' ? 'Calisthenics' : 'Pilates'}</Text>
-              <Text variant="caption" colorToken={color.neutral.warmgray700}>
-                {mastered.length} mastered
-              </Text>
-              {unlocked.map((n) => (
-                <View key={n.id} style={{ flexDirection: 'row', alignItems: 'center', gap: space[8], marginTop: space[4] }}>
-                  <Ionicons name="ellipse-outline" size={14} color={color.node.unlocked} />
-                  <Text variant="caption">{n.name} — unlocked</Text>
-                </View>
-              ))}
+      <Section title="Workout tiers">
+        <Card onPress={() => navigation.navigate('ProgressionStatus')}>
+          <Row style={{ justifyContent: 'space-between' }}>
+            <View style={{ flex: 1 }}>
+              <AppText variant="bodyEmphasis">Calisthenics · Tier 2</AppText>
+              <AppText variant="caption" color={theme.neutrals.charcoal}>
+                Next unlocks approaching on the push and handstand lines.
+              </AppText>
             </View>
-          );
-        })}
-        <Button label="View progression status" variant="tertiary" onPress={() => nav.navigate('Workout', { screen: 'ProgressionStatus' })} />
-      </Card>
-    </ScreenContainer>
+            <NodeStateBadge state="unlocked" />
+          </Row>
+          <Row style={{ justifyContent: 'space-between', marginTop: theme.spacing.space12 }}>
+            <View style={{ flex: 1 }}>
+              <AppText variant="bodyEmphasis">Pilates · Basic Mat</AppText>
+              <AppText variant="caption" color={theme.neutrals.charcoal}>
+                Working toward the Intermediate tier.
+              </AppText>
+            </View>
+            <NodeStateBadge state="inProgress" />
+          </Row>
+        </Card>
+      </Section>
+    </Screen>
   );
 }

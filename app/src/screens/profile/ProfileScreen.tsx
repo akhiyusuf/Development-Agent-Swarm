@@ -1,82 +1,62 @@
 import React, { useState } from 'react';
 import { View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { Ionicons } from '@expo/vector-icons';
-import { ScreenContainer } from '../../components/ScreenContainer';
-import { Text } from '../../components/Typography';
-import { Input } from '../../components/Input';
-import { Button } from '../../components/Button';
-import { SingleSelect } from '../../components/SingleSelect';
-import { Card } from '../../components/Card';
-import { ListRow } from '../../components/ListRow';
-import { color, space } from '../../theme/tokens';
-import { useAppState } from '../../state/AppStateContext';
+import { Button, Card, ListRow, SingleSelectChips, TextField, useTheme } from '@fit-and-fed/design-system';
+import { AppText, Screen, Section } from '../../ui/layout';
 
-const SETTINGS_LINKS: { route: string; title: string; icon: keyof typeof Ionicons.glyphMap }[] = [
-  { route: 'AccountSettings', title: 'Account Settings', icon: 'key-outline' },
-  { route: 'DataSyncSettings', title: 'Data & Sync Settings', icon: 'sync-outline' },
-  { route: 'Integrations', title: 'Integrations', icon: 'link-outline' },
-  { route: 'RegionLanguageSettings', title: 'Region & Language', icon: 'globe-outline' },
-  { route: 'NotificationsSettings', title: 'Notifications', icon: 'notifications-outline' },
-  { route: 'LegalDisclaimers', title: 'Legal & Disclaimers', icon: 'document-text-outline' },
-  { route: 'HelpSupport', title: 'Help / Support', icon: 'help-circle-outline' },
-];
-
-/** S1. Profile — edit personal info, goals. */
+/**
+ * Profile (S1) — the Profile/Settings tab root: edit personal info + a shortcut
+ * into Goal Settings, plus the settings menu into every sub-screen (Req 12).
+ *
+ * DATA CONTRACT: `{ profile: { name, sex, heightCm, weightKg } }`. Save commits;
+ * unsaved edits discard on back-out (E1). No settings-menu screen exists in the
+ * sitemap, so the menu rows live here on the tab root.
+ */
 export function ProfileScreen() {
-  const nav = useNavigation<any>();
-  const { state, dispatch } = useAppState();
-  const [name, setName] = useState(state.profile.name);
-  const [height, setHeight] = useState(state.profile.heightCm?.toString() ?? '');
-  const [weight, setWeight] = useState(state.profile.weightKg?.toString() ?? '');
-  const [sex, setSex] = useState(state.profile.sex);
+  const theme = useTheme();
+  const navigation = useNavigation();
 
-  const save = () => {
-    dispatch({ type: 'SET_PROFILE', payload: { name, heightCm: Number(height), weightKg: Number(weight), sex } });
-  };
+  const [name, setName] = useState('Amara');
+  const [sex, setSex] = useState<string | null>('female');
+  const [height, setHeight] = useState('168');
+  const [weight, setWeight] = useState('80');
 
   return (
-    <ScreenContainer>
-      <View style={{ alignItems: 'center', gap: space[8] }}>
-        <View style={{ width: 72, height: 72, borderRadius: 36, backgroundColor: color.primary.deepgreen, alignItems: 'center', justifyContent: 'center' }}>
-          <Ionicons name="person" size={36} color={color.neutral.white} />
-        </View>
-        <Text variant="h2">{state.profile.name || 'Your profile'}</Text>
-      </View>
-      <Card style={{ gap: space[12] }}>
-        <Input label="Name" value={name} onChangeText={setName} />
-        <SingleSelect
-          label="Sex"
-          value={sex}
-          onChange={(v) => setSex(v as any)}
-          options={[
-            { value: 'female', label: 'Female' },
-            { value: 'male', label: 'Male' },
-            { value: 'prefer_not_to_say', label: 'Prefer not to say' },
-          ]}
-        />
-        <View style={{ flexDirection: 'row', gap: space[12] }}>
-          <View style={{ flex: 1 }}>
-            <Input label="Height (cm)" keyboardType="numeric" value={height} onChangeText={setHeight} />
+    <Screen>
+      <Section title="Personal info">
+        <Card>
+          <View style={{ gap: theme.spacing.space16 }}>
+            <TextField label="Name" value={name} onChangeText={setName} />
+            <Section title="Sex">
+              <SingleSelectChips
+                value={sex}
+                onChange={setSex}
+                options={[
+                  { value: 'female', label: 'Female' },
+                  { value: 'male', label: 'Male' },
+                  { value: 'other', label: 'Prefer not to say' },
+                ]}
+              />
+            </Section>
+            <TextField label="Height (cm)" value={height} onChangeText={setHeight} keyboardType="numeric" />
+            <TextField label="Current weight (kg)" value={weight} onChangeText={setWeight} keyboardType="numeric" />
           </View>
-          <View style={{ flex: 1 }}>
-            <Input label="Weight (kg)" keyboardType="numeric" value={weight} onChangeText={setWeight} />
-          </View>
-        </View>
-      </Card>
-      <Button label="Save" onPress={save} />
-      <Button label="Edit goals" variant="secondary" onPress={() => nav.navigate('Progress', { screen: 'GoalSettings' })} />
+        </Card>
+        <Button label="Save profile" onPress={() => { /* app-builder commits */ }} />
+        <Button variant="secondary" label="Adjust goals & targets" onPress={() => navigation.navigate('GoalSettings')} />
+      </Section>
 
-      <View style={{ gap: space[8] }}>
-        {SETTINGS_LINKS.map((link) => (
-          <ListRow
-            key={link.route}
-            title={link.title}
-            onPress={() => nav.navigate(link.route)}
-            leading={<Ionicons name={link.icon} size={20} color={color.primary.deepgreen} />}
-          />
-        ))}
-      </View>
-    </ScreenContainer>
+      <Section title="Settings">
+        <Card>
+          <ListRow title="Account" subtitle="Email, password, delete account" leadingIcon="person-circle-outline" showChevron onPress={() => navigation.navigate('AccountSettings')} />
+          <ListRow title="Data & Sync" subtitle="Offline status, manual sync, low-data mode" leadingIcon="sync-outline" showChevron onPress={() => navigation.navigate('DataSyncSettings')} />
+          <ListRow title="Integrations" subtitle="Google Fit / Apple Health" leadingIcon="fitness-outline" showChevron onPress={() => navigation.navigate('Integrations')} />
+          <ListRow title="Region & Language" subtitle="Market and household-unit display" leadingIcon="globe-outline" showChevron onPress={() => navigation.navigate('RegionLanguageSettings')} />
+          <ListRow title="Notifications" subtitle="Reminders, streaks, sync" leadingIcon="notifications-outline" showChevron onPress={() => navigation.navigate('NotificationsSettings')} />
+          <ListRow title="Legal & Disclaimers" subtitle="Privacy, injury liability" leadingIcon="document-text-outline" showChevron onPress={() => navigation.navigate('LegalDisclaimers')} />
+          <ListRow title="Help & Support" subtitle="FAQ and contact" leadingIcon="help-circle-outline" showChevron onPress={() => navigation.navigate('HelpSupport')} />
+        </Card>
+      </Section>
+    </Screen>
   );
 }

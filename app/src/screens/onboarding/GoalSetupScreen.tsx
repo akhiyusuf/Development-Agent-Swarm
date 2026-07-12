@@ -1,94 +1,104 @@
-import React, { useMemo, useState } from 'react';
+import React, { useState } from 'react';
 import { View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { ScreenContainer } from '../../components/ScreenContainer';
-import { Text } from '../../components/Typography';
-import { Button } from '../../components/Button';
-import { Card } from '../../components/Card';
-import { ProgressBar } from '../../components/ProgressBar';
-import { ProgressRing } from '../../components/ProgressRing';
-import { Stepper } from '../../components/Stepper';
-import { macroColor, space, color } from '../../theme/tokens';
-import { useAppState } from '../../state/AppStateContext';
-import { computeCalorieTarget, computeMacros } from '../../utils/calculateGoals';
+import { Button, Card, ProgressRing, TextField, useTheme } from '@fit-and-fed/design-system';
+import { AppText, Row, Screen } from '../../ui/layout';
+import { OnboardingProgress } from '../../components/OnboardingProgress';
+import { PreAuthLoginLink } from '../../components/PreAuthLoginLink';
+import { SAMPLE_TARGETS } from '../../data/sampleData';
 
-/** A4. Goal & Target Setup — computed calorie/macro targets, user-adjustable. */
+/**
+ * Goal & Target Setup — computed calorie/macro target the user may adjust.
+ *
+ * DATA CONTRACT: `computed` is derived locally (Mifflin-St Jeor + activity +
+ * goal) from Profile Setup's draft — no network call, so no loading state
+ * (user-flows A1). Screen expects `{ computed: Targets }` and commits the
+ * possibly-adjusted `{ kcal, protein_g, carbs_g, fat_g }` to the draft on
+ * Continue. Over-aggressive adjustment shows a non-blocking warning, never a
+ * hard block.
+ */
 export function GoalSetupScreen() {
-  const nav = useNavigation<any>();
-  const { state, dispatch } = useAppState();
-  const computed = useMemo(() => {
-    const calories = computeCalorieTarget(state.profile);
-    return { calories, ...computeMacros(calories) };
-  }, [state.profile]);
+  const theme = useTheme();
+  const navigation = useNavigation();
 
-  const [edited, setEdited] = useState(false);
-  const [calorieTarget, setCalorieTarget] = useState(computed.calories);
-  const [proteinG, setProteinG] = useState(computed.proteinG);
-  const [carbsG, setCarbsG] = useState(computed.carbsG);
-  const [fatG, setFatG] = useState(computed.fatG);
+  // PLACEHOLDER "computed" default (would come from the Profile Setup draft).
+  const [kcal, setKcal] = useState(String(SAMPLE_TARGETS.kcal));
+  const [protein, setProtein] = useState(String(SAMPLE_TARGETS.protein_g));
+  const [carbs, setCarbs] = useState(String(SAMPLE_TARGETS.carbs_g));
+  const [fat, setFat] = useState(String(SAMPLE_TARGETS.fat_g));
 
-  const aggressive = calorieTarget < 1200 || calorieTarget > 4000;
-
-  const onContinue = () => {
-    dispatch({ type: 'SET_GOALS', payload: { calorieTarget, proteinG, carbsG, fatG, computed: !edited } });
-    nav.navigate('RegionPreference');
-  };
-
-  const reset = () => {
-    setCalorieTarget(computed.calories);
-    setProteinG(computed.proteinG);
-    setCarbsG(computed.carbsG);
-    setFatG(computed.fatG);
-    setEdited(false);
-  };
+  const kcalNum = Number(kcal) || 0;
+  const proteinKcal = (Number(protein) || 0) * 4;
+  const carbsKcal = (Number(carbs) || 0) * 4;
+  const fatKcal = (Number(fat) || 0) * 9;
+  const aggressive = kcalNum > 0 && (kcalNum < 1200 || kcalNum > 4000);
 
   return (
-    <ScreenContainer density="relaxed">
-      <ProgressBar progress={3 / 8} label="Step 3 of 8" />
-      <Text variant="h1">Your daily targets</Text>
+    <Screen>
+      <OnboardingProgress step={2} total={5} />
+      <AppText variant="h1">Your daily targets</AppText>
+      <AppText variant="caption" color={theme.neutrals.charcoal}>
+        Computed from your profile. Adjust anything and the preview updates live.
+      </AppText>
+
       <Card>
-        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-          <ProgressRing progress={1} fillColor={macroColor.calories} centerLabel={`${calorieTarget}`} centerSubLabel="kcal" />
-          <ProgressRing progress={1} fillColor={macroColor.protein} size={64} centerLabel={`${proteinG}g`} centerSubLabel="protein" />
-          <ProgressRing progress={1} fillColor={macroColor.carbs} size={64} centerLabel={`${carbsG}g`} centerSubLabel="carbs" />
-          <ProgressRing progress={1} fillColor={macroColor.fat} size={64} centerLabel={`${fatG}g`} centerSubLabel="fat" />
+        <AppText variant="h3">{kcalNum} kcal / day</AppText>
+        <Row style={{ justifyContent: 'space-around', marginTop: theme.spacing.space16 }}>
+          <ProgressRing
+            progress={kcalNum ? proteinKcal / (kcalNum || 1) : 0}
+            color={theme.macro.protein}
+            label="Protein"
+            valueText={`${protein}g`}
+            size={84}
+          />
+          <ProgressRing
+            progress={kcalNum ? carbsKcal / (kcalNum || 1) : 0}
+            color={theme.macro.carbs}
+            label="Carbs"
+            valueText={`${carbs}g`}
+            size={84}
+          />
+          <ProgressRing
+            progress={kcalNum ? fatKcal / (kcalNum || 1) : 0}
+            color={theme.macro.fat}
+            label="Fat"
+            valueText={`${fat}g`}
+            size={84}
+          />
+        </Row>
+      </Card>
+
+      <Card>
+        <View style={{ gap: theme.spacing.space16 }}>
+          <AppText variant="bodyEmphasis">Adjust targets</AppText>
+          <TextField label="Calories (kcal)" value={kcal} onChangeText={setKcal} keyboardType="numeric" />
+          {aggressive ? (
+            <AppText variant="caption" color={theme.semantic.warning}>
+              ⚠ That target is outside a typical safe range. You can proceed, but consider a gentler goal.
+            </AppText>
+          ) : null}
+          <Row style={{ gap: theme.spacing.space16 }}>
+            <View style={{ flex: 1 }}>
+              <TextField label="Protein (g)" value={protein} onChangeText={setProtein} keyboardType="numeric" />
+            </View>
+            <View style={{ flex: 1 }}>
+              <TextField label="Carbs (g)" value={carbs} onChangeText={setCarbs} keyboardType="numeric" />
+            </View>
+            <View style={{ flex: 1 }}>
+              <TextField label="Fat (g)" value={fat} onChangeText={setFat} keyboardType="numeric" />
+            </View>
+          </Row>
         </View>
-        {edited ? (
-          <Text variant="micro" colorToken={color.primary.terracotta} style={{ marginTop: space[8] }}>
-            EDITED
-          </Text>
-        ) : (
-          <Text variant="caption" colorToken={color.neutral.warmgray700} style={{ marginTop: space[8] }}>
-            Computed from your profile
-          </Text>
-        )}
       </Card>
 
-      <Card style={{ gap: space[12] }}>
-        <Text variant="h3">Adjust targets</Text>
-        <Row label="Calories" value={calorieTarget} onChange={(v) => { setCalorieTarget(v); setEdited(true); }} step={50} min={1000} max={5000} />
-        <Row label="Protein (g)" value={proteinG} onChange={(v) => { setProteinG(v); setEdited(true); }} step={5} min={20} max={300} />
-        <Row label="Carbs (g)" value={carbsG} onChange={(v) => { setCarbsG(v); setEdited(true); }} step={5} min={20} max={500} />
-        <Row label="Fat (g)" value={fatG} onChange={(v) => { setFatG(v); setEdited(true); }} step={5} min={10} max={200} />
-        {aggressive ? (
-          <Text variant="caption" colorToken={color.semantic.warning}>
-            That target looks unusually aggressive — consider a safer range.
-          </Text>
-        ) : null}
-      </Card>
-
-      <Button label="Continue" onPress={onContinue} />
-      <Button label="Reset to computed" variant="secondary" onPress={reset} />
-      <Button label="Back" variant="tertiary" onPress={() => nav.goBack()} />
-    </ScreenContainer>
-  );
-}
-
-function Row({ label, value, onChange, step, min, max }: { label: string; value: number; onChange: (v: number) => void; step: number; min: number; max: number }) {
-  return (
-    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-      <Text variant="body">{label}</Text>
-      <Stepper value={value} onChange={onChange} step={step} min={min} max={max} />
-    </View>
+      <Button label="Continue" onPress={() => navigation.navigate('RegionPreference')} />
+      <Button variant="tertiary" label="Reset to computed" onPress={() => {
+        setKcal(String(SAMPLE_TARGETS.kcal));
+        setProtein(String(SAMPLE_TARGETS.protein_g));
+        setCarbs(String(SAMPLE_TARGETS.carbs_g));
+        setFat(String(SAMPLE_TARGETS.fat_g));
+      }} />
+      <PreAuthLoginLink />
+    </Screen>
   );
 }

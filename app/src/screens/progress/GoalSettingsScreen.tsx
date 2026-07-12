@@ -1,87 +1,90 @@
 import React, { useState } from 'react';
 import { View } from 'react-native';
-import { ScreenContainer } from '../../components/ScreenContainer';
-import { Text } from '../../components/Typography';
-import { Card } from '../../components/Card';
-import { Button } from '../../components/Button';
-import { Stepper } from '../../components/Stepper';
-import { SingleSelect } from '../../components/SingleSelect';
-import { ProgressRing } from '../../components/ProgressRing';
-import { Input } from '../../components/Input';
-import { macroColor, color, space } from '../../theme/tokens';
-import { useAppState } from '../../state/AppStateContext';
+import { useNavigation } from '@react-navigation/native';
+import { Button, Card, ProgressRing, SingleSelectChips, TextField, useTheme } from '@fit-and-fed/design-system';
+import { AppText, Row, Screen, Section } from '../../ui/layout';
+import { SAMPLE_TARGETS } from '../../data/sampleData';
 
-/** P3. Goal Settings / Adjust Targets. */
+/**
+ * Goal Settings / Adjust Targets (P3) — mirrors onboarding Goal Setup plus a
+ * weight-goal control (Req 3, 12).
+ *
+ * DATA CONTRACT: `{ targets, weightGoal }`. Save commits immediately and takes
+ * effect on the current day's remaining totals too (D3 same-day recalculation).
+ * Over-aggressive adjustment shows a non-blocking warning, never a hard block.
+ */
 export function GoalSettingsScreen() {
-  const { state, dispatch } = useAppState();
-  const [calorieTarget, setCalorieTarget] = useState(state.goals.calorieTarget);
-  const [proteinG, setProteinG] = useState(state.goals.proteinG);
-  const [carbsG, setCarbsG] = useState(state.goals.carbsG);
-  const [fatG, setFatG] = useState(state.goals.fatG);
-  const [weightGoalKg, setWeightGoalKg] = useState(state.goals.weightGoalKg?.toString() ?? '');
-  const [pace, setPace] = useState(state.goals.pace ?? 'standard');
-  const [saved, setSaved] = useState(false);
+  const theme = useTheme();
+  const navigation = useNavigation();
 
-  const aggressive = calorieTarget < 1200 || calorieTarget > 4000;
+  const [kcal, setKcal] = useState(String(SAMPLE_TARGETS.kcal));
+  const [protein, setProtein] = useState(String(SAMPLE_TARGETS.protein_g));
+  const [carbs, setCarbs] = useState(String(SAMPLE_TARGETS.carbs_g));
+  const [fat, setFat] = useState(String(SAMPLE_TARGETS.fat_g));
+  const [direction, setDirection] = useState<string | null>('lose');
+  const [targetWeight, setTargetWeight] = useState('75');
 
-  const save = () => {
-    dispatch({
-      type: 'SET_GOALS',
-      payload: { calorieTarget, proteinG, carbsG, fatG, computed: false, weightGoalKg: Number(weightGoalKg) || undefined, pace: pace as any },
-    });
-    setSaved(true);
-  };
+  const kcalNum = Number(kcal) || 0;
+  const aggressive = kcalNum > 0 && (kcalNum < 1200 || kcalNum > 4000);
 
   return (
-    <ScreenContainer density="compact">
-      <Text variant="h1">Goal Settings</Text>
+    <Screen>
+      <AppText variant="h2">Adjust targets</AppText>
+
       <Card>
-        <View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
-          <ProgressRing progress={1} fillColor={macroColor.calories} centerLabel={`${calorieTarget}`} centerSubLabel="kcal" />
-          <ProgressRing progress={1} size={64} fillColor={macroColor.protein} centerLabel={`${proteinG}g`} centerSubLabel="protein" />
-          <ProgressRing progress={1} size={64} fillColor={macroColor.carbs} centerLabel={`${carbsG}g`} centerSubLabel="carbs" />
-          <ProgressRing progress={1} size={64} fillColor={macroColor.fat} centerLabel={`${fatG}g`} centerSubLabel="fat" />
+        <Row style={{ justifyContent: 'space-around' }}>
+          <ProgressRing progress={1} color={theme.macro.protein} label="Protein" valueText={`${protein}g`} size={72} />
+          <ProgressRing progress={1} color={theme.macro.carbs} label="Carbs" valueText={`${carbs}g`} size={72} />
+          <ProgressRing progress={1} color={theme.macro.fat} label="Fat" valueText={`${fat}g`} size={72} />
+        </Row>
+      </Card>
+
+      <Card>
+        <View style={{ gap: theme.spacing.space16 }}>
+          <TextField label="Calories (kcal)" value={kcal} onChangeText={setKcal} keyboardType="numeric" />
+          {aggressive ? (
+            <AppText variant="caption" color={theme.semantic.warning}>
+              ⚠ That target is outside a typical safe range. You can still save it.
+            </AppText>
+          ) : null}
+          <Row style={{ gap: theme.spacing.space12 }}>
+            <View style={{ flex: 1 }}>
+              <TextField label="Protein g" value={protein} onChangeText={setProtein} keyboardType="numeric" />
+            </View>
+            <View style={{ flex: 1 }}>
+              <TextField label="Carbs g" value={carbs} onChangeText={setCarbs} keyboardType="numeric" />
+            </View>
+            <View style={{ flex: 1 }}>
+              <TextField label="Fat g" value={fat} onChangeText={setFat} keyboardType="numeric" />
+            </View>
+          </Row>
         </View>
       </Card>
-      <Card style={{ gap: space[12] }}>
-        <Row label="Calories" value={calorieTarget} onChange={setCalorieTarget} step={50} min={1000} max={5000} />
-        <Row label="Protein (g)" value={proteinG} onChange={setProteinG} step={5} min={20} max={300} />
-        <Row label="Carbs (g)" value={carbsG} onChange={setCarbsG} step={5} min={20} max={500} />
-        <Row label="Fat (g)" value={fatG} onChange={setFatG} step={5} min={10} max={200} />
-        {aggressive ? (
-          <Text variant="caption" colorToken={color.semantic.warning}>
-            That target looks unusually aggressive — consider a safer range.
-          </Text>
-        ) : null}
-      </Card>
-      <Card style={{ gap: space[12] }}>
-        <Input label="Weight goal (kg)" keyboardType="numeric" value={weightGoalKg} onChangeText={setWeightGoalKg} />
-        <SingleSelect
-          label="Pace"
-          value={pace}
-          onChange={(v) => setPace(v as any)}
-          options={[
-            { value: 'gradual', label: 'Gradual' },
-            { value: 'standard', label: 'Standard' },
-            { value: 'aggressive', label: 'Aggressive' },
-          ]}
-        />
-      </Card>
-      {saved ? (
-        <Text variant="caption" colorToken={color.semantic.success}>
-          Saved.
-        </Text>
-      ) : null}
-      <Button label="Save targets" onPress={save} />
-    </ScreenContainer>
-  );
-}
 
-function Row({ label, value, onChange, step, min, max }: { label: string; value: number; onChange: (v: number) => void; step: number; min: number; max: number }) {
-  return (
-    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-      <Text variant="body">{label}</Text>
-      <Stepper value={value} onChange={onChange} step={step} min={min} max={max} />
-    </View>
+      <Card>
+        <Section title="Weight goal">
+          <SingleSelectChips
+            value={direction}
+            onChange={setDirection}
+            options={[
+              { value: 'lose', label: 'Lose' },
+              { value: 'maintain', label: 'Maintain' },
+              { value: 'gain', label: 'Gain' },
+            ]}
+          />
+          <View style={{ marginTop: theme.spacing.space12 }}>
+            <TextField label="Target weight (kg)" value={targetWeight} onChangeText={setTargetWeight} keyboardType="numeric" />
+          </View>
+        </Section>
+      </Card>
+
+      <Button label="Save targets" onPress={() => navigation.goBack()} />
+      <Button variant="tertiary" label="Reset to computed" onPress={() => {
+        setKcal(String(SAMPLE_TARGETS.kcal));
+        setProtein(String(SAMPLE_TARGETS.protein_g));
+        setCarbs(String(SAMPLE_TARGETS.carbs_g));
+        setFat(String(SAMPLE_TARGETS.fat_g));
+      }} />
+    </Screen>
   );
 }

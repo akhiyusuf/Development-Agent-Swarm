@@ -1,76 +1,124 @@
 import React, { useState } from 'react';
 import { View } from 'react-native';
-import { ScreenContainer } from '../../components/ScreenContainer';
-import { Text } from '../../components/Typography';
-import { Input } from '../../components/Input';
-import { Button } from '../../components/Button';
-import { SegmentedControl } from '../../components/SegmentedControl';
-import { BottomSheet } from '../../components/BottomSheet';
-import { StatusBadge } from '../../components/StatusBadge';
-import { space } from '../../theme/tokens';
-import { useAppState } from '../../state/AppStateContext';
+import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
+import { BottomSheet, Button, SegmentedControl, StatusBadge, TextField, useTheme } from '@fit-and-fed/design-system';
+import { AppText, Screen } from '../../ui/layout';
+import type { RootParamList } from '../../navigation/types';
 
 /**
- * A2. Sign Up / Log In + forgot-password sub-flow.
- * [GAP] segmented control used here per docs/screens.md — implemented as an
- * additive design-system component (SegmentedControl), not invented ad hoc.
+ * Sign Up / Log In — the mandatory account gate (user-flows §0.3: no guest/skip
+ * path exists). Sits immediately before Onboarding Complete in the reordered
+ * sitemap.
+ *
+ * DATA CONTRACT:
+ *  - Sign Up (A4): create account, atomically attach the local onboarding draft,
+ *    clear the draft, set the device account-history marker -> OnboardingComplete.
+ *  - Log In (A5): authenticate, run the field-level server-wins merge (§0.1); if
+ *    any required field is unfilled -> resume onboarding at it, else a fully
+ *    onboarded account -> Main (Home) directly (§0.2, no Welcome-back screen).
+ *  - Both are synchronous, connectivity-required: [CP-NETFAIL] on submit
+ *    (form preserved + inline retry). [CP-VALIDATION] per field.
  */
 export function AuthScreen() {
-  const { dispatch, isOnline } = useAppState();
-  const [mode, setMode] = useState<'login' | 'signup'>('signup');
+  const theme = useTheme();
+  const navigation = useNavigation();
+  const route = useRoute<RouteProp<RootParamList, 'Auth'>>();
+
+  const [mode, setMode] = useState<'login' | 'signup'>(route.params?.mode ?? 'signup');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState<string | undefined>();
-  const [forgotVisible, setForgotVisible] = useState(false);
-  const [resetSent, setResetSent] = useState(false);
-  const [resetEmail, setResetEmail] = useState('');
+  const [showPw, setShowPw] = useState(false);
+  const [touched, setTouched] = useState(false);
+  const [forgotOpen, setForgotOpen] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState('');
+  const [forgotSent, setForgotSent] = useState(false);
 
-  const submit = () => {
-    if (!isOnline) {
-      setError("You're offline — connect to sign in.");
-      return;
+  const emailValid = /\S+@\S+\.\S+/.test(email);
+  const pwValid = password.length >= 8;
+
+  function submit() {
+    setTouched(true);
+    if (!emailValid || !pwValid) return;
+    if (mode === 'signup') {
+      navigation.navigate('OnboardingComplete');
+    } else {
+      // Returning, fully-onboarded account lands straight on Home (§0.2).
+      navigation.reset({ index: 0, routes: [{ name: 'Main' as never }] });
     }
-    if (!email.includes('@')) {
-      setError('Enter a valid email address.');
-      return;
-    }
-    if (password.length < 6) {
-      setError('Password must be at least 6 characters.');
-      return;
-    }
-    setError(undefined);
-    dispatch({ type: 'SET_AUTH', email });
-  };
+  }
 
   return (
-    <ScreenContainer density="relaxed">
-      <Text variant="h1">{mode === 'login' ? 'Log in' : 'Create your account'}</Text>
+    <Screen>
+      <AppText variant="h1">{mode === 'signup' ? 'Create your account' : 'Welcome back'}</AppText>
+      <AppText variant="caption" color={theme.neutrals.charcoal}>
+        {mode === 'signup'
+          ? "This is the point where there's real progress worth saving — your profile, targets and placement attach to this account."
+          : 'Log in to sync your account across devices.'}
+      </AppText>
+
       <SegmentedControl
+        accessibilityLabel="Auth mode"
+        value={mode}
+        onChange={(v) => setMode(v as 'login' | 'signup')}
         options={[
           { value: 'signup', label: 'Sign Up' },
           { value: 'login', label: 'Log In' },
         ]}
-        value={mode}
-        onChange={(v) => setMode(v as 'login' | 'signup')}
       />
-      {!isOnline ? <StatusBadge tone="warning" label="Offline" /> : null}
-      <View style={{ gap: space[16] }}>
-        <Input label="Email" autoCapitalize="none" keyboardType="email-address" value={email} onChangeText={setEmail} placeholder="you@example.com" />
-        <Input label="Password" secureTextEntry secureToggle value={password} onChangeText={setPassword} placeholder="••••••••" error={error} />
-      </View>
-      <Button label={mode === 'login' ? 'Log in' : 'Create account'} onPress={submit} />
-      <Button label="Forgot password?" variant="tertiary" onPress={() => setForgotVisible(true)} />
 
-      <BottomSheet visible={forgotVisible} onDismiss={() => setForgotVisible(false)} title="Reset your password">
-        {resetSent ? (
-          <StatusBadge tone="success" label={`Reset link sent to ${resetEmail}`} />
+      <TextField
+        label="Email"
+        value={email}
+        onChangeText={setEmail}
+        keyboardType="email-address"
+        autoCapitalize="none"
+        placeholder="you@example.com"
+        error={touched && !emailValid}
+        errorMessage="Enter a valid email"
+      />
+      <TextField
+        label="Password"
+        value={password}
+        onChangeText={setPassword}
+        secureTextEntry={!showPw}
+        placeholder="At least 8 characters"
+        error={touched && !pwValid}
+        errorMessage="Password must be at least 8 characters"
+      />
+      <View style={{ alignItems: 'flex-start' }}>
+        <Button variant="tertiary" label={showPw ? 'Hide password' : 'Show password'} onPress={() => setShowPw((s) => !s)} />
+      </View>
+
+      <Button label={mode === 'signup' ? 'Create account' : 'Log in'} onPress={submit} />
+      <Button variant="tertiary" label="Forgot password?" onPress={() => { setForgotOpen(true); setForgotSent(false); }} />
+
+      <BottomSheet
+        visible={forgotOpen}
+        onClose={() => setForgotOpen(false)}
+        title="Reset your password"
+      >
+        {forgotSent ? (
+          <View style={{ gap: theme.spacing.space12 }}>
+            <StatusBadge tone="success" label="Reset link sent" />
+            <AppText variant="caption" color={theme.neutrals.charcoal}>
+              If an account exists for that email, a reset link is on its way.
+            </AppText>
+            <Button label="Done" onPress={() => setForgotOpen(false)} />
+          </View>
         ) : (
-          <>
-            <Input label="Email" autoCapitalize="none" keyboardType="email-address" value={resetEmail} onChangeText={setResetEmail} />
-            <Button label="Send reset link" onPress={() => setResetSent(true)} />
-          </>
+          <View style={{ gap: theme.spacing.space12 }}>
+            <TextField
+              label="Email"
+              value={forgotEmail}
+              onChangeText={setForgotEmail}
+              keyboardType="email-address"
+              autoCapitalize="none"
+              placeholder="you@example.com"
+            />
+            <Button label="Send reset link" onPress={() => setForgotSent(true)} />
+          </View>
         )}
       </BottomSheet>
-    </ScreenContainer>
+    </Screen>
   );
 }

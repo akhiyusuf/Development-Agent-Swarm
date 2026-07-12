@@ -1,122 +1,80 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { ScreenContainer } from '../../components/ScreenContainer';
-import { Text } from '../../components/Typography';
-import { Card } from '../../components/Card';
-import { Button } from '../../components/Button';
-import { ProgressRing } from '../../components/ProgressRing';
-import { ProgressBar } from '../../components/ProgressBar';
-import { StatusBadge } from '../../components/StatusBadge';
-import { BottomSheet } from '../../components/BottomSheet';
-import { Input } from '../../components/Input';
-import { macroColor, space, color } from '../../theme/tokens';
-import { useAppState } from '../../state/AppStateContext';
-import { MICRONUTRIENT_LABELS, MICRONUTRIENT_TARGETS, Micronutrients } from '../../data/foodDatabase';
+import { Button, Card, ProgressRing, StatusBadge, useTheme } from '@fit-and-fed/design-system';
+import { AppText, Row, Screen, Section } from '../../ui/layout';
+import { MicroBar } from '../../components/MicroBar';
+import { microRows, totalsForEntries } from '../../data/compute';
+import { SAMPLE_DIARY, SAMPLE_QUEUED_COUNT, SAMPLE_TARGETS } from '../../data/sampleData';
 
-/** Home (Today Dashboard) — Tab 1. Aggregation view (Req 3 + Req 12). */
+/**
+ * Home (Today Dashboard) — energy-balance card, micronutrient snapshot, quick
+ * actions, and the offline/sync status indicator (Req 3 + Req 12 aggregation).
+ *
+ * DATA CONTRACT: expects
+ *   { entries: DiaryEntry[]; targets: Targets; queuedCount: number;
+ *     logMeal(): void; logWorkoutSession(): void; quickAddWeight(): void }
+ * Cache-first render, no spinner on the common case (F1); first-run zero-data
+ * shows the empty states below, not a loader. Quick actions open modals as
+ * OVERLAYS on Home and rejoin back to Home on save/discard (F1 fork/join).
+ */
 export function HomeScreen() {
-  const nav = useNavigation<any>();
-  const { state, dispatch, isOnline, queuedCount, uid, todayStr } = useAppState();
-  const [weightSheet, setWeightSheet] = useState(false);
-  const [weightInput, setWeightInput] = useState('');
+  const theme = useTheme();
+  const navigation = useNavigation();
 
-  const today = todayStr();
-  const todaysEntries = state.diary.filter((d) => d.date === today);
-  const caloriesIn = todaysEntries.reduce((s, e) => s + e.calories, 0);
-  const proteinIn = todaysEntries.reduce((s, e) => s + e.proteinG, 0);
-  const carbsIn = todaysEntries.reduce((s, e) => s + e.carbsG, 0);
-  const fatIn = todaysEntries.reduce((s, e) => s + e.fatG, 0);
-
-  const microTotals: Micronutrients = {};
-  todaysEntries.forEach((e) => {
-    (Object.keys(e.micronutrients) as (keyof Micronutrients)[]).forEach((k) => {
-      microTotals[k] = (microTotals[k] ?? 0) + (e.micronutrients[k] ?? 0);
-    });
-  });
-  const trackedMicros: (keyof Micronutrients)[] = ['ironMg', 'zincMg', 'calciumMg', 'vitaminAmcg', 'folateMcg', 'b12Mcg'];
-
-  const saveWeight = () => {
-    const kg = Number(weightInput);
-    if (!kg) return;
-    dispatch({ type: 'ADD_WEIGHT', entry: { id: uid(), date: today, kg, queued: !isOnline } });
-    setWeightSheet(false);
-    setWeightInput('');
-  };
+  const totals = totalsForEntries(SAMPLE_DIARY);
+  const micros = microRows(SAMPLE_DIARY);
+  const calProgress = totals.kcal / SAMPLE_TARGETS.kcal;
+  const calStatus = calProgress > 1 ? 'exceeded' : calProgress > 0.9 ? 'approaching' : 'normal';
 
   return (
-    <ScreenContainer>
-      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-        <Text variant="h1">Today</Text>
-        {queuedCount > 0 ? (
-          <StatusBadge tone="info" label={`${queuedCount} queued`} />
-        ) : !isOnline ? (
-          <StatusBadge tone="warning" label="Offline" />
+    <Screen>
+      {/* Sync / offline status — Req 5 screen-level surface. */}
+      <Row style={{ justifyContent: 'space-between' }}>
+        <AppText variant="h2">Today</AppText>
+        {SAMPLE_QUEUED_COUNT > 0 ? (
+          <StatusBadge tone="info" label={`${SAMPLE_QUEUED_COUNT} queued to sync`} />
         ) : (
           <StatusBadge tone="success" label="Synced" />
         )}
-      </View>
+      </Row>
 
+      {/* Energy-balance summary */}
       <Card>
-        <Text variant="h2">Energy balance</Text>
-        <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-around', marginTop: space[12], gap: space[12] }}>
+        <Row style={{ justifyContent: 'space-around', alignItems: 'flex-start' }}>
           <ProgressRing
-            progress={caloriesIn / state.goals.calorieTarget}
-            fillColor={macroColor.calories}
-            state={caloriesIn > state.goals.calorieTarget ? 'warning' : 'default'}
-            centerLabel={`${caloriesIn}`}
-            centerSubLabel={`/ ${state.goals.calorieTarget} kcal`}
+            progress={calProgress}
+            color={theme.macro.calories}
+            label="Calories"
+            valueText={`${totals.kcal}`}
+            status={calStatus}
+            size={120}
           />
-          <ProgressRing progress={proteinIn / state.goals.proteinG} size={64} fillColor={macroColor.protein} centerLabel={`${proteinIn}g`} centerSubLabel="protein" />
-          <ProgressRing progress={carbsIn / state.goals.carbsG} size={64} fillColor={macroColor.carbs} centerLabel={`${carbsIn}g`} centerSubLabel="carbs" />
-          <ProgressRing progress={fatIn / state.goals.fatG} size={64} fillColor={macroColor.fat} centerLabel={`${fatIn}g`} centerSubLabel="fat" />
-        </View>
+          <View style={{ justifyContent: 'space-around', gap: theme.spacing.space12 }}>
+            <ProgressRing progress={totals.protein_g / SAMPLE_TARGETS.protein_g} color={theme.macro.protein} label="Protein" valueText={`${Math.round(totals.protein_g)}g`} size={72} />
+            <ProgressRing progress={totals.carbs_g / SAMPLE_TARGETS.carbs_g} color={theme.macro.carbs} label="Carbs" valueText={`${Math.round(totals.carbs_g)}g`} size={72} />
+          </View>
+        </Row>
+        <AppText variant="caption" color={theme.neutrals.charcoal}>
+          {SAMPLE_TARGETS.kcal - totals.kcal} kcal remaining of {SAMPLE_TARGETS.kcal}
+        </AppText>
       </Card>
 
+      {/* Micronutrient snapshot — partial-coverage aware (Req 4). */}
       <Card>
-        <Text variant="h2">Micronutrient snapshot</Text>
-        <View style={{ gap: space[8], marginTop: space[8] }}>
-          {trackedMicros.map((k) => {
-            const meta = MICRONUTRIENT_LABELS[k];
-            const value = microTotals[k];
-            if (value === undefined) {
-              return (
-                <View key={k} style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-                  <Text variant="caption">{meta.label}</Text>
-                  <Text variant="caption" colorToken={color.neutral.warmgray700}>
-                    No data yet
-                  </Text>
-                </View>
-              );
-            }
-            return (
-              <ProgressBar
-                key={k}
-                progress={value / MICRONUTRIENT_TARGETS[k]}
-                label={meta.label}
-                valueLabel={`${Math.round(value)}${meta.unit}`}
-                fillColor={color.primary.deepgreen}
-              />
-            );
-          })}
-        </View>
+        <Section title="Micronutrients" caption="No-data states are honest gaps, never a false zero.">
+          <View style={{ gap: theme.spacing.space12 }}>
+            {micros.map((row) => (
+              <MicroBar key={String(row.key)} row={row} />
+            ))}
+          </View>
+        </Section>
       </Card>
 
-      <View style={{ flexDirection: 'row', gap: space[12] }}>
-        <Button label="Log Meal" onPress={() => nav.navigate('Nutrition', { screen: 'AddEntry' })} style={{ flex: 1 }} />
-        <Button
-          label="Log Workout"
-          variant="secondary"
-          onPress={() => nav.navigate('Workout', { screen: 'WorkoutSessionLog' })}
-          style={{ flex: 1 }}
-        />
-      </View>
-      <Button label="Quick-add weight" variant="tertiary" onPress={() => setWeightSheet(true)} />
-
-      <BottomSheet visible={weightSheet} onDismiss={() => setWeightSheet(false)} title="Log your weight">
-        <Input label="Weight (kg)" keyboardType="numeric" value={weightInput} onChangeText={setWeightInput} placeholder="70" />
-        <Button label="Save" onPress={saveWeight} />
-      </BottomSheet>
-    </ScreenContainer>
+      {/* Quick actions — overlays that rejoin to Home (F1). */}
+      <Button label="Log Meal" onPress={() => navigation.navigate('AddEntry')} />
+      <Button variant="secondary" label="Log Workout Session" onPress={() => navigation.navigate('WorkoutSessionLog')} />
+      <Button variant="tertiary" label="Quick-add Weight" onPress={() => navigation.navigate('QuickAddWeight')} />
+    </Screen>
   );
 }

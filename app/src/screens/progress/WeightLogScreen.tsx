@@ -1,86 +1,58 @@
-import React, { useMemo, useState } from 'react';
-import { ScreenContainer } from '../../components/ScreenContainer';
-import { Text } from '../../components/Typography';
-import { Card } from '../../components/Card';
-import { Button } from '../../components/Button';
-import { ListRow } from '../../components/ListRow';
-import { TrendChart, TrendPoint } from '../../components/TrendChart';
-import { BottomSheet } from '../../components/BottomSheet';
-import { Input } from '../../components/Input';
-import { color } from '../../theme/tokens';
-import { useAppState } from '../../state/AppStateContext';
+import React, { useState } from 'react';
+import { View } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import { Button, Card, ListRow, TrendChart, useTheme } from '@fit-and-fed/design-system';
+import { AppText, Screen, Section } from '../../ui/layout';
+import { SAMPLE_WEIGHTS } from '../../data/sampleData';
 
-/** P2. Weight Log — add/view weight entries. */
+/**
+ * Weight Log (P2) — add/view weight entries; also reachable as quick-add from
+ * Home (Req 12).
+ *
+ * DATA CONTRACT: `{ entries: { date, kg }[] }`. Add opens the Quick-add sheet;
+ * delete requires an explicit confirm (matching N9). Offline: queues
+ * ([CP-OFFLINE]). 0/1 points shows the "log more to see a trend" state (D2).
+ */
 export function WeightLogScreen() {
-  const { state, dispatch, isOnline, uid, todayStr } = useAppState();
-  const [sheetVisible, setSheetVisible] = useState(false);
-  const [input, setInput] = useState('');
-  // Deletion requires an explicit confirm step (matches N9 entry-delete and
-  // S2 account-delete) rather than deleting on a bare row tap.
-  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
-
-  const trend: TrendPoint[] = useMemo(() => {
-    const points: TrendPoint[] = [];
-    for (let i = 13; i >= 0; i--) {
-      const d = new Date();
-      d.setDate(d.getDate() - i);
-      const dateStr = d.toISOString().slice(0, 10);
-      const entry = state.weightLog.find((w) => w.date === dateStr);
-      points.push({ label: d.toLocaleDateString(undefined, { day: 'numeric', month: 'short' }), value: entry ? entry.kg : null });
-    }
-    return points;
-  }, [state.weightLog]);
-
-  const save = () => {
-    const kg = Number(input);
-    if (!kg) return;
-    dispatch({ type: 'ADD_WEIGHT', entry: { id: uid(), date: todayStr(), kg, queued: !isOnline } });
-    setInput('');
-    setSheetVisible(false);
-  };
+  const theme = useTheme();
+  const navigation = useNavigation();
+  const [confirmId, setConfirmId] = useState<string | null>(null);
 
   return (
-    <ScreenContainer density="relaxed">
-      <Text variant="h1">Weight Log</Text>
-      <Card>
-        <TrendChart data={trend} unit="kg" />
-      </Card>
-      <Button label="Add weight" onPress={() => setSheetVisible(true)} />
-      {state.weightLog.map((w) =>
-        confirmDeleteId === w.id ? (
-          <Card key={w.id} state="error">
-            <Text variant="body" colorToken={color.semantic.error}>
-              Delete the {w.kg} kg entry from {w.date}? This can't be undone.
-            </Text>
-            <Button
-              label="Yes, delete"
-              destructive
-              variant="tertiary"
-              onPress={() => {
-                dispatch({ type: 'DELETE_WEIGHT', id: w.id });
-                setConfirmDeleteId(null);
-              }}
-            />
-            <Button label="Cancel" variant="tertiary" onPress={() => setConfirmDeleteId(null)} />
-          </Card>
-        ) : (
-          <ListRow
-            key={w.id}
-            title={`${w.kg} kg`}
-            subtitle={w.date}
-            onPress={() => setConfirmDeleteId(w.id)}
-            meta={w.queued ? 'Queued' : undefined}
-          />
-        )
-      )}
-      <Text variant="caption" colorToken={color.neutral.warmgray700}>
-        Tap an entry to remove it (a confirm step follows before anything is deleted).
-      </Text>
+    <Screen>
+      <Section title="Trend">
+        <Card>
+          <TrendChart points={SAMPLE_WEIGHTS.map((w) => ({ label: w.date, value: w.kg }))} color={theme.brand.deepGreen} unit="kg" />
+        </Card>
+      </Section>
 
-      <BottomSheet visible={sheetVisible} onDismiss={() => setSheetVisible(false)} title="Log your weight">
-        <Input label="Weight (kg)" keyboardType="numeric" value={input} onChangeText={setInput} placeholder="70" />
-        <Button label="Save" onPress={save} />
-      </BottomSheet>
-    </ScreenContainer>
+      <Button label="Add weight" onPress={() => navigation.navigate('QuickAddWeight')} />
+
+      <Section title="Entries">
+        {SAMPLE_WEIGHTS.slice().reverse().map((w) => {
+          const id = w.date;
+          const confirming = confirmId === id;
+          return (
+            <Card key={id} error={confirming}>
+              <ListRow
+                title={`${w.kg} kg`}
+                subtitle={w.date}
+                trailingText={confirming ? undefined : 'Delete'}
+                onPress={() => setConfirmId(confirming ? null : id)}
+              />
+              {confirming ? (
+                <View style={{ gap: theme.spacing.space8, marginTop: theme.spacing.space8 }}>
+                  <AppText variant="caption" color={theme.semantic.error}>
+                    Delete this entry?
+                  </AppText>
+                  <Button label="Yes, delete" error errorMessage="" onPress={() => setConfirmId(null)} />
+                  <Button variant="tertiary" label="Cancel" onPress={() => setConfirmId(null)} />
+                </View>
+              ) : null}
+            </Card>
+          );
+        })}
+      </Section>
+    </Screen>
   );
 }

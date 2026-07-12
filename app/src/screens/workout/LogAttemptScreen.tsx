@@ -1,59 +1,70 @@
 import React, { useState } from 'react';
-import { useNavigation, useRoute } from '@react-navigation/native';
-import { ScreenContainer } from '../../components/ScreenContainer';
-import { Text } from '../../components/Typography';
-import { Button } from '../../components/Button';
-import { Stepper } from '../../components/Stepper';
-import { StatusBadge } from '../../components/StatusBadge';
-import { color, space } from '../../theme/tokens';
-import { useAppState } from '../../state/AppStateContext';
-import { getNodeDef } from '../../data/skillTree';
+import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
+import { Button, Card, StatusBadge, TextField, useTheme } from '@fit-and-fed/design-system';
+import { AppText, Screen } from '../../ui/layout';
+import { PILATES_TIERS, describeThreshold, findNode } from '../../data/skillTree';
+import type { RootParamList } from '../../navigation/types';
 
-/** W4. Log Attempt — reps or hold duration; routes to Mastery Gate Confirmation on success. */
+/**
+ * Log Attempt (W4, modal) — enter reps completed or hold duration matching the
+ * node's gate type (Req 7, 11).
+ *
+ * DATA CONTRACT: `{ nodeId }`. Save records the attempt (offline: queues,
+ * [CP-OFFLINE]); threshold evaluation runs client-side against the known
+ * threshold, so an offline attempt can still trigger the Mastery Gate. If the
+ * value meets/exceeds the threshold -> Mastery Gate Confirmation; otherwise the
+ * attempt is recorded against in-progress state and the sheet dismisses (C2).
+ */
 export function LogAttemptScreen() {
-  const nav = useNavigation<any>();
-  const route = useRoute<any>();
-  const { nodeId, sessionId } = route.params;
-  const def = getNodeDef(nodeId);
-  const { dispatch, isOnline, uid } = useAppState();
-  const [value, setValue] = useState(def?.gateType === 'hold' ? 15 : 8);
+  const theme = useTheme();
+  const navigation = useNavigation();
+  const route = useRoute<RouteProp<RootParamList, 'LogAttempt'>>();
+  const { nodeId } = route.params;
 
-  if (!def) return null;
+  const node = findNode(nodeId);
+  const tier = PILATES_TIERS.find((t) => t.id === nodeId);
+  const threshold = node?.threshold ?? tier?.unlockThreshold;
+  const isHold = threshold?.type === 'hold_seconds' || threshold?.type === 'duration_seconds';
+  const targetNumber = typeof threshold?.value === 'number' ? threshold.value : null;
 
-  const save = () => {
-    dispatch({
-      type: 'LOG_ATTEMPT',
-      attempt: {
-        id: uid(),
-        nodeId,
-        track: def.track,
-        value,
-        gateType: def.gateType,
-        timestamp: new Date().toISOString(),
-        sessionId: sessionId ?? 'standalone',
-        queued: !isOnline,
-      },
-    });
-    // AppStateContext computes lastGateEvent synchronously in the reducer;
-    // MasteryGateConfirmation reads it directly from state.
-    nav.navigate('MasteryGateConfirmation', { nodeId });
-  };
+  const [value, setValue] = useState('');
+  const [touched, setTouched] = useState(false);
+
+  const num = Number(value);
+  const valid = value.trim() !== '' && !Number.isNaN(num);
+
+  function save() {
+    setTouched(true);
+    if (!valid) return;
+    const meets = targetNumber != null ? num >= targetNumber : true;
+    if (meets) {
+      navigation.navigate('MasteryGateConfirmation', { nodeId });
+    } else {
+      navigation.goBack();
+    }
+  }
 
   return (
-    <ScreenContainer density="relaxed" forceDark>
-      <Text variant="h1" colorToken={color.neutral.white}>
-        Log attempt
-      </Text>
-      <Text variant="body" colorToken="#C9C6BE">
-        {def.name} · {def.gateType === 'reps' ? 'Reps completed' : 'Hold duration (seconds)'}
-      </Text>
-      <Text variant="timerXl" colorToken={color.neutral.white} center>
-        {value}
-      </Text>
-      <Stepper value={value} onChange={setValue} min={1} max={def.gateType === 'hold' ? 300 : 100} step={def.gateType === 'hold' ? 5 : 1} />
-      {!isOnline ? <StatusBadge tone="info" label="Offline — will queue and sync later" /> : null}
+    <Screen>
+      <AppText variant="h2">{node?.name ?? tier?.name ?? 'Log attempt'}</AppText>
+      {threshold ? (
+        <StatusBadge tone="info" label={`Gate: ${describeThreshold(threshold)}`} />
+      ) : null}
+
+      <Card>
+        <TextField
+          label={isHold ? 'Hold duration (seconds)' : 'Reps completed'}
+          value={value}
+          onChangeText={setValue}
+          keyboardType="numeric"
+          placeholder={isHold ? 'e.g. 45' : 'e.g. 12'}
+          error={touched && !valid}
+          errorMessage="Enter a number"
+        />
+      </Card>
+
       <Button label="Save attempt" onPress={save} />
-      <Button label="Dismiss" variant="tertiary" onPress={() => nav.goBack()} />
-    </ScreenContainer>
+      <Button variant="tertiary" label="Cancel" onPress={() => navigation.goBack()} />
+    </Screen>
   );
 }

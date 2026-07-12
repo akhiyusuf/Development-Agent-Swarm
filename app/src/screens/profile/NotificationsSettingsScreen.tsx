@@ -1,28 +1,40 @@
-import React from 'react';
-import { Card } from '../../components/Card';
-import { ScreenContainer } from '../../components/ScreenContainer';
-import { Text } from '../../components/Typography';
-import { ToggleSwitch } from '../../components/ToggleSwitch';
-import { useAppState } from '../../state/AppStateContext';
+import React, { useState } from 'react';
+import { View } from 'react-native';
+import { Button, Card, ToggleSwitch, useTheme } from '@fit-and-fed/design-system';
+import { AppText, Screen, Section } from '../../ui/layout';
 
-/** S6. Notifications Settings. */
+/**
+ * Notifications Settings (S6) — category toggles + optional quiet hours.
+ *
+ * DATA CONTRACT: `{ logReminders, streaks, sync, quietHours }`. Save queues the
+ * setting sync if server-synced across devices ([CP-OFFLINE], E6).
+ */
 export function NotificationsSettingsScreen() {
-  const { state, dispatch } = useAppState();
-  const set = (key: keyof typeof state.settings.notifications, value: boolean) =>
-    dispatch({ type: 'SET_SETTINGS', payload: { notifications: { ...state.settings.notifications, [key]: value } } });
+  const theme = useTheme();
+  const [logReminders, setLogReminders] = useState(true);
+  const [streaks, setStreaks] = useState(true);
+  const [sync, setSync] = useState(false);
+  const [quietHours, setQuietHours] = useState(false);
 
   return (
-    <ScreenContainer>
-      <Text variant="h1">Notifications</Text>
-      <Card>
-        <ToggleSwitch label="Log reminders" value={state.settings.notifications.logReminders} onChange={(v) => set('logReminders', v)} />
-      </Card>
-      <Card>
-        <ToggleSwitch label="Streak / progress updates" value={state.settings.notifications.streakProgress} onChange={(v) => set('streakProgress', v)} />
-      </Card>
-      <Card>
-        <ToggleSwitch label="Sync alerts" value={state.settings.notifications.syncAlerts} onChange={(v) => set('syncAlerts', v)} />
-      </Card>
-    </ScreenContainer>
+    <Screen>
+      <Section title="Categories">
+        <Card>
+          <View style={{ gap: theme.spacing.space8 }}>
+            <ToggleSwitch label="Meal-log reminders" value={logReminders} onChange={setLogReminders} />
+            <ToggleSwitch label="Streaks & progress" value={streaks} onChange={setStreaks} />
+            <ToggleSwitch label="Sync notifications" value={sync} onChange={setSync} />
+          </View>
+        </Card>
+      </Section>
+
+      <Section title="Quiet hours">
+        <Card>
+          <ToggleSwitch label="Silence notifications overnight" value={quietHours} onChange={setQuietHours} />
+        </Card>
+      </Section>
+
+      <Button label="Save" onPress={() => { /* app-builder persists */ }} />
+    </Screen>
   );
 }

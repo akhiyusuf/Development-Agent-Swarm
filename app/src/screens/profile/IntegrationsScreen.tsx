@@ -1,40 +1,58 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { ScreenContainer } from '../../components/ScreenContainer';
-import { Text } from '../../components/Typography';
-import { Card } from '../../components/Card';
-import { Button } from '../../components/Button';
-import { StatusBadge } from '../../components/StatusBadge';
-import { color, space } from '../../theme/tokens';
-import { useAppState } from '../../state/AppStateContext';
+import { Button, Card, StatusBadge, useTheme } from '@fit-and-fed/design-system';
+import { AppText, Row, Screen, Section } from '../../ui/layout';
 
-/** S4. Integrations — Google Fit / Apple Health optional sync. */
+type ConnState = 'disconnected' | 'connected' | 'denied';
+
+/**
+ * Integrations (S4) — Google Fit / Apple Health connect (Req 13).
+ *
+ * DATA CONTRACT: `{ providers: { id, state }[]; connect(id) }`. [CP-PERMDENY]:
+ * denying the OAuth/permission prompt shows an explicit "not connected" state
+ * with a Retry action — never a silently half-connected state (E4). Backing out
+ * of the external OAuth flow is treated identically to denial.
+ */
 export function IntegrationsScreen() {
-  const { state, dispatch } = useAppState();
+  const theme = useTheme();
+  const [fit, setFit] = useState<ConnState>('disconnected');
+  const [health, setHealth] = useState<ConnState>('denied');
+
+  function providerCard(name: string, state: ConnState, setState: (s: ConnState) => void) {
+    return (
+      <Card>
+        <Row style={{ justifyContent: 'space-between' }}>
+          <AppText variant="h3">{name}</AppText>
+          {state === 'connected' ? (
+            <StatusBadge tone="success" label="Connected" />
+          ) : state === 'denied' ? (
+            <StatusBadge tone="warning" label="Not connected" />
+          ) : (
+            <StatusBadge tone="info" label="Not connected" />
+          )}
+        </Row>
+        {state === 'connected' ? (
+          <Button variant="tertiary" label="Disconnect" onPress={() => setState('disconnected')} />
+        ) : (
+          <Button
+            variant="secondary"
+            label={state === 'denied' ? 'Try connecting again' : 'Connect'}
+            onPress={() => setState('connected')}
+          />
+        )}
+      </Card>
+    );
+  }
 
   return (
-    <ScreenContainer>
-      <Text variant="h1">Integrations</Text>
-      {(['googleFit', 'appleHealth'] as const).map((key) => {
-        const connected = state.integrations[key];
-        return (
-          <Card key={key}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: space[12] }}>
-              <Ionicons name={key === 'googleFit' ? 'logo-google' : 'heart-outline'} size={24} color={color.primary.deepgreen} />
-              <View style={{ flex: 1 }}>
-                <Text variant="h3">{key === 'googleFit' ? 'Google Fit' : 'Apple Health'}</Text>
-                {connected ? <StatusBadge tone="success" label="Connected" /> : <StatusBadge tone="neutral" label="Not connected" />}
-              </View>
-              <Button
-                label={connected ? 'Disconnect' : 'Connect'}
-                variant={connected ? 'secondary' : 'primary'}
-                onPress={() => dispatch({ type: 'SET_INTEGRATION', key, value: !connected })}
-              />
-            </View>
-          </Card>
-        );
-      })}
-    </ScreenContainer>
+    <Screen>
+      <Section title="Health & fitness">
+        {providerCard('Google Fit', fit, setFit)}
+        {providerCard('Apple Health', health, setHealth)}
+      </Section>
+      <AppText variant="caption" color={theme.neutrals.charcoal}>
+        Optional. Connecting lets the app read basic activity data to refine your energy balance.
+      </AppText>
+    </Screen>
   );
 }

@@ -1,97 +1,133 @@
-import React, { useMemo, useState } from 'react';
-import { useNavigation, useRoute } from '@react-navigation/native';
-import { ScreenContainer } from '../../components/ScreenContainer';
-import { Text } from '../../components/Typography';
-import { Input } from '../../components/Input';
-import { Button } from '../../components/Button';
-import { SegmentedControl } from '../../components/SegmentedControl';
-import { StatusBadge } from '../../components/StatusBadge';
-import { space } from '../../theme/tokens';
-import { useAppState } from '../../state/AppStateContext';
-import { searchFoods, getFoodById, FOOD_DATABASE, customFoodToFoodItem } from '../../data/foodDatabase';
-import { FoodResultsList } from './FoodResultsList';
+import React, { useState } from 'react';
+import { View } from 'react-native';
+import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
+import { Button, Card, ListRow, SegmentedControl, StatusBadge, TextField, useTheme } from '@fit-and-fed/design-system';
+import { AppText, Screen } from '../../ui/layout';
+import { FOODS, FoodItem, isComposite } from '../../data/foods';
+import type { RootParamList } from '../../navigation/types';
 
-/** N2. Add Food Entry — tabs: Search / Recent / Favorites / Custom. */
+type Tab = 'search' | 'recent' | 'favorites' | 'custom';
+
+// PLACEHOLDER recent/favorite ids (real user history is app-builder's job).
+const RECENT_IDS = ['ng-jollof-rice', 'ke-sukuma-wiki', 'diaspora-egg-boiled'];
+const FAVORITE_IDS: string[] = [];
+
+/**
+ * Add Food Entry (modal) — tabs Search / Recent / Favorites / Custom (Req 2).
+ * The Search tab renders "Food Search Results" (N3) inline.
+ *
+ * DATA CONTRACT: `{ recentIds, favoriteIds, search(query): FoodItem[],
+ *   customFoods: FoodItem[] }`. Selecting a result routes to Ingredient/Composite
+ *   Detail by category, then Confirm & Log — one modal flow ([CP-MODAL-BACKOUT]).
+ *   Offline: search falls back to cached/recent with an info banner (B1);
+ *   [CP-EMPTY-SEARCH]: zero results -> "Create a custom food".
+ */
 export function AddEntryScreen() {
-  const nav = useNavigation<any>();
-  const route = useRoute<any>();
-  const slot = route.params?.slot ?? 'snack';
-  const { state, isOnline } = useAppState();
-  const [tab, setTab] = useState('search');
+  const theme = useTheme();
+  const navigation = useNavigation();
+  const route = useRoute<RouteProp<RootParamList, 'AddEntry'>>();
+  const slot = route.params?.slot;
+
+  const [tab, setTab] = useState<Tab>('search');
   const [query, setQuery] = useState('');
 
-  // Custom foods (N7 saves) are first-class here: always included alongside
-  // the seed database rather than being a save-only dead end (see
-  // BUILD_NOTES.md — Req 2 fix).
-  const customFoodItems = useMemo(() => state.customFoods.map(customFoodToFoodItem), [state.customFoods]);
+  const results: FoodItem[] =
+    query.trim() === ''
+      ? FOODS.slice(0, 6)
+      : FOODS.filter((f) => f.name.toLowerCase().includes(query.trim().toLowerCase()));
 
-  const regionFiltered = useMemo(
-    () => [
-      ...customFoodItems,
-      ...FOOD_DATABASE.filter(
-        (f) => f.region === state.region.market || (state.region.includeWestern && f.region === 'Diaspora/Western')
-      ),
-    ],
-    [state.region, customFoodItems]
-  );
+  function openDetail(food: FoodItem) {
+    if (isComposite(food)) navigation.navigate('CompositeMealDetail', { foodId: food.id });
+    else navigation.navigate('IngredientDetail', { foodId: food.id });
+  }
 
-  const searchResults = useMemo(() => {
-    if (!query.trim()) return regionFiltered;
-    const q = query.trim().toLowerCase();
-    return [...customFoodItems.filter((f) => f.name.toLowerCase().includes(q)), ...searchFoods(query)];
-  }, [query, regionFiltered, customFoodItems]);
+  function resultRow(food: FoodItem) {
+    return (
+      <ListRow
+        key={food.id}
+        title={food.name}
+        subtitle={`${food.region} · ${food.per100g.kcal} kcal/100g`}
+        showChevron
+        onPress={() => openDetail(food)}
+      />
+    );
+  }
 
-  const recentFoods = state.recents
-    .map((id) => getFoodById(id) ?? customFoodItems.find((f) => f.id === id))
-    .filter(Boolean) as typeof FOOD_DATABASE;
-  const favoriteFoods = state.favorites
-    .map((id) => getFoodById(id) ?? customFoodItems.find((f) => f.id === id))
-    .filter(Boolean) as typeof FOOD_DATABASE;
-
-  const selectFood = (foodId: string) => {
-    nav.navigate('FoodDetail', { foodId, slot });
-  };
+  function foodById(id: string) {
+    return FOODS.find((f) => f.id === id);
+  }
 
   return (
-    <ScreenContainer density="compact">
-      <Text variant="h1">Add to {slot}</Text>
+    <Screen>
+      {slot ? (
+        <AppText variant="caption" color={theme.neutrals.charcoal}>
+          Adding to {slot}
+        </AppText>
+      ) : null}
+
       <SegmentedControl
+        value={tab}
+        onChange={(v) => setTab(v as Tab)}
         options={[
           { value: 'search', label: 'Search' },
           { value: 'recent', label: 'Recent' },
           { value: 'favorites', label: 'Favorites' },
           { value: 'custom', label: 'Custom' },
         ]}
-        value={tab}
-        onChange={setTab}
       />
 
-      {!isOnline && tab === 'search' ? (
-        <StatusBadge tone="info" label="Offline — showing cached/recent results" />
+      {tab === 'search' ? (
+        <View style={{ gap: theme.spacing.space12 }}>
+          <TextField label="Search foods" value={query} onChangeText={setQuery} placeholder="e.g. jollof, ugali, egg" />
+          <Card>
+            {results.length === 0 ? (
+              <View style={{ gap: theme.spacing.space12 }}>
+                <AppText variant="body">No matches for "{query}".</AppText>
+                <Button label="Create a custom food" onPress={() => navigation.navigate('CustomFoodBuilder')} />
+              </View>
+            ) : (
+              results.map(resultRow)
+            )}
+          </Card>
+        </View>
       ) : null}
 
-      {tab === 'search' ? (
-        <>
-          <Input placeholder="Search foods…" value={query} onChangeText={setQuery} />
-          {query.trim().length > 0 && searchResults.length === 0 ? (
-            <Button label="Create a custom food" variant="tertiary" onPress={() => setTab('custom')} />
-          ) : null}
-          <FoodResultsList foods={searchResults} onSelect={(f) => selectFood(f.id)} />
-        </>
-      ) : tab === 'recent' ? (
-        <FoodResultsList foods={recentFoods} onSelect={(f) => selectFood(f.id)} emptyLabel="No recent foods yet." />
-      ) : tab === 'favorites' ? (
-        <FoodResultsList foods={favoriteFoods} onSelect={(f) => selectFood(f.id)} emptyLabel="No favorites yet." />
-      ) : (
-        <>
-          <Button label="Build a custom food or meal" onPress={() => nav.navigate('CustomFoodBuilder', { slot })} />
-          <FoodResultsList
-            foods={customFoodItems}
-            onSelect={(f) => selectFood(f.id)}
-            emptyLabel="No custom foods yet — build one above."
-          />
-        </>
-      )}
-    </ScreenContainer>
+      {tab === 'recent' ? (
+        <Card>
+          {RECENT_IDS.map((id) => {
+            const f = foodById(id);
+            return f ? resultRow(f) : null;
+          })}
+        </Card>
+      ) : null}
+
+      {tab === 'favorites' ? (
+        <Card>
+          {FAVORITE_IDS.length === 0 ? (
+            <View style={{ gap: theme.spacing.space12 }}>
+              <StatusBadge tone="info" label="Nothing here yet" />
+              <AppText variant="caption" color={theme.neutrals.charcoal}>
+                Favorite a food from its detail screen and it'll show up here for one-tap logging.
+              </AppText>
+              <Button variant="tertiary" label="Search foods instead" onPress={() => setTab('search')} />
+            </View>
+          ) : (
+            FAVORITE_IDS.map((id) => {
+              const f = foodById(id);
+              return f ? resultRow(f) : null;
+            })
+          )}
+        </Card>
+      ) : null}
+
+      {tab === 'custom' ? (
+        <Card>
+          <View style={{ gap: theme.spacing.space12 }}>
+            <AppText variant="body">Create your own ingredient or composite meal with its own portions.</AppText>
+            <Button label="Open Custom Food Builder" onPress={() => navigation.navigate('CustomFoodBuilder')} />
+          </View>
+        </Card>
+      ) : null}
+    </Screen>
   );
 }

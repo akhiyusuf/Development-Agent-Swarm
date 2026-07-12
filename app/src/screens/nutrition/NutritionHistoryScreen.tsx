@@ -1,35 +1,40 @@
 import React, { useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
-import { ScreenContainer } from '../../components/ScreenContainer';
-import { Text } from '../../components/Typography';
-import { Button } from '../../components/Button';
-import { Calendar, DayCompleteness } from '../../components/Calendar';
-import { useAppState } from '../../state/AppStateContext';
+import { CalendarDatePicker, Card, useTheme } from '@fit-and-fed/design-system';
+import { AppText, Screen } from '../../ui/layout';
+import { SAMPLE_MARKED_DAYS } from '../../data/sampleData';
 
-/** N12. Nutrition History / Calendar. */
+/**
+ * Nutrition History / Calendar (N12) — past days, tap into any day (Req 3).
+ *
+ * DATA CONTRACT: `markedDates: Set<'YYYY-MM-DD'>` of days with logged data;
+ * each marked day carries a completeness indicator (the calendar's dot). Empty
+ * days route to the same first-run empty Diary/Summary state (B6).
+ */
 export function NutritionHistoryScreen() {
-  const nav = useNavigation<any>();
-  const { state } = useAppState();
-  const [selected, setSelected] = useState<Date | undefined>();
-
-  const getCompleteness = (date: Date): DayCompleteness => {
-    const dateStr = date.toISOString().slice(0, 10);
-    const entries = state.diary.filter((d) => d.date === dateStr);
-    if (entries.length === 0) return 'none';
-    const slotsLogged = new Set(entries.map((e) => e.slot)).size;
-    return slotsLogged >= 3 ? 'logged' : 'partial';
-  };
+  const theme = useTheme();
+  const navigation = useNavigation();
+  const [month, setMonth] = useState(new Date(2026, 6, 1));
+  const [selected, setSelected] = useState<Date | undefined>(undefined);
 
   return (
-    <ScreenContainer density="relaxed">
-      <Text variant="h1">History</Text>
-      <Calendar getCompleteness={getCompleteness} onSelectDay={setSelected} selectedDate={selected} />
-      {selected ? (
-        <Button
-          label={`View ${selected.toDateString()}`}
-          onPress={() => nav.navigate('DailyNutritionSummary', { date: selected.toISOString().slice(0, 10) })}
+    <Screen>
+      <AppText variant="h2">History</AppText>
+      <Card>
+        <CalendarDatePicker
+          month={month}
+          selectedDate={selected}
+          markedDates={SAMPLE_MARKED_DAYS}
+          onChangeMonth={setMonth}
+          onSelectDay={(d) => {
+            setSelected(d);
+            navigation.navigate('DailyNutritionSummary');
+          }}
         />
-      ) : null}
-    </ScreenContainer>
+      </Card>
+      <AppText variant="caption" color={theme.neutrals.charcoal}>
+        Dots mark days with logged entries. Tap any day to open its summary.
+      </AppText>
+    </Screen>
   );
 }

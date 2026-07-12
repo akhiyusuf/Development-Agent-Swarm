@@ -1,64 +1,61 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View } from 'react-native';
-import { ScreenContainer } from '../../components/ScreenContainer';
-import { Text } from '../../components/Typography';
-import { Card } from '../../components/Card';
-import { Button } from '../../components/Button';
-import { ToggleSwitch } from '../../components/ToggleSwitch';
-import { StatusBadge } from '../../components/StatusBadge';
-import { ListRow } from '../../components/ListRow';
-import { color, space } from '../../theme/tokens';
-import { useAppState } from '../../state/AppStateContext';
+import { Button, Card, ListRow, StatusBadge, ToggleSwitch, useTheme } from '@fit-and-fed/design-system';
+import { AppText, Row, Screen, Section } from '../../ui/layout';
+import { SAMPLE_QUEUED_COUNT } from '../../data/sampleData';
 
-/** S3. Data & Sync Settings — offline status, manual sync, low-data-mode toggle. */
+/**
+ * Data & Sync Settings (S3) — the terminal/observable surface for every
+ * [CP-OFFLINE] queue in the app (Req 5, 13 partial).
+ *
+ * DATA CONTRACT: `{ queuedCount, failedItems[], lowDataMode, syncNow(), retry(id) }`.
+ * Sync now can itself fail (inline non-blocking error, retry; queue never
+ * cleared). Per-item retry for repeatedly-failed items (E3).
+ */
 export function DataSyncSettingsScreen() {
-  const { state, dispatch, isOnline, queuedCount } = useAppState();
-
-  const failedEntries = state.diary.filter((d) => d.syncFailed);
+  const theme = useTheme();
+  const [lowData, setLowData] = useState(false);
 
   return (
-    <ScreenContainer density="compact">
-      <Text variant="h1">Data & Sync</Text>
-      <Card>
-        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-          <Text variant="h3">Status</Text>
-          {isOnline ? <StatusBadge tone="success" label="Online" /> : <StatusBadge tone="warning" label="Offline" />}
-        </View>
-        <Text variant="body" style={{ marginTop: space[8] }}>
-          {queuedCount} item(s) queued for sync
-        </Text>
-        {state.settings.lastSyncedAt ? (
-          <Text variant="caption" colorToken={color.neutral.warmgray700}>
-            Last synced: {new Date(state.settings.lastSyncedAt).toLocaleString()}
-          </Text>
-        ) : null}
-      </Card>
-      <Button label="Sync now" onPress={() => dispatch({ type: 'SYNC_NOW' })} state={queuedCount > 0 && isOnline ? 'default' : 'disabled'} />
-      <Card>
-        <ToggleSwitch
-          label="Low-data mode (reduce image/photo loading)"
-          value={state.settings.lowDataMode}
-          onChange={(v) => dispatch({ type: 'SET_SETTINGS', payload: { lowDataMode: v } })}
-        />
-      </Card>
-      <Card>
-        <ToggleSwitch
-          label="Simulate offline (demo)"
-          value={state.settings.simulateOffline}
-          onChange={(v) => dispatch({ type: 'SET_SETTINGS', payload: { simulateOffline: v } })}
-        />
-        <Text variant="caption" colorToken={color.neutral.warmgray700} style={{ marginTop: space[4] }}>
-          For demoing the offline queue without changing real device connectivity — see BUILD_NOTES.md.
-        </Text>
-      </Card>
-      {failedEntries.length > 0 ? (
-        <View style={{ gap: space[8] }}>
-          <Text variant="h3">Sync-failed items</Text>
-          {failedEntries.map((e) => (
-            <ListRow key={e.id} title={e.foodName} subtitle="Sync failed" state="error" onPress={() => dispatch({ type: 'SYNC_NOW' })} />
-          ))}
-        </View>
-      ) : null}
-    </ScreenContainer>
+    <Screen>
+      <Section title="Sync status">
+        <Card>
+          <Row style={{ justifyContent: 'space-between' }}>
+            <AppText variant="bodyEmphasis">
+              {SAMPLE_QUEUED_COUNT > 0 ? `${SAMPLE_QUEUED_COUNT} entries queued` : 'Everything synced'}
+            </AppText>
+            {SAMPLE_QUEUED_COUNT > 0 ? <StatusBadge tone="info" label="Pending" /> : <StatusBadge tone="success" label="Synced" />}
+          </Row>
+        </Card>
+        <Button label="Sync now" onPress={() => { /* app-builder triggers sync */ }} />
+      </Section>
+
+      <Section title="Low-data mode">
+        <Card>
+          <ToggleSwitch label="Reduce image and sync data usage" value={lowData} onChange={setLowData} />
+          <AppText variant="caption" color={theme.neutrals.charcoal}>
+            Portion photos load on demand and background sync is throttled.
+          </AppText>
+        </Card>
+      </Section>
+
+      <Section title="Needs attention">
+        <Card>
+          {SAMPLE_QUEUED_COUNT > 0 ? (
+            <ListRow
+              title="Akara × 3 (breakfast)"
+              subtitle="Waiting to sync"
+              trailingText="Retry"
+              onPress={() => { /* retry this item */ }}
+              badge={{ color: theme.semantic.info, icon: 'cloud-upload-outline', label: 'Queued' }}
+            />
+          ) : (
+            <AppText variant="caption" color={theme.neutrals.charcoal}>
+              No failed items.
+            </AppText>
+          )}
+        </Card>
+      </Section>
+    </Screen>
   );
 }

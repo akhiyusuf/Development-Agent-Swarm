@@ -1,92 +1,90 @@
 import React, { useState } from 'react';
-import { useNavigation, useRoute } from '@react-navigation/native';
-import { ScreenContainer } from '../../components/ScreenContainer';
-import { Text } from '../../components/Typography';
-import { Input } from '../../components/Input';
-import { Button } from '../../components/Button';
-import { StatusBadge } from '../../components/StatusBadge';
-import { space } from '../../theme/tokens';
-import { useAppState } from '../../state/AppStateContext';
+import { View } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import { Button, Card, StatusBadge, TextField, useTheme } from '@fit-and-fed/design-system';
+import { AppText, Row, Screen, Section } from '../../ui/layout';
 
-/** N7. Custom Food / Meal Builder. */
+/**
+ * Custom Food / Meal Builder (N7) — user creates/saves an ingredient or
+ * composite meal with its own household units (Req 2).
+ *
+ * DATA CONTRACT: on Save, persist a FoodItem-shaped record to the user's custom
+ * set (searchable/loggable thereafter). "Save & log now" persists then routes
+ * to Confirm & Log with the new food pre-selected at a 1× portion (B3).
+ * [CP-VALIDATION]: name + numeric macros + at least one unit/gram pair required.
+ */
 export function CustomFoodBuilderScreen() {
-  const nav = useNavigation<any>();
-  const route = useRoute<any>();
-  const slot = route.params?.slot ?? 'snack';
-  const { dispatch, isOnline, uid } = useAppState();
+  const theme = useTheme();
+  const navigation = useNavigation();
 
   const [name, setName] = useState('');
-  const [unitLabel, setUnitLabel] = useState('1 serving');
-  const [gramsPerUnit, setGramsPerUnit] = useState('100');
-  const [calories, setCalories] = useState('');
+  const [kcal, setKcal] = useState('');
   const [protein, setProtein] = useState('');
   const [carbs, setCarbs] = useState('');
   const [fat, setFat] = useState('');
+  const [unit, setUnit] = useState('');
+  const [grams, setGrams] = useState('');
+  const [touched, setTouched] = useState(false);
   const [saved, setSaved] = useState(false);
 
-  const valid = name.trim() && calories && protein && carbs && fat;
-
-  const buildFood = () => ({
-    id: `custom-${uid()}`,
-    name,
-    unitLabel,
-    gramsPerUnit: Number(gramsPerUnit) || 100,
-    caloriesPerUnit: Number(calories),
-    proteinG: Number(protein),
-    carbsG: Number(carbs),
-    fatG: Number(fat),
-  });
-
-  const save = () => {
-    if (!valid) return;
-    const food = buildFood();
-    dispatch({ type: 'ADD_CUSTOM_FOOD', food });
-    setSaved(true);
-  };
-
-  // "Save & log now" (screens.md N7 secondary action) saves the custom food
-  // and routes straight to Confirm & Log (N8) with a 1x-quantity portion of
-  // the food's own declared household unit — the same functional path a
-  // seed-database food takes from Food Detail's "Add to diary".
-  const saveAndLog = () => {
-    if (!valid) return;
-    const food = buildFood();
-    dispatch({ type: 'ADD_CUSTOM_FOOD', food });
-    nav.navigate('ConfirmLog', {
-      foodId: food.id,
-      slot,
-      unitLabel: food.unitLabel,
-      quantity: 1,
-      grams: food.gramsPerUnit,
-      calories: food.caloriesPerUnit,
-      proteinG: food.proteinG,
-      carbsG: food.carbsG,
-      fatG: food.fatG,
-      micronutrients: {},
-    });
-  };
+  const num = (v: string) => v.trim() !== '' && !Number.isNaN(Number(v));
+  const valid = name.trim() !== '' && num(kcal) && unit.trim() !== '' && num(grams);
 
   return (
-    <ScreenContainer density="compact">
-      <Text variant="h1">Custom food / meal</Text>
-      {!isOnline ? <StatusBadge tone="info" label="Offline — will save locally and sync later" /> : null}
-      <Input label="Name" value={name} onChangeText={setName} placeholder="e.g. My family's stew" />
-      <Input label="Household unit label" value={unitLabel} onChangeText={setUnitLabel} placeholder="1 bowl" />
-      <Input label="Grams per unit" keyboardType="numeric" value={gramsPerUnit} onChangeText={setGramsPerUnit} />
-      <Input label="Calories per unit (kcal)" keyboardType="numeric" value={calories} onChangeText={setCalories} />
-      <Input label="Protein (g)" keyboardType="numeric" value={protein} onChangeText={setProtein} />
-      <Input label="Carbs (g)" keyboardType="numeric" value={carbs} onChangeText={setCarbs} />
-      <Input label="Fat (g)" keyboardType="numeric" value={fat} onChangeText={setFat} />
-      <Text variant="caption" style={{ marginTop: -8 }}>
-        Micronutrient entry and a portion photo attach are optional and left out of this build's
-        custom-food form for time — see BUILD_NOTES.md. Once saved, this food is fully
-        searchable/loggable everywhere the seed database is (Add Entry's Search/Recent/
-        Favorites/Custom tabs and Food Detail).
-      </Text>
-      {saved ? <StatusBadge tone="success" label="Saved" /> : null}
-      <Button label="Save" onPress={save} state={valid ? 'default' : 'disabled'} />
-      <Button label="Save & log now" variant="secondary" onPress={saveAndLog} state={valid ? 'default' : 'disabled'} />
-      <Button label="Cancel" variant="tertiary" onPress={() => nav.goBack()} />
-    </ScreenContainer>
+    <Screen>
+      <AppText variant="h2">New custom food</AppText>
+      {saved ? <StatusBadge tone="success" label="Saved to your custom foods" /> : null}
+
+      <Card>
+        <View style={{ gap: theme.spacing.space16 }}>
+          <TextField label="Name" value={name} onChangeText={setName} placeholder="e.g. My jollof recipe" error={touched && name.trim() === ''} errorMessage="Name is required" />
+          <Section title="Per 100g">
+            <Row style={{ gap: theme.spacing.space12 }}>
+              <View style={{ flex: 1 }}>
+                <TextField label="kcal" value={kcal} onChangeText={setKcal} keyboardType="numeric" error={touched && !num(kcal)} errorMessage="Required" />
+              </View>
+              <View style={{ flex: 1 }}>
+                <TextField label="Protein g" value={protein} onChangeText={setProtein} keyboardType="numeric" />
+              </View>
+            </Row>
+            <Row style={{ gap: theme.spacing.space12 }}>
+              <View style={{ flex: 1 }}>
+                <TextField label="Carbs g" value={carbs} onChangeText={setCarbs} keyboardType="numeric" />
+              </View>
+              <View style={{ flex: 1 }}>
+                <TextField label="Fat g" value={fat} onChangeText={setFat} keyboardType="numeric" />
+              </View>
+            </Row>
+          </Section>
+          <Section title="Household unit" caption="Give your food a first-class portion, e.g. '1 wrap' ≈ 150g.">
+            <Row style={{ gap: theme.spacing.space12 }}>
+              <View style={{ flex: 2 }}>
+                <TextField label="Unit label" value={unit} onChangeText={setUnit} placeholder="1 wrap" error={touched && unit.trim() === ''} errorMessage="Required" />
+              </View>
+              <View style={{ flex: 1 }}>
+                <TextField label="Grams" value={grams} onChangeText={setGrams} keyboardType="numeric" error={touched && !num(grams)} errorMessage="Required" />
+              </View>
+            </Row>
+          </Section>
+        </View>
+      </Card>
+
+      <Button
+        label="Save"
+        onPress={() => {
+          setTouched(true);
+          if (valid) setSaved(true);
+        }}
+      />
+      <Button
+        variant="secondary"
+        label="Save & log now"
+        onPress={() => {
+          setTouched(true);
+          if (valid) navigation.navigate('ConfirmLog', { foodId: 'custom-preview', customName: name });
+        }}
+      />
+      <Button variant="tertiary" label="Cancel" onPress={() => navigation.goBack()} />
+    </Screen>
   );
 }

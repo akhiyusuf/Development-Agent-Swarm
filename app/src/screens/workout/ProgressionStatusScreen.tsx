@@ -1,49 +1,72 @@
 import React from 'react';
 import { View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { ScreenContainer } from '../../components/ScreenContainer';
-import { Text } from '../../components/Typography';
-import { Card } from '../../components/Card';
-import { NodeStateBadge } from '../../components/NodeStateBadge';
-import { color, space } from '../../theme/tokens';
-import { useAppState } from '../../state/AppStateContext';
-import { nodesForTrack } from '../../data/skillTree';
-import type { Track } from '../../data/skillTree';
+import { Card, NodeStateBadge, useTheme } from '@fit-and-fed/design-system';
+import { AppText, Row, Screen, Section } from '../../ui/layout';
+import { CALISTHENICS_LINES, PILATES_TIERS, describeThreshold, nodeState } from '../../data/skillTree';
 
-/** W6. Progression Status — per skill line, current/next, across both tracks. */
+/**
+ * Progression Status (W6) — per skill line, "what you're on now / what's next",
+ * across both tracks (Req 8).
+ *
+ * DATA CONTRACT: derived from the per-user `nodeState` resolver. A freshly-placed
+ * zero-attempt track simply shows its starting node as current (C3, no special
+ * empty state). Deferred/unplaced tracks are out of scope here (Skill Tree Home).
+ */
 export function ProgressionStatusScreen() {
-  const nav = useNavigation<any>();
-  const { state } = useAppState();
-
-  const renderTrack = (track: Track) => {
-    const nodes = nodesForTrack(track);
-    const current = nodes.find((n) => {
-      const s = state.nodeStates[n.id] ?? n.defaultState;
-      return s === 'unlocked' || s === 'inprogress';
-    });
-    const next = nodes.find((n) => (state.nodeStates[n.id] ?? n.defaultState) === 'locked');
-
-    return (
-      <Card key={track} onPress={() => nav.navigate('TierNodeMap', { track })}>
-        <Text variant="h3">{track === 'calisthenics' ? 'Calisthenics' : 'Pilates'}</Text>
-        <View style={{ marginTop: space[8], gap: space[4] }}>
-          <Text variant="body">
-            Now: {current ? current.name : 'All available nodes cleared'}
-          </Text>
-          {current ? <NodeStateBadge state={state.nodeStates[current.id] ?? current.defaultState} /> : null}
-          <Text variant="body" style={{ marginTop: space[8] }}>
-            Next: {next ? `${next.name} (gate: ${next.thresholdLabel})` : 'None — track complete'}
-          </Text>
-        </View>
-      </Card>
-    );
-  };
+  const theme = useTheme();
+  const navigation = useNavigation();
 
   return (
-    <ScreenContainer density="relaxed">
-      <Text variant="h1">Progression</Text>
-      {renderTrack('calisthenics')}
-      {renderTrack('pilates')}
-    </ScreenContainer>
+    <Screen>
+      <AppText variant="h2">Progression</AppText>
+
+      <Section title="Calisthenics">
+        {CALISTHENICS_LINES.map((line) => {
+          const ordered = [...line.nodes].sort((a, b) => a.tier - b.tier);
+          const current = [...ordered].reverse().find((n) => nodeState(n.id) !== 'locked') ?? ordered[0];
+          const currentIdx = ordered.findIndex((n) => n.id === current.id);
+          const next = ordered[currentIdx + 1];
+          return (
+            <Card key={line.id} onPress={() => navigation.navigate('NodeDetail', { nodeId: current.id })}>
+              <AppText variant="bodyEmphasis">{line.name}</AppText>
+              <Row style={{ justifyContent: 'space-between', marginTop: theme.spacing.space8 }}>
+                <View style={{ flex: 1 }}>
+                  <AppText variant="caption" color={theme.neutrals.charcoal}>
+                    Now: {current.name}
+                  </AppText>
+                  {next ? (
+                    <AppText variant="caption" color={theme.neutrals.charcoal}>
+                      Next: {next.name} · {describeThreshold(next.threshold)}
+                    </AppText>
+                  ) : (
+                    <AppText variant="caption" color={theme.neutrals.charcoal}>
+                      Line complete
+                    </AppText>
+                  )}
+                </View>
+                <NodeStateBadge state={nodeState(current.id)} />
+              </Row>
+            </Card>
+          );
+        })}
+      </Section>
+
+      <Section title="Pilates">
+        {PILATES_TIERS.map((tier) => (
+          <Card key={tier.id} onPress={() => navigation.navigate('NodeDetail', { nodeId: tier.id })}>
+            <Row style={{ justifyContent: 'space-between' }}>
+              <View style={{ flex: 1 }}>
+                <AppText variant="bodyEmphasis">{tier.name}</AppText>
+                <AppText variant="caption" color={theme.neutrals.charcoal}>
+                  {tier.exercises.length} exercises
+                </AppText>
+              </View>
+              <NodeStateBadge state={nodeState(tier.id)} />
+            </Row>
+          </Card>
+        ))}
+      </Section>
+    </Screen>
   );
 }

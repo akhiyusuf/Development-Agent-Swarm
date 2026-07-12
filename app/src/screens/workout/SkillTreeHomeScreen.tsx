@@ -1,88 +1,83 @@
 import React, { useState } from 'react';
 import { View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { ScreenContainer } from '../../components/ScreenContainer';
-import { Text } from '../../components/Typography';
-import { Card } from '../../components/Card';
-import { Button } from '../../components/Button';
-import { SegmentedControl } from '../../components/SegmentedControl';
-import { color, space } from '../../theme/tokens';
-import { useAppState } from '../../state/AppStateContext';
-import { nodesForTrack } from '../../data/skillTree';
-import type { Track } from '../../data/skillTree';
+import { Button, Card, SegmentedControl, StatusBadge, useTheme } from '@fit-and-fed/design-system';
+import { AppText, Row, Screen } from '../../ui/layout';
+import { CALISTHENICS_LINES } from '../../data/skillTree';
 
 /**
- * W1. Skill Tree Home — track selector + deferred-placement re-entry
- * (carry-forward #3). Renders on the dark-bg node-map background per
- * carry-forward #7.
+ * Skill Tree Home (W1) — track selector + per-track summary; also the deferred-
+ * placement re-entry point (Req 6, Req 9 / A9).
+ *
+ * DATA CONTRACT: `{ tracks: { id, placement: 'placed'|'deferred', currentTier }[] }`.
+ * A placed track's card continues into its Node Map; a deferred/unplaced track
+ * shows "Complete placement" which launches that track's Assessment Steps
+ * directly (skipping Intro/Track Selection) and returns HERE on completion (A9).
+ * "Never opted in" and "deferred" are treated identically (§G #7).
  */
 export function SkillTreeHomeScreen() {
-  const nav = useNavigation<any>();
-  const { state } = useAppState();
+  const theme = useTheme();
+  const navigation = useNavigation();
   const [view, setView] = useState<'calisthenics' | 'pilates' | 'combined'>('combined');
 
-  const renderTrackCard = (track: Track) => {
-    const placement = state.placement[track];
-    const nodes = nodesForTrack(track);
-    const masteredCount = nodes.filter((n) => state.nodeStates[n.id] === 'mastered').length;
-
-    if (placement.status !== 'done') {
-      return (
-        <Card key={track} forceDark>
-          <Text variant="h3" colorToken={color.neutral.white}>
-            {track === 'calisthenics' ? 'Calisthenics' : 'Pilates'}
-          </Text>
-          <Text variant="caption" colorToken="#C9C6BE">
-            {placement.status === 'deferred' ? 'Placement deferred' : 'Placement not started'}
-          </Text>
-          <Button
-            label="Complete placement"
-            onPress={() =>
-              nav.navigate('AssessmentIntro', { returnTo: 'SkillTreeHome', forceTrack: track })
-            }
-            style={{ marginTop: space[8] }}
-          />
-        </Card>
-      );
-    }
-
-    return (
-      <Card key={track} forceDark onPress={() => nav.navigate('TierNodeMap', { track })}>
-        <Text variant="h3" colorToken={color.neutral.white}>
-          {track === 'calisthenics' ? 'Calisthenics' : 'Pilates'}
-        </Text>
-        <Text variant="caption" colorToken="#C9C6BE">
-          Starting Tier {placement.startingTier} · {masteredCount} node(s) mastered
-        </Text>
-        <Button label="Continue" variant="secondary" onPress={() => nav.navigate('TierNodeMap', { track })} style={{ marginTop: space[8] }} />
-      </Card>
-    );
-  };
+  const showCal = view !== 'pilates';
+  const showPil = view !== 'calisthenics';
 
   return (
-    <ScreenContainer density="relaxed" forceDark>
-      <Text variant="h1" colorToken={color.neutral.white}>
-        Skill Tree
-      </Text>
+    <Screen>
+      <AppText variant="h2">Skill tree</AppText>
       <SegmentedControl
+        value={view}
+        onChange={(v) => setView(v as typeof view)}
         options={[
           { value: 'calisthenics', label: 'Calisthenics' },
           { value: 'pilates', label: 'Pilates' },
           { value: 'combined', label: 'Combined' },
         ]}
-        value={view}
-        onChange={(v) => setView(v as any)}
       />
-      <View style={{ gap: space[16] }}>
-        {view === 'combined' ? (
-          <>
-            {renderTrackCard('calisthenics')}
-            {renderTrackCard('pilates')}
-          </>
-        ) : (
-          renderTrackCard(view)
-        )}
-      </View>
-    </ScreenContainer>
+
+      {showCal ? (
+        <Card>
+          <Row style={{ justifyContent: 'space-between' }}>
+            <View style={{ flex: 1 }}>
+              <AppText variant="h3">Calisthenics</AppText>
+              <AppText variant="caption" color={theme.neutrals.charcoal}>
+                {CALISTHENICS_LINES.length} skill lines · currently Tier 2
+              </AppText>
+            </View>
+            <StatusBadge tone="success" label="Placed" />
+          </Row>
+          <Button label="Continue" onPress={() => navigation.navigate('TierNodeMap', { track: 'calisthenics' })} />
+        </Card>
+      ) : null}
+
+      {showPil ? (
+        <Card>
+          <Row style={{ justifyContent: 'space-between' }}>
+            <View style={{ flex: 1 }}>
+              <AppText variant="h3">Pilates</AppText>
+              <AppText variant="caption" color={theme.neutrals.charcoal}>
+                Classical mat · Basic → Intermediate → Advanced
+              </AppText>
+            </View>
+            <StatusBadge tone="success" label="Placed" />
+          </Row>
+          <Button label="Continue" onPress={() => navigation.navigate('TierNodeMap', { track: 'pilates' })} />
+        </Card>
+      ) : null}
+
+      {/* Deferred re-entry (A9): a not-yet-placed track shows this instead of a map. */}
+      <Card>
+        <AppText variant="bodyEmphasis">Deferred a placement at onboarding?</AppText>
+        <AppText variant="caption" color={theme.neutrals.charcoal}>
+          A track with no placement yet shows "Complete placement" here — it launches that track's
+          assessment directly and returns to the skill tree.
+        </AppText>
+        <Button variant="secondary" label="Complete Pilates placement" onPress={() => navigation.navigate('PilatesPlacementSteps')} />
+      </Card>
+
+      <Button variant="tertiary" label="Progression status" onPress={() => navigation.navigate('ProgressionStatus')} />
+      <Button variant="tertiary" label="Session history" onPress={() => navigation.navigate('WorkoutHistory')} />
+    </Screen>
   );
 }

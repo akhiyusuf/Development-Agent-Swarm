@@ -1,62 +1,156 @@
 /**
- * Skill-tree seed data — MECHANISM ONLY.
+ * Real, cited calisthenics + Pilates progression content — sourced directly
+ * from `data/workouts/skill-tree.json` (data-research stage, approved pass 2).
+ * These are the REAL node names, prerequisite orderings, and rep/hold
+ * thresholds (Convict Conditioning line ordering, convergent muscle-up /
+ * pistol / handstand gates, classical Pilates tiering). No `[Skill Node]`
+ * placeholders and no ComponentGallery demo strings ("Full planche") are used.
  *
- * Per research/product-research.md Open Question 1 (explicitly unvalidated)
- * and the sitemap's scope note, the *actual* skill names, orderings, and
- * mastery thresholds are NOT real exercise-science content. Every node below
- * is a generic placeholder ("Skill Node A", "Skill Node B", ...) with a
- * `thresholdLabel` of `'TBD'`. Do not treat any of this as real progression
- * content — it exists solely to demonstrate the tier/node/mastery-gate UI
- * mechanism end to end.
+ * IMPORTANT (carried from data-sourcing.md #6/#7): this tree is a well-sourced
+ * SYNTHESIS, not a clinically validated program. Screens surface the real
+ * names/thresholds but also surface the confidence tag so users are never
+ * misled that these gates are certified. Per-user progression STATE is
+ * app-builder's job — the `PREVIEW_NODE_STATE` map below is clearly-labeled
+ * sample state so the map/detail screens preview realistically.
+ *
+ * DATA CONTRACT (for app-builder): screens read `TRACKS` (structure) and a
+ * `nodeState(nodeId) => NodeState` resolver. Replace `PREVIEW_NODE_STATE` with
+ * the real per-user progression store without touching screen JSX.
  */
+import rawTree from '../../../data/workouts/skill-tree.json';
+import type { NodeState } from '@fit-and-fed/design-system';
 
-export type NodeState = 'locked' | 'unlocked' | 'inprogress' | 'completed' | 'mastered';
-export type Track = 'calisthenics' | 'pilates';
-export type GateType = 'reps' | 'hold';
+export type Threshold = {
+  type: 'reps' | 'hold_seconds' | 'duration_seconds' | 'compound' | 'form_check';
+  value: number | string;
+  sets?: number;
+  per?: string;
+  confidence: 'high' | 'medium' | 'estimate';
+  note?: string;
+};
 
-export interface SkillNodeDef {
+export type SkillNodeData = {
   id: string;
-  track: Track;
+  name: string;
   tier: number;
-  name: string; // placeholder, e.g. "Skill Node A"
-  prerequisiteIds: string[];
-  gateType: GateType;
-  thresholdLabel: 'TBD';
-  isBoss?: boolean;
-  /** Generic form-cue placeholder copy — no real technique content asserted. */
-  formCues: string[];
-  /** Seed/default state for a fresh install — mutated per-user at runtime. */
-  defaultState: NodeState;
+  prerequisites: string[];
+  threshold: Threshold;
+  milestone?: boolean;
+};
+
+export type SkillLine = {
+  id: string;
+  name: string;
+  sourceSystem: string;
+  nodes: SkillNodeData[];
+};
+
+export type PilatesExercise = { id: string; name: string; threshold: Threshold };
+export type PilatesTier = {
+  id: string;
+  name: string;
+  tier: number;
+  prerequisites: string[];
+  unlockThreshold: Threshold;
+  exercises: PilatesExercise[];
+};
+
+type RawTree = {
+  tracks: Array<{
+    id: string;
+    name: string;
+    sourceSystem?: string;
+    lines?: Array<{ id: string; name: string; sourceSystem: string; nodes: SkillNodeData[] }>;
+    tiers?: PilatesTier[];
+  }>;
+};
+
+const tree = rawTree as RawTree;
+
+export const CALISTHENICS = tree.tracks.find((t) => t.id === 'calisthenics')!;
+export const PILATES = tree.tracks.find((t) => t.id === 'pilates')!;
+
+/** Compound-gate nodes (muscle-up, handstand push-up) render as milestone "boss" nodes. */
+function markMilestones(nodes: SkillNodeData[]): SkillNodeData[] {
+  return nodes.map((n) => ({ ...n, milestone: n.threshold.type === 'compound' }));
 }
 
-const genericFormCues = [
-  '[Placeholder form cue] Maintain a neutral, controlled position throughout the movement.',
-  '[Placeholder form cue] Breathe steadily; avoid holding your breath under tension.',
-  '[Placeholder form cue] Full range of motion counts more than speed — content TBD.',
-];
+export const CALISTHENICS_LINES: SkillLine[] = (CALISTHENICS.lines ?? []).map((l) => ({
+  ...l,
+  nodes: markMilestones(l.nodes),
+}));
 
-export const SKILL_NODES: SkillNodeDef[] = [
-  // --- Calisthenics track ---
-  { id: 'cal-a1', track: 'calisthenics', tier: 1, name: 'Skill Node A', prerequisiteIds: [], gateType: 'reps', thresholdLabel: 'TBD', formCues: genericFormCues, defaultState: 'mastered' },
-  { id: 'cal-a2', track: 'calisthenics', tier: 1, name: 'Skill Node B', prerequisiteIds: ['cal-a1'], gateType: 'hold', thresholdLabel: 'TBD', formCues: genericFormCues, defaultState: 'completed' },
-  { id: 'cal-b1', track: 'calisthenics', tier: 2, name: 'Skill Node C', prerequisiteIds: ['cal-a2'], gateType: 'reps', thresholdLabel: 'TBD', formCues: genericFormCues, defaultState: 'inprogress' },
-  { id: 'cal-b2', track: 'calisthenics', tier: 2, name: 'Skill Node D', prerequisiteIds: ['cal-a2'], gateType: 'hold', thresholdLabel: 'TBD', isBoss: true, formCues: genericFormCues, defaultState: 'unlocked' },
-  { id: 'cal-c1', track: 'calisthenics', tier: 3, name: 'Skill Node E', prerequisiteIds: ['cal-b1', 'cal-b2'], gateType: 'reps', thresholdLabel: 'TBD', formCues: genericFormCues, defaultState: 'locked' },
-  { id: 'cal-c2', track: 'calisthenics', tier: 3, name: 'Skill Node F', prerequisiteIds: ['cal-b2'], gateType: 'hold', thresholdLabel: 'TBD', formCues: genericFormCues, defaultState: 'locked' },
+export const PILATES_TIERS: PilatesTier[] = PILATES.tiers ?? [];
 
-  // --- Pilates track (structurally parallel, materially separate criteria per A7e) ---
-  { id: 'pil-a1', track: 'pilates', tier: 1, name: 'Skill Node A', prerequisiteIds: [], gateType: 'hold', thresholdLabel: 'TBD', formCues: genericFormCues, defaultState: 'mastered' },
-  { id: 'pil-a2', track: 'pilates', tier: 1, name: 'Skill Node B', prerequisiteIds: ['pil-a1'], gateType: 'reps', thresholdLabel: 'TBD', formCues: genericFormCues, defaultState: 'completed' },
-  { id: 'pil-b1', track: 'pilates', tier: 2, name: 'Skill Node C', prerequisiteIds: ['pil-a2'], gateType: 'hold', thresholdLabel: 'TBD', formCues: genericFormCues, defaultState: 'inprogress' },
-  { id: 'pil-b2', track: 'pilates', tier: 2, name: 'Skill Node D', prerequisiteIds: ['pil-a2'], gateType: 'reps', thresholdLabel: 'TBD', isBoss: true, formCues: genericFormCues, defaultState: 'unlocked' },
-  { id: 'pil-c1', track: 'pilates', tier: 3, name: 'Skill Node E', prerequisiteIds: ['pil-b1', 'pil-b2'], gateType: 'hold', thresholdLabel: 'TBD', formCues: genericFormCues, defaultState: 'locked' },
-  { id: 'pil-c2', track: 'pilates', tier: 3, name: 'Skill Node F', prerequisiteIds: ['pil-b2'], gateType: 'reps', thresholdLabel: 'TBD', formCues: genericFormCues, defaultState: 'locked' },
-];
+export type TrackId = 'calisthenics' | 'pilates';
 
-export function nodesForTrack(track: Track) {
-  return SKILL_NODES.filter((n) => n.track === track).sort((a, b) => a.tier - b.tier);
+/**
+ * Clearly-labeled SAMPLE per-user progression state for preview only.
+ * Deterministic per line: earliest nodes mastered/completed, then in-progress,
+ * then the next unlocked, and everything after it locked. Real state is wired
+ * by app-builder (Req 8: per-user progression store).
+ */
+export const PREVIEW_NODE_STATE: Record<string, NodeState> = (() => {
+  const map: Record<string, NodeState> = {};
+  const seq: NodeState[] = ['mastered', 'completed', 'inProgress', 'unlocked'];
+  for (const line of CALISTHENICS_LINES) {
+    const ordered = [...line.nodes].sort((a, b) => a.tier - b.tier);
+    ordered.forEach((n, i) => {
+      map[n.id] = i < seq.length ? seq[i] : 'locked';
+    });
+  }
+  // Pilates tier nodes: Basic completed, Intermediate in-progress, Advanced locked.
+  const pilStates: NodeState[] = ['completed', 'inProgress', 'locked'];
+  PILATES_TIERS.forEach((t, i) => {
+    map[t.id] = pilStates[i] ?? 'locked';
+  });
+  return map;
+})();
+
+export function nodeState(id: string): NodeState {
+  return PREVIEW_NODE_STATE[id] ?? 'locked';
 }
 
-export function getNodeDef(id: string) {
-  return SKILL_NODES.find((n) => n.id === id);
+/** Human-readable threshold summary, e.g. "3 × 12 reps" or "Hold 30s". */
+export function describeThreshold(t: Threshold): string {
+  switch (t.type) {
+    case 'reps': {
+      const per = t.per ? ` per ${t.per}` : '';
+      return t.sets ? `${t.sets} × ${t.value} reps${per}` : `${t.value} reps${per}`;
+    }
+    case 'hold_seconds':
+      return `Hold ${t.value}s${t.per ? ` per ${t.per}` : ''}`;
+    case 'duration_seconds':
+      return `${t.value}s continuous`;
+    case 'compound':
+      return String(t.value);
+    case 'form_check':
+      return String(t.value);
+    default:
+      return String(t.value);
+  }
+}
+
+export function confidenceLabel(c: Threshold['confidence']): string {
+  switch (c) {
+    case 'high':
+      return 'Convergent across sources';
+    case 'medium':
+      return 'Ordering sourced; volume generalized';
+    case 'estimate':
+      return 'Reasoned estimate — unvalidated';
+  }
+}
+
+/** Find any calisthenics node by id (for Node Detail / Log Attempt routing). */
+export function findNode(id: string): SkillNodeData | undefined {
+  for (const line of CALISTHENICS_LINES) {
+    const n = line.nodes.find((x) => x.id === id);
+    if (n) return n;
+  }
+  return undefined;
+}
+
+export function lineForNode(id: string): SkillLine | undefined {
+  return CALISTHENICS_LINES.find((l) => l.nodes.some((n) => n.id === id));
 }

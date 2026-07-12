@@ -1,41 +1,46 @@
 import React, { useState } from 'react';
 import { View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { ScreenContainer } from '../../components/ScreenContainer';
-import { Text } from '../../components/Typography';
-import { Card } from '../../components/Card';
-import { Button } from '../../components/Button';
-import { color, space } from '../../theme/tokens';
+import { Button, Card, useTheme } from '@fit-and-fed/design-system';
+import { AppText, Row, Screen, Section } from '../../ui/layout';
 
 const FAQ = [
-  { q: 'How are household units converted to grams?', a: 'Each food defines its own household-unit-to-gram conversion; if a food has none yet, the picker falls back to exact grams.' },
-  { q: 'What happens to my logs when I\'m offline?', a: 'They save locally immediately and are queued; they sync automatically once you\'re back online.' },
-  { q: 'Are the workout skill names final?', a: 'No — this build uses generic placeholder skill names ("Skill Node A", etc.) pending content validation.' },
+  { q: 'Why does a nutrient say "no data"?', a: 'Some regional foods have no sourced value for that nutrient yet. We show an honest "no data" instead of a misleading zero.' },
+  { q: 'Are the workout thresholds a certified program?', a: 'No — they are a well-sourced synthesis of published systems, pending review by a qualified coach. Train within your ability.' },
+  { q: 'Does logging work offline?', a: 'Yes. Entries save locally and sync automatically when you reconnect.' },
 ];
 
-/** S8. Help / Support — FAQ + contact affordance, cached offline. */
+/**
+ * Help / Support (S8) — expandable FAQ + contact action.
+ *
+ * DATA CONTRACT: FAQ content readable offline; the contact action requires
+ * connectivity ([CP-NETFAIL]) and queues the message when offline (E8 default).
+ */
 export function HelpSupportScreen() {
-  const [openIndex, setOpenIndex] = useState<number | null>(null);
+  const theme = useTheme();
+  const [open, setOpen] = useState<number | null>(0);
 
   return (
-    <ScreenContainer>
-      <Text variant="h1">Help & Support</Text>
-      {FAQ.map((item, i) => (
-        <Card key={i} onPress={() => setOpenIndex(openIndex === i ? null : i)}>
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-            <Text variant="h3" style={{ flex: 1 }}>
-              {item.q}
-            </Text>
-            <Ionicons name={openIndex === i ? 'chevron-up' : 'chevron-down'} size={18} color={color.neutral.warmgray700} />
-          </View>
-          {openIndex === i ? (
-            <Text variant="body" colorToken={color.neutral.warmgray700} style={{ marginTop: space[8] }}>
-              {item.a}
-            </Text>
-          ) : null}
-        </Card>
-      ))}
-      <Button label="Contact support" onPress={() => {}} />
-    </ScreenContainer>
+    <Screen>
+      <Section title="FAQ">
+        {FAQ.map((item, i) => (
+          <Card key={i} onPress={() => setOpen(open === i ? null : i)}>
+            <Row style={{ justifyContent: 'space-between' }}>
+              <AppText variant="bodyEmphasis" style={{ flex: 1 }}>
+                {item.q}
+              </AppText>
+              <Ionicons name={open === i ? 'chevron-up' : 'chevron-down'} size={20} color={theme.neutrals.placeholder} />
+            </Row>
+            {open === i ? (
+              <AppText variant="caption" color={theme.neutrals.charcoal} style={{ marginTop: theme.spacing.space8 }}>
+                {item.a}
+              </AppText>
+            ) : null}
+          </Card>
+        ))}
+      </Section>
+
+      <Button label="Contact support" onPress={() => { /* [CP-NETFAIL] / queue when offline */ }} />
+    </Screen>
   );
 }

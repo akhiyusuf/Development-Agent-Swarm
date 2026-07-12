@@ -1,80 +1,66 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { View } from 'react-native';
-import { useNavigation, useRoute } from '@react-navigation/native';
-import { Ionicons } from '@expo/vector-icons';
-import { ScreenContainer } from '../../components/ScreenContainer';
-import { Text } from '../../components/Typography';
-import { Button } from '../../components/Button';
-import { Card } from '../../components/Card';
-import { color, space } from '../../theme/tokens';
-import { useAppState } from '../../state/AppStateContext';
-import { getNodeDef } from '../../data/skillTree';
+import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
+import { Button, Card, SkillNode, useTheme } from '@fit-and-fed/design-system';
+import { AppText, Row, Screen, Section } from '../../ui/layout';
+import { CALISTHENICS_LINES, PILATES_TIERS, findNode } from '../../data/skillTree';
+import type { RootParamList, TrackId } from '../../navigation/types';
 
 /**
- * W5. Mastery Gate Confirmation — shown when a logged attempt meets/exceeds
- * the node's (placeholder) threshold. If this attempt didn't reach a gate,
- * shows a lightweight "attempt saved, keep going" state instead.
+ * Mastery Gate Confirmation (W5) — shown when a logged attempt meets a node's
+ * threshold; confirms the unlock of downstream node(s) (Req 7).
+ *
+ * DATA CONTRACT: `{ nodeId }`. The unlock is already committed by Save Attempt
+ * (C2) — this screen is a one-way confirmation, safe to dismiss either way.
+ * Uses the fixed node-state vocabulary (a legitimate node-state context).
+ * Continue returns to the Node Map reflecting the new states.
  */
 export function MasteryGateConfirmationScreen() {
-  const nav = useNavigation<any>();
-  const route = useRoute<any>();
+  const theme = useTheme();
+  const navigation = useNavigation();
+  const route = useRoute<RouteProp<RootParamList, 'MasteryGateConfirmation'>>();
   const { nodeId } = route.params;
-  const { state, dispatch } = useAppState();
-  const def = getNodeDef(nodeId);
-  const event = state.lastGateEvent?.masteredNodeId === nodeId ? state.lastGateEvent : null;
 
-  useEffect(() => {
-    return () => {
-      dispatch({ type: 'CLEAR_GATE_EVENT' });
-    };
-  }, []);
+  const node = findNode(nodeId);
+  const isPilates = PILATES_TIERS.some((t) => t.id === nodeId);
+  const track: TrackId = isPilates ? 'pilates' : 'calisthenics';
+  const name = node?.name ?? PILATES_TIERS.find((t) => t.id === nodeId)?.name ?? 'Skill';
 
-  if (!def) return null;
-
-  if (!event) {
-    return (
-      <ScreenContainer density="relaxed" forceDark>
-        <Text variant="h1" colorToken={color.neutral.white}>
-          Attempt saved
-        </Text>
-        <Text variant="body" colorToken="#C9C6BE">
-          Keep logging — {def.name} isn't at its gate yet.
-        </Text>
-        <Button label="Continue" onPress={() => nav.navigate('TierNodeMap', { track: def.track })} />
-      </ScreenContainer>
-    );
-  }
+  const unlocked = CALISTHENICS_LINES.flatMap((l) => l.nodes).filter((n) => n.prerequisites.includes(nodeId));
 
   return (
-    <ScreenContainer density="relaxed" forceDark>
-      <View style={{ alignItems: 'center', gap: space[12] }}>
-        <Ionicons name="star" size={56} color={color.node.mastered} />
-        <Text variant="h1" colorToken={color.neutral.white} center>
-          {event.nowState === 'mastered' ? 'Mastered!' : 'Gate cleared!'}
-        </Text>
-        <Text variant="body" colorToken="#C9C6BE" center>
-          {def.name} is now {event.nowState}.
-        </Text>
-      </View>
+    <Screen>
+      <AppText variant="display" color={theme.node.mastered}>
+        Mastered!
+      </AppText>
+      <AppText variant="body" color={theme.neutrals.charcoal}>
+        You cleared the gate for {name}.
+      </AppText>
 
-      {event.newlyUnlockedIds.length > 0 ? (
-        <Card forceDark>
-          <Text variant="h3" colorToken={color.neutral.white}>
-            Newly unlocked
-          </Text>
-          {event.newlyUnlockedIds.map((id) => (
-            <View key={id} style={{ flexDirection: 'row', alignItems: 'center', gap: space[8], marginTop: space[8] }}>
-              <Ionicons name="ellipse-outline" size={20} color={color.node.unlocked} />
-              <Text variant="body" colorToken={color.neutral.white}>
-                {getNodeDef(id)?.name}
-              </Text>
-            </View>
-          ))}
-        </Card>
+      <Card>
+        <Row style={{ justifyContent: 'center' }}>
+          <SkillNode label={name} state="mastered" milestone />
+        </Row>
+      </Card>
+
+      {unlocked.length > 0 ? (
+        <Section title="Now unlocked">
+          <Card>
+            <ScrollableRow>
+              {unlocked.map((n) => (
+                <SkillNode key={n.id} label={n.name} state="unlocked" />
+              ))}
+            </ScrollableRow>
+          </Card>
+        </Section>
       ) : null}
 
-      <Button label="Continue" onPress={() => nav.navigate('TierNodeMap', { track: def.track })} />
-      <Button label="View progression" variant="tertiary" onPress={() => nav.navigate('ProgressionStatus')} />
-    </ScreenContainer>
+      <Button label="Continue" onPress={() => navigation.navigate('TierNodeMap', { track })} />
+    </Screen>
   );
+}
+
+function ScrollableRow({ children }: { children: React.ReactNode }) {
+  const theme = useTheme();
+  return <Row style={{ gap: theme.spacing.space24, flexWrap: 'wrap' }}>{children}</Row>;
 }

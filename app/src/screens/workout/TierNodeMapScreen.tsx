@@ -1,76 +1,85 @@
 import React from 'react';
-import { View, StyleSheet } from 'react-native';
-import { useNavigation, useRoute } from '@react-navigation/native';
-import { ScreenContainer } from '../../components/ScreenContainer';
-import { Text } from '../../components/Typography';
-import { SkillNode } from '../../components/SkillNode';
-import { color, space } from '../../theme/tokens';
-import { useAppState } from '../../state/AppStateContext';
-import { nodesForTrack, getNodeDef } from '../../data/skillTree';
-import type { Track } from '../../data/skillTree';
+import { ScrollView, View } from 'react-native';
+import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
+import { Card, SkillNode, useTheme } from '@fit-and-fed/design-system';
+import { AppText, Screen, Section } from '../../ui/layout';
+import { CALISTHENICS_LINES, PILATES_TIERS, findNode, nodeState } from '../../data/skillTree';
+import type { RootParamList } from '../../navigation/types';
 
 /**
- * W2. Tier / Node Map — visual tree per track. Locked nodes are fully
- * non-interactive (carry-forward #5); dark-bg per carry-forward #7.
+ * Tier / Node Map (W2) — visual tree per track; each node shows its state and
+ * prerequisites (Req 6, Req 8).
  *
- * Prerequisite information (Req 8 / docs/screens.md W2): each locked node
- * shows a static, non-interactive caption naming its prerequisite node(s), so
- * a user can see what unlocks it without needing to tap in (locked nodes
- * can't be tapped at all). Full prerequisite edge-lines between nodes were
- * not additionally drawn in this build — the caption is the chosen
- * lightweight alternative the spec allows ("and/or simple prerequisite edge
- * lines"); see BUILD_NOTES.md.
+ * DATA CONTRACT: `{ track }` + a per-user `nodeState(id)` resolver. Locked nodes
+ * are fully NON-INTERACTIVE (the design system's SkillNode enforces this) — a
+ * locked node's prerequisite shows as a static caption, never a control (C1).
+ * Actionable nodes route to Node Detail. In dark mode the screen background is
+ * the design system's #17181A app-bg, where the mastered node's outline/icon —
+ * not its fill — carries contrast (design-system carry-forward #7).
  */
 export function TierNodeMapScreen() {
-  const nav = useNavigation<any>();
-  const route = useRoute<any>();
-  const track: Track = route.params.track;
-  const { state } = useAppState();
-  const nodes = nodesForTrack(track);
-  const tiers = Array.from(new Set(nodes.map((n) => n.tier))).sort();
+  const theme = useTheme();
+  const navigation = useNavigation();
+  const route = useRoute<RouteProp<RootParamList, 'TierNodeMap'>>();
+  const track = route.params.track;
+
+  if (track === 'pilates') {
+    return (
+      <Screen>
+        <AppText variant="h2">Pilates — classical mat</AppText>
+        <AppText variant="caption" color={theme.neutrals.charcoal}>
+          Taught as three ordered tiers rather than an exercise-by-exercise tree.
+        </AppText>
+        <Card>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: theme.spacing.space24, padding: theme.spacing.space8 }}>
+            {PILATES_TIERS.map((tier) => (
+              <SkillNode
+                key={tier.id}
+                label={tier.name}
+                state={nodeState(tier.id)}
+                milestone
+                onPress={() => navigation.navigate('NodeDetail', { nodeId: tier.id })}
+              />
+            ))}
+          </ScrollView>
+        </Card>
+      </Screen>
+    );
+  }
 
   return (
-    <ScreenContainer density="relaxed" forceDark>
-      <Text variant="h1" colorToken={color.neutral.white}>
-        {track === 'calisthenics' ? 'Calisthenics' : 'Pilates'} tree
-      </Text>
-      {tiers.map((tier) => (
-        <View key={tier} style={{ gap: space[12] }}>
-          <Text variant="h3" colorToken="#C9C6BE">
-            Tier {tier}
-          </Text>
-          <View style={styles.row}>
-            {nodes
-              .filter((n) => n.tier === tier)
-              .map((n) => {
-                const nodeState = state.nodeStates[n.id] ?? n.defaultState;
-                const locked = nodeState === 'locked';
-                const prereqNames = n.prerequisiteIds.map((id) => getNodeDef(id)?.name ?? id);
+    <Screen>
+      <AppText variant="h2">Calisthenics map</AppText>
+      {CALISTHENICS_LINES.map((line) => (
+        <Section key={line.id} title={line.name}>
+          <Card>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: theme.spacing.space24, padding: theme.spacing.space8, alignItems: 'flex-start' }}>
+              {line.nodes.map((node) => {
+                const state = nodeState(node.id);
+                const prereqNames = node.prerequisites
+                  .map((p) => findNode(p)?.name)
+                  .filter(Boolean)
+                  .join(', ');
                 return (
-                  <View key={n.id} style={styles.nodeCol}>
+                  <View key={node.id} style={{ width: 96, alignItems: 'center', gap: theme.spacing.space4 }}>
                     <SkillNode
-                      name={n.name}
-                      state={nodeState}
-                      isBoss={n.isBoss}
-                      onPress={() => nav.navigate('NodeDetail', { nodeId: n.id })}
+                      label={node.name}
+                      state={state}
+                      milestone={node.milestone}
+                      onPress={() => navigation.navigate('NodeDetail', { nodeId: node.id })}
                     />
-                    {locked && prereqNames.length > 0 ? (
-                      <Text variant="micro" colorToken={color.neutral.warmgray700} center style={styles.prereqCaption}>
-                        Requires: {prereqNames.join(', ')}
-                      </Text>
+                    {state === 'locked' && prereqNames ? (
+                      <AppText variant="micro" color={theme.neutrals.placeholder} style={{ textAlign: 'center' }}>
+                        Requires: {prereqNames}
+                      </AppText>
                     ) : null}
                   </View>
                 );
               })}
-          </View>
-        </View>
+            </ScrollView>
+          </Card>
+        </Section>
       ))}
-    </ScreenContainer>
+    </Screen>
   );
 }
-
-const styles = StyleSheet.create({
-  row: { flexDirection: 'row', flexWrap: 'wrap', gap: space[16] },
-  nodeCol: { alignItems: 'center', width: 96 },
-  prereqCaption: { marginTop: 2, width: 96 },
-});

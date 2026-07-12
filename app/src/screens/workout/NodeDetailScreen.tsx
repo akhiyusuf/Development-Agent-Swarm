@@ -1,88 +1,124 @@
 import React from 'react';
 import { View } from 'react-native';
-import { useNavigation, useRoute } from '@react-navigation/native';
-import { ScreenContainer } from '../../components/ScreenContainer';
-import { Text } from '../../components/Typography';
-import { Card } from '../../components/Card';
-import { Button } from '../../components/Button';
-import { ProgressBar } from '../../components/ProgressBar';
-import { NodeStateBadge } from '../../components/NodeStateBadge';
-import { color, space } from '../../theme/tokens';
-import { useAppState } from '../../state/AppStateContext';
-import { getNodeDef } from '../../data/skillTree';
+import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
+import { Button, Card, NodeStateBadge, ProgressBar, StatusBadge, useTheme } from '@fit-and-fed/design-system';
+import { AppText, Screen, Section } from '../../ui/layout';
+import {
+  PILATES_TIERS,
+  confidenceLabel,
+  describeThreshold,
+  findNode,
+  nodeState,
+} from '../../data/skillTree';
+import type { RootParamList } from '../../navigation/types';
 
 /**
- * W3. Node Detail — reached only for unlocked/in-progress/completed/mastered
- * nodes (carry-forward #5). `[Skill Node]` placeholder name, TBD threshold.
+ * Node Detail (W3) — name, status, prerequisites, unlock requirement, form cues
+ * (Req 6, 7, 10). Reached only for actionable (non-locked) nodes (C1).
+ *
+ * DATA CONTRACT: `{ nodeId }` resolves a calisthenics node OR a Pilates tier.
+ * The unlock requirement + confidence come straight from the cited dataset;
+ * copy surfaces the confidence so users aren't misled that a synthesized gate
+ * is certified (data-sourcing.md #7). Log Attempt commits against this node.
  */
 export function NodeDetailScreen() {
-  const nav = useNavigation<any>();
-  const route = useRoute<any>();
+  const theme = useTheme();
+  const navigation = useNavigation();
+  const route = useRoute<RouteProp<RootParamList, 'NodeDetail'>>();
   const { nodeId } = route.params;
-  const { state } = useAppState();
-  const def = getNodeDef(nodeId);
-  if (!def) return null;
-  const nodeState = state.nodeStates[nodeId] ?? def.defaultState;
 
-  const prereqNames = def.prerequisiteIds.map((id) => getNodeDef(id)?.name ?? id);
+  const node = findNode(nodeId);
+  const tier = PILATES_TIERS.find((t) => t.id === nodeId);
+  const state = nodeState(nodeId);
+
+  if (!node && !tier) {
+    return (
+      <Screen>
+        <AppText variant="h2">Skill not found</AppText>
+        <Button label="Back" onPress={() => navigation.goBack()} />
+      </Screen>
+    );
+  }
+
+  // --- Pilates tier ---
+  if (tier) {
+    return (
+      <Screen>
+        <AppText variant="h2">{tier.name}</AppText>
+        <NodeStateBadge state={state} />
+        <Card>
+          <Section title="Unlock requirement">
+            <AppText variant="body">{describeThreshold(tier.unlockThreshold)}</AppText>
+            <StatusBadge tone="info" label={confidenceLabel(tier.unlockThreshold.confidence)} />
+          </Section>
+        </Card>
+        <Section title="Exercises in this tier">
+          {tier.exercises.map((ex) => (
+            <Card key={ex.id}>
+              <AppText variant="bodyEmphasis">{ex.name}</AppText>
+              <AppText variant="caption" color={theme.neutrals.charcoal}>
+                {describeThreshold(ex.threshold)} · {confidenceLabel(ex.threshold.confidence)}
+              </AppText>
+            </Card>
+          ))}
+        </Section>
+        <Button label="Log attempt" onPress={() => navigation.navigate('LogAttempt', { nodeId: tier.id })} />
+        <Button variant="tertiary" label="View progression" onPress={() => navigation.navigate('ProgressionStatus')} />
+      </Screen>
+    );
+  }
+
+  // --- Calisthenics node ---
+  const n = node!;
+  const prereqNames = n.prerequisites.map((p) => findNode(p)?.name).filter(Boolean);
 
   return (
-    <ScreenContainer density="relaxed" forceDark>
-      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-        <Text variant="h2" colorToken={color.neutral.white}>
-          {def.name}
-        </Text>
-        <NodeStateBadge state={nodeState} />
-      </View>
+    <Screen>
+      <AppText variant="h2">{n.name}</AppText>
+      <NodeStateBadge state={state} />
+
+      <Card>
+        <Section title="Unlock requirement">
+          <AppText variant="body">{describeThreshold(n.threshold)}</AppText>
+          <StatusBadge tone="info" label={confidenceLabel(n.threshold.confidence)} />
+        </Section>
+      </Card>
 
       {prereqNames.length > 0 ? (
-        <Card forceDark>
-          <Text variant="h3" colorToken={color.neutral.white}>
-            Prerequisite(s)
-          </Text>
-          {prereqNames.map((n) => (
-            <Text key={n} variant="body" colorToken="#C9C6BE">
-              • {n}
-            </Text>
-          ))}
+        <Card>
+          <Section title="Prerequisites">
+            {prereqNames.map((name) => (
+              <AppText key={name} variant="body">
+                • {name}
+              </AppText>
+            ))}
+          </Section>
         </Card>
       ) : null}
 
-      <Card forceDark>
-        <Text variant="h3" colorToken={color.neutral.white}>
-          Unlock requirement
-        </Text>
-        <Text variant="body" colorToken="#C9C6BE">
-          {def.gateType === 'reps' ? 'Rep threshold' : 'Time-hold threshold'}: {def.thresholdLabel} (value pending
-          validated content — see docs/screens.md carry-forward #1)
-        </Text>
-      </Card>
-
-      <Card forceDark>
-        <Text variant="h3" colorToken={color.neutral.white}>
-          Form cues
-        </Text>
-        {def.formCues.map((cue, i) => (
-          <Text key={i} variant="caption" colorToken="#C9C6BE" style={{ marginTop: 4 }}>
-            {cue}
-          </Text>
-        ))}
-      </Card>
-
-      {nodeState === 'inprogress' ? (
-        <Card forceDark>
-          <Text variant="body" colorToken={color.neutral.white}>
-            Progress toward gate
-          </Text>
-          <ProgressBar progress={0.5} fillColor={color.node.inprogress} trackColor={color.neutral.darkBorder} />
+      {n.threshold.note ? (
+        <Card>
+          <Section title="Form cue">
+            <AppText variant="body" color={theme.neutrals.charcoal}>
+              {n.threshold.note}
+            </AppText>
+          </Section>
         </Card>
       ) : null}
 
-      <Button label="Log attempt" onPress={() => nav.navigate('LogAttempt', { nodeId })} />
-      <Button label="Back to map" variant="secondary" onPress={() => nav.goBack()} />
-      {(nodeState === 'completed' || nodeState === 'mastered') && (
-        <Button label="View progression" variant="tertiary" onPress={() => nav.navigate('ProgressionStatus')} />
-      )}
-    </ScreenContainer>
+      {state === 'inProgress' ? (
+        <Card>
+          <Section title="Progress toward gate">
+            <ProgressBar progress={0.6} color={theme.node.inProgress} />
+            <AppText variant="caption" color={theme.neutrals.charcoal}>
+              Sample progress — app-builder wires the real per-user attempt totals.
+            </AppText>
+          </Section>
+        </Card>
+      ) : null}
+
+      <Button label="Log attempt" onPress={() => navigation.navigate('LogAttempt', { nodeId: n.id })} />
+      <Button variant="tertiary" label="View progression" onPress={() => navigation.navigate('ProgressionStatus')} />
+    </Screen>
   );
 }
