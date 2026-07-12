@@ -57,7 +57,7 @@ export function PlacementResultBody({
         label="Continue"
         onPress={() =>
           context === 'account'
-            ? navigation.navigate('SkillTreeHome')
+            ? (navigation as unknown as { popTo: (screen: string) => void }).popTo('Main')
             : navigation.navigate('TrackSelection')
         }
       />
