@@ -73,10 +73,10 @@
       "householdPortions": [
         { "unit": "1 ladle/bowl", "grams": 250 }
       ],
-      "per100g": { "kcal": 182, "protein_g": 14.3, "carbs_g": 8.0, "fat_g": 13.2 },
+      "per100g": { "kcal": 182, "protein_g": 12.5, "carbs_g": 7.0, "fat_g": 11.5 },
       "micronutrients": { "folate_mcg": 58, "iron_mg": 4.2 },
       "confidence": "compiled-estimate",
-      "valueSpread": "Meat/fish/palm-oil content varies substantially by household recipe; per-250g-serving trackers show 350-400 kcal depending on protein load, consistent with the per-100g figure used here at a moderate-protein fill level.",
+      "valueSpread": "Re-checked against the cited source: NutriScan's own 250g-bowl figure is ~455 kcal, i.e. exactly 182 kcal/100g x 2.5 — the previous revision of this entry incorrectly stated a 350-400 kcal/250g range as 'consistent,' which was arithmetically false (455 is above that range) and has been corrected. Meat/fish/palm-oil content still varies substantially by household recipe: lean, minimal-oil versions run closer to 400-450 kcal/250g bowl (~160-180 kcal/100g), while palm-oil-heavy versions run 600+ kcal/250g bowl (~240+ kcal/100g). 182 kcal/100g sits at the lean-to-moderate end of that real spread. The macro panel was also rescaled in this pass so it Atwater-reconciles with the stated kcal (12.5P/7C/11.5F x 4/4/9 = ~182 kcal, vs. the previous 14.3/8/13.2 panel which computed to 208 kcal against a 182 kcal label).",
       "source": {
         "name": "NutriScan App — Egusi Soup: Calories, Nutrition and Health Benefits",
         "url": "https://nutriscan.app/calories-nutrition/egusi-soup"
@@ -376,9 +376,9 @@
       "per100g": { "kcal": 320, "protein_g": 5.0, "carbs_g": 40.0, "fat_g": 15.0 },
       "micronutrients": {},
       "confidence": "compiled-estimate",
-      "valueSpread": "Piece-size and oil absorption during deep-frying vary calorie count by roughly 292-320 kcal per piece across sources; the vegan mahamri variant runs far lower (~28 kcal/piece) and is tracked as a distinct item if added later.",
+      "valueSpread": "Corrected in this pass: the previous revision cited '292-320 kcal per piece' for the same 60g piece used here, which contradicted 320 kcal/100g x 60g = 192 kcal/piece (a 292-320 kcal piece at 320 kcal/100g would need to weigh ~90-100g, not 60g). Re-checking the sources: 292-320 kcal/100g is actually the range independent trackers report on a per-100g basis (not per-piece) for fried mandazi, depending on coconut milk/egg content and oil absorption; 320 kcal/100g is the upper-middle of that range and is independently corroborated by a small-piece source reporting 99 kcal for a 31g piece (≈318 kcal/100g when scaled). Piece weight itself varies widely by vendor/household from a small ~31g piece (~99 kcal) to the 60g piece used as this entry's default household portion (320 kcal/100g x 60g = 192 kcal/piece). The previously-cited '~28 kcal/piece vegan mahamri' figure has been removed: a fried-dough piece at 28 kcal is not physically plausible (it was an uncaught source artifact, likely a per-gram or per-small-bite figure misread as per-piece) and no source in this pass gave a corroborated numeric value for the vegan mahamri variant, so it is left out entirely rather than assigned an invented number; it should be added as its own catalog item with its own sourcing pass if/when tracked.",
       "source": {
-        "name": "Calorique — Mandazi Calories",
+        "name": "Calorique — Mandazi Calories, cross-checked against a Nutritionix small-piece (31g) mandazi entry",
         "url": "https://www.caloriqueapp.com/calories/mandazi"
       }
     },
