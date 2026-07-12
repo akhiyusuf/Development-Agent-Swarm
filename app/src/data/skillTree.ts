@@ -9,16 +9,12 @@
  * IMPORTANT (carried from data-sourcing.md #6/#7): this tree is a well-sourced
  * SYNTHESIS, not a clinically validated program. Screens surface the real
  * names/thresholds but also surface the confidence tag so users are never
- * misled that these gates are certified. Per-user progression STATE is
- * app-builder's job — the `PREVIEW_NODE_STATE` map below is clearly-labeled
- * sample state so the map/detail screens preview realistically.
- *
- * DATA CONTRACT (for app-builder): screens read `TRACKS` (structure) and a
- * `nodeState(nodeId) => NodeState` resolver. Replace `PREVIEW_NODE_STATE` with
- * the real per-user progression store without touching screen JSX.
+ * misled that these gates are certified. Per-user progression STATE is wired
+ * in `app/src/logic/progression.ts` + `app/src/state/selectors.ts`
+ * (`useNodeStateResolver`), driven by real logged attempts — this module
+ * stays pure content (structure only).
  */
 import rawTree from '../../../data/workouts/skill-tree.json';
-import type { NodeState } from '@fit-and-fed/design-system';
 
 export type Threshold = {
   type: 'reps' | 'hold_seconds' | 'duration_seconds' | 'compound' | 'form_check';
@@ -85,31 +81,11 @@ export const PILATES_TIERS: PilatesTier[] = PILATES.tiers ?? [];
 export type TrackId = 'calisthenics' | 'pilates';
 
 /**
- * Clearly-labeled SAMPLE per-user progression state for preview only.
- * Deterministic per line: earliest nodes mastered/completed, then in-progress,
- * then the next unlocked, and everything after it locked. Real state is wired
- * by app-builder (Req 8: per-user progression store).
+ * Real per-user progression state (which nodes are locked/unlocked/mastered)
+ * now lives in `app/src/logic/progression.ts` + `app/src/state/selectors.ts`
+ * (`useNodeStateResolver`), driven by actual logged attempts and the
+ * placement-derived starting tier. This module stays pure content.
  */
-export const PREVIEW_NODE_STATE: Record<string, NodeState> = (() => {
-  const map: Record<string, NodeState> = {};
-  const seq: NodeState[] = ['mastered', 'completed', 'inProgress', 'unlocked'];
-  for (const line of CALISTHENICS_LINES) {
-    const ordered = [...line.nodes].sort((a, b) => a.tier - b.tier);
-    ordered.forEach((n, i) => {
-      map[n.id] = i < seq.length ? seq[i] : 'locked';
-    });
-  }
-  // Pilates tier nodes: Basic completed, Intermediate in-progress, Advanced locked.
-  const pilStates: NodeState[] = ['completed', 'inProgress', 'locked'];
-  PILATES_TIERS.forEach((t, i) => {
-    map[t.id] = pilStates[i] ?? 'locked';
-  });
-  return map;
-})();
-
-export function nodeState(id: string): NodeState {
-  return PREVIEW_NODE_STATE[id] ?? 'locked';
-}
 
 /** Human-readable threshold summary, e.g. "3 × 12 reps" or "Hold 30s". */
 export function describeThreshold(t: Threshold): string {

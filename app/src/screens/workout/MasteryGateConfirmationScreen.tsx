@@ -4,6 +4,8 @@ import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { Button, Card, SkillNode, useTheme } from '@fit-and-fed/design-system';
 import { AppText, Row, Screen, Section } from '../../ui/layout';
 import { CALISTHENICS_LINES, PILATES_TIERS, findNode } from '../../data/skillTree';
+import { useAppState } from '../../state/AppStateContext';
+import { computeCalisthenicsNodeStates, computePilatesTierStates, newlyUnlocked } from '../../logic/progression';
 import type { RootParamList, TrackId } from '../../navigation/types';
 
 /**
@@ -20,13 +22,29 @@ export function MasteryGateConfirmationScreen() {
   const navigation = useNavigation();
   const route = useRoute<RouteProp<RootParamList, 'MasteryGateConfirmation'>>();
   const { nodeId } = route.params;
+  const { placement, workoutAttempts } = useAppState();
 
   const node = findNode(nodeId);
   const isPilates = PILATES_TIERS.some((t) => t.id === nodeId);
   const track: TrackId = isPilates ? 'pilates' : 'calisthenics';
   const name = node?.name ?? PILATES_TIERS.find((t) => t.id === nodeId)?.name ?? 'Skill';
 
-  const unlocked = CALISTHENICS_LINES.flatMap((l) => l.nodes).filter((n) => n.prerequisites.includes(nodeId));
+  // Compute newly-unlocked nodes by comparing states with vs. without the
+  // just-logged attempt (Req 7's "confirms unlock of downstream node(s)").
+  const attemptsWithoutLast = {
+    ...workoutAttempts,
+    [nodeId]: (workoutAttempts[nodeId] ?? []).slice(0, -1),
+  };
+  const calBefore = computeCalisthenicsNodeStates(placement.calisthenics.startingTier ?? 1, attemptsWithoutLast);
+  const calAfter = computeCalisthenicsNodeStates(placement.calisthenics.startingTier ?? 1, workoutAttempts);
+  const pilBefore = computePilatesTierStates(placement.pilates.startingTier ?? 1, attemptsWithoutLast);
+  const pilAfter = computePilatesTierStates(placement.pilates.startingTier ?? 1, workoutAttempts);
+  const unlockedCalIds = newlyUnlocked(calBefore, calAfter);
+  const unlockedPilIds = newlyUnlocked(pilBefore, pilAfter);
+  const unlocked = [
+    ...CALISTHENICS_LINES.flatMap((l) => l.nodes).filter((n) => unlockedCalIds.includes(n.id)),
+    ...PILATES_TIERS.filter((t) => unlockedPilIds.includes(t.id)),
+  ];
 
   return (
     <Screen>

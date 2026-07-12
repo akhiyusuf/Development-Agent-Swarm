@@ -4,6 +4,8 @@ import { Button, Card, SingleSelectChips, ToggleSwitch, useTheme } from '@fit-an
 import { AppText, Screen } from '../../ui/layout';
 import { OnboardingProgress } from '../../components/OnboardingProgress';
 import { PreAuthLoginLink } from '../../components/PreAuthLoginLink';
+import { useAppDispatch, useAppState } from '../../state/AppStateContext';
+import type { Market } from '../../state/types';
 
 /**
  * Region & Cuisine Preference — v1 market + optional Western/diaspora food set.
@@ -15,8 +17,10 @@ import { PreAuthLoginLink } from '../../components/PreAuthLoginLink';
 export function RegionPreferenceScreen() {
   const theme = useTheme();
   const navigation = useNavigation();
-  const [market, setMarket] = useState<string | null>('Nigeria');
-  const [diaspora, setDiaspora] = useState(false);
+  const dispatch = useAppDispatch();
+  const existing = useAppState().region;
+  const [market, setMarket] = useState<string | null>(existing.market);
+  const [diaspora, setDiaspora] = useState(existing.diaspora);
   const [touched, setTouched] = useState(false);
 
   return (
@@ -57,7 +61,11 @@ export function RegionPreferenceScreen() {
         label="Continue"
         onPress={() => {
           setTouched(true);
-          if (market) navigation.navigate('ModuleInterest');
+          if (market) {
+            dispatch({ type: 'SET_REGION', region: { market: market as Market, diaspora } });
+            dispatch({ type: 'SET_ONBOARDING_STEP', step: 'ModuleInterest' });
+            navigation.navigate('ModuleInterest');
+          }
         }}
       />
       <PreAuthLoginLink />

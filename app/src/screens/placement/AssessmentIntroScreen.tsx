@@ -5,6 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Button, Card, useTheme } from '@fit-and-fed/design-system';
 import { AppText, Row, Screen } from '../../ui/layout';
 import { PreAuthLoginLink } from '../../components/PreAuthLoginLink';
+import { useAppDispatch } from '../../state/AppStateContext';
 
 /**
  * Assessment Intro — states what placement measures, a safety note, and that
@@ -19,6 +20,7 @@ import { PreAuthLoginLink } from '../../components/PreAuthLoginLink';
 export function AssessmentIntroScreen() {
   const theme = useTheme();
   const navigation = useNavigation();
+  const dispatch = useAppDispatch();
 
   return (
     <Screen>
@@ -43,8 +45,21 @@ export function AssessmentIntroScreen() {
         </Row>
       </Card>
 
-      <Button label="Begin" onPress={() => navigation.navigate('TrackSelection')} />
-      <Button variant="tertiary" label="Skip for now — do this later" onPress={() => navigation.navigate('Auth', { mode: 'signup' })} />
+      <Button
+        label="Begin"
+        onPress={() => {
+          dispatch({ type: 'SET_ONBOARDING_STEP', step: 'TrackSelection' });
+          navigation.navigate('TrackSelection');
+        }}
+      />
+      <Button
+        variant="tertiary"
+        label="Skip for now — do this later"
+        onPress={() => {
+          dispatch({ type: 'SET_ONBOARDING_STEP', step: 'Auth' });
+          navigation.navigate('Auth', { mode: 'signup' });
+        }}
+      />
       <PreAuthLoginLink />
     </Screen>
   );

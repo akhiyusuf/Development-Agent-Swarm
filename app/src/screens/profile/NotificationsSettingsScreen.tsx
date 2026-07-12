@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View } from 'react-native';
 import { Button, Card, ToggleSwitch, useTheme } from '@fit-and-fed/design-system';
 import { AppText, Screen, Section } from '../../ui/layout';
+import { useAppDispatch, useAppState } from '../../state/AppStateContext';
 
 /**
  * Notifications Settings (S6) — category toggles + optional quiet hours.
@@ -11,10 +12,12 @@ import { AppText, Screen, Section } from '../../ui/layout';
  */
 export function NotificationsSettingsScreen() {
   const theme = useTheme();
-  const [logReminders, setLogReminders] = useState(true);
-  const [streaks, setStreaks] = useState(true);
-  const [sync, setSync] = useState(false);
-  const [quietHours, setQuietHours] = useState(false);
+  const dispatch = useAppDispatch();
+  const { settings } = useAppState();
+  const [logReminders, setLogReminders] = useState(settings.notifications.logReminders);
+  const [streaks, setStreaks] = useState(settings.notifications.streaks);
+  const [sync, setSync] = useState(settings.notifications.sync);
+  const [quietHours, setQuietHours] = useState(settings.notifications.quietHours);
 
   return (
     <Screen>
@@ -34,7 +37,10 @@ export function NotificationsSettingsScreen() {
         </Card>
       </Section>
 
-      <Button label="Save" onPress={() => { /* app-builder persists */ }} />
+      <Button
+        label="Save"
+        onPress={() => dispatch({ type: 'SET_NOTIFICATIONS', notifications: { logReminders, streaks, sync, quietHours } })}
+      />
     </Screen>
   );
 }

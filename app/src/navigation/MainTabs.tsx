@@ -3,6 +3,7 @@ import { createBottomTabNavigator, BottomTabBarProps } from '@react-navigation/b
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 import { TabBar, TabItem, useTheme } from '@fit-and-fed/design-system';
+import { useAppState } from '../state/AppStateContext';
 
 import { HomeScreen } from '../screens/home/HomeScreen';
 import { FoodDiaryScreen } from '../screens/nutrition/FoodDiaryScreen';
@@ -111,14 +112,17 @@ const TAB_META: { name: string; label: string; icon: keyof typeof Ionicons.glyph
 
 /** Bridges React Navigation's tab state onto the design-system TabBar component. */
 function AppTabBar({ state, navigation }: BottomTabBarProps) {
+  // The offline-sync queue's persistent-failure state ([CP-OFFLINE] step 5) —
+  // the badge belongs on the Profile tab, whose Data & Sync screen is the
+  // terminal surface for that queue (E3).
+  const { syncQueue } = useAppState();
+  const hasFailedSyncItems = syncQueue.some((i) => i.failed);
+
   const items: TabItem[] = TAB_META.map((m) => ({
     key: m.name,
     label: m.label,
     icon: m.icon,
-    // DATA CONTRACT: app-builder sets hasErrorBadge from the offline-sync queue's
-    // persistent-failure state ([CP-OFFLINE] step 5) — the badge belongs on the
-    // tab whose Data & Sync screen is the terminal surface for that queue (E3).
-    hasErrorBadge: false,
+    hasErrorBadge: m.name === 'ProfileTab' && hasFailedSyncItems,
   }));
   const activeKey = state.routes[state.index].name;
 

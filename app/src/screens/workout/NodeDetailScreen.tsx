@@ -8,8 +8,9 @@ import {
   confidenceLabel,
   describeThreshold,
   findNode,
-  nodeState,
 } from '../../data/skillTree';
+import { useAppState } from '../../state/AppStateContext';
+import { useNodeStateResolver } from '../../state/selectors';
 import type { RootParamList } from '../../navigation/types';
 
 /**
@@ -26,10 +27,17 @@ export function NodeDetailScreen() {
   const navigation = useNavigation();
   const route = useRoute<RouteProp<RootParamList, 'NodeDetail'>>();
   const { nodeId } = route.params;
+  const { workoutAttempts } = useAppState();
+  const nodeState = useNodeStateResolver();
 
   const node = findNode(nodeId);
   const tier = PILATES_TIERS.find((t) => t.id === nodeId);
   const state = nodeState(nodeId);
+  const attempts = workoutAttempts[nodeId] ?? [];
+  const bestAttempt = attempts.reduce((max, a) => (a.value > max ? a.value : max), 0);
+  const threshold = node?.threshold ?? tier?.unlockThreshold;
+  const targetNumber = threshold && typeof threshold.value === 'number' ? threshold.value : null;
+  const progressFraction = targetNumber ? Math.min(1, bestAttempt / targetNumber) : attempts.length > 0 ? 1 : 0;
 
   if (!node && !tier) {
     return (
@@ -109,9 +117,9 @@ export function NodeDetailScreen() {
       {state === 'inProgress' ? (
         <Card>
           <Section title="Progress toward gate">
-            <ProgressBar progress={0.6} color={theme.node.inProgress} />
+            <ProgressBar progress={progressFraction} color={theme.node.inProgress} />
             <AppText variant="caption" color={theme.neutrals.charcoal}>
-              Sample progress — app-builder wires the real per-user attempt totals.
+              Best logged attempt: {bestAttempt} · {attempts.length} attempt{attempts.length === 1 ? '' : 's'} so far.
             </AppText>
           </Section>
         </Card>

@@ -5,6 +5,8 @@ import { Button, Card, SingleSelectChips, TextField, useTheme } from '@fit-and-f
 import { AppText, Screen, Section } from '../../ui/layout';
 import { OnboardingProgress } from '../../components/OnboardingProgress';
 import { PreAuthLoginLink } from '../../components/PreAuthLoginLink';
+import { useAppDispatch, useAppState } from '../../state/AppStateContext';
+import type { ActivityLevel, Goal, Sex } from '../../state/types';
 
 /**
  * Profile Setup — name, sex, height, current weight, activity level, primary goal.
@@ -19,15 +21,17 @@ import { PreAuthLoginLink } from '../../components/PreAuthLoginLink';
 export function ProfileSetupScreen() {
   const theme = useTheme();
   const navigation = useNavigation();
+  const dispatch = useAppDispatch();
+  const existing = useAppState().profile;
   const { width } = useWindowDimensions();
   const wide = width >= 700;
 
-  const [name, setName] = useState('');
-  const [sex, setSex] = useState<string | null>(null);
-  const [height, setHeight] = useState('');
-  const [weight, setWeight] = useState('');
-  const [activity, setActivity] = useState<string | null>(null);
-  const [goal, setGoal] = useState<string | null>(null);
+  const [name, setName] = useState(existing.name);
+  const [sex, setSex] = useState<string | null>(existing.sex);
+  const [height, setHeight] = useState(existing.heightCm ? String(existing.heightCm) : '');
+  const [weight, setWeight] = useState(existing.weightKg ? String(existing.weightKg) : '');
+  const [activity, setActivity] = useState<string | null>(existing.activity);
+  const [goal, setGoal] = useState<string | null>(existing.goal);
   const [touched, setTouched] = useState(false);
 
   const numeric = (v: string) => v.trim() !== '' && !Number.isNaN(Number(v));
@@ -123,7 +127,21 @@ export function ProfileSetupScreen() {
         onPress={() => {
           // [CP-VALIDATION]: surface field errors rather than submitting invalid data.
           setTouched(true);
-          if (valid) navigation.navigate('GoalSetup');
+          if (valid) {
+            dispatch({
+              type: 'SET_PROFILE',
+              profile: {
+                name,
+                sex: sex as Sex,
+                heightCm: Number(height),
+                weightKg: Number(weight),
+                activity: activity as ActivityLevel,
+                goal: goal as Goal,
+              },
+            });
+            dispatch({ type: 'SET_ONBOARDING_STEP', step: 'GoalSetup' });
+            navigation.navigate('GoalSetup');
+          }
         }}
       />
       <PreAuthLoginLink />

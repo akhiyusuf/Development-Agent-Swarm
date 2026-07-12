@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import { Button, Card, TextField, useTheme } from '@fit-and-fed/design-system';
 import { AppText, Screen } from '../../ui/layout';
+import { useAppDispatch } from '../../state/AppStateContext';
+import { todayKey } from '../../state/selectors';
 
 /**
  * Quick-add Weight Entry (modal) — single numeric input, Save. Reached
@@ -14,6 +16,7 @@ import { AppText, Screen } from '../../ui/layout';
 export function QuickAddWeightScreen() {
   const theme = useTheme();
   const navigation = useNavigation();
+  const dispatch = useAppDispatch();
   const [value, setValue] = useState('');
   const [touched, setTouched] = useState(false);
 
@@ -38,7 +41,10 @@ export function QuickAddWeightScreen() {
         label="Save"
         onPress={() => {
           setTouched(true);
-          if (valid) navigation.goBack();
+          if (valid) {
+            dispatch({ type: 'ADD_WEIGHT', kg: num, date: todayKey() });
+            navigation.goBack();
+          }
         }}
       />
       <Button variant="tertiary" label="Cancel" onPress={() => navigation.goBack()} />

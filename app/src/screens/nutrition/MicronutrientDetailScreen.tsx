@@ -3,7 +3,8 @@ import { useRoute, RouteProp } from '@react-navigation/native';
 import { Card, ProgressBar, StatusBadge, TrendChart, useTheme } from '@fit-and-fed/design-system';
 import { AppText, Row, Screen, Section } from '../../ui/layout';
 import { microRows } from '../../data/compute';
-import { SAMPLE_DIARY } from '../../data/sampleData';
+import { useAppState } from '../../state/AppStateContext';
+import { todayKey } from '../../state/selectors';
 import type { RootParamList } from '../../navigation/types';
 
 /**
@@ -19,21 +20,30 @@ export function MicronutrientDetailScreen() {
   const theme = useTheme();
   const route = useRoute<RouteProp<RootParamList, 'MicronutrientDetail'>>();
   const { nutrientKey, label, unit } = route.params;
+  const { diary } = useAppState();
+  const today = todayKey();
 
-  const row = microRows(SAMPLE_DIARY).find((r) => r.key === nutrientKey);
+  const row = microRows(diary[today] ?? []).find((r) => r.key === nutrientKey);
   const hasToday = row?.value != null;
 
   // B12 has documented near-zero African-food coverage -> genuine trend gap.
   const isB12 = nutrientKey === 'vitaminB12_mcg';
-  const trendPoints = isB12
-    ? [] // < 2 points -> TrendChart renders its honest "not enough data" state
-    : [
-        { label: 'Mon', value: (row?.value ?? 6) * 0.8 },
-        { label: 'Tue', value: (row?.value ?? 6) * 1.1 },
-        { label: 'Wed', value: (row?.value ?? 6) * 0.6 },
-        { label: 'Thu', value: (row?.value ?? 6) * 1.0 },
-        { label: 'Fri', value: (row?.value ?? 6) * 0.9 },
-      ];
+
+  // Real weekly trend from the last 7 days of logged diary entries. Days with
+  // no underlying sourced data are genuine gaps (filtered out), never a false
+  // zero point — matching Req 4's graceful "no data" requirement.
+  const last7Dates: string[] = Array.from({ length: 7 }, (_, i) => {
+    const d = new Date();
+    d.setDate(d.getDate() - (6 - i));
+    return d.toISOString().slice(0, 10);
+  });
+  const trendPoints = last7Dates
+    .map((date) => {
+      const dayRow = microRows(diary[date] ?? []).find((r) => r.key === nutrientKey);
+      if (dayRow?.value == null) return null;
+      return { label: date.slice(5), value: dayRow.value };
+    })
+    .filter((p): p is { label: string; value: number } => p != null);
 
   return (
     <Screen>

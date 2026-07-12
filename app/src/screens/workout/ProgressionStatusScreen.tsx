@@ -3,7 +3,8 @@ import { View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Card, NodeStateBadge, useTheme } from '@fit-and-fed/design-system';
 import { AppText, Row, Screen, Section } from '../../ui/layout';
-import { CALISTHENICS_LINES, PILATES_TIERS, describeThreshold, nodeState } from '../../data/skillTree';
+import { CALISTHENICS_LINES, PILATES_TIERS, describeThreshold } from '../../data/skillTree';
+import { useNodeStateResolver } from '../../state/selectors';
 
 /**
  * Progression Status (W6) — per skill line, "what you're on now / what's next",
@@ -16,6 +17,7 @@ import { CALISTHENICS_LINES, PILATES_TIERS, describeThreshold, nodeState } from 
 export function ProgressionStatusScreen() {
   const theme = useTheme();
   const navigation = useNavigation();
+  const nodeState = useNodeStateResolver();
 
   return (
     <Screen>

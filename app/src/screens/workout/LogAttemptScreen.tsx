@@ -3,7 +3,9 @@ import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { Button, Card, StatusBadge, TextField, useTheme } from '@fit-and-fed/design-system';
 import { AppText, Screen } from '../../ui/layout';
 import { PILATES_TIERS, describeThreshold, findNode } from '../../data/skillTree';
-import type { RootParamList } from '../../navigation/types';
+import { useAppDispatch } from '../../state/AppStateContext';
+import { evaluateThreshold } from '../../logic/progression';
+import type { RootParamList, TrackId } from '../../navigation/types';
 
 /**
  * Log Attempt (W4, modal) — enter reps completed or hold duration matching the
@@ -18,6 +20,7 @@ import type { RootParamList } from '../../navigation/types';
 export function LogAttemptScreen() {
   const theme = useTheme();
   const navigation = useNavigation();
+  const dispatch = useAppDispatch();
   const route = useRoute<RouteProp<RootParamList, 'LogAttempt'>>();
   const { nodeId } = route.params;
 
@@ -25,7 +28,7 @@ export function LogAttemptScreen() {
   const tier = PILATES_TIERS.find((t) => t.id === nodeId);
   const threshold = node?.threshold ?? tier?.unlockThreshold;
   const isHold = threshold?.type === 'hold_seconds' || threshold?.type === 'duration_seconds';
-  const targetNumber = typeof threshold?.value === 'number' ? threshold.value : null;
+  const track: TrackId = tier ? 'pilates' : 'calisthenics';
 
   const [value, setValue] = useState('');
   const [touched, setTouched] = useState(false);
@@ -35,8 +38,9 @@ export function LogAttemptScreen() {
 
   function save() {
     setTouched(true);
-    if (!valid) return;
-    const meets = targetNumber != null ? num >= targetNumber : true;
+    if (!valid || !threshold) return;
+    const meets = evaluateThreshold(threshold, num);
+    dispatch({ type: 'LOG_ATTEMPT', nodeId, track, value: num, met: meets });
     if (meets) {
       navigation.navigate('MasteryGateConfirmation', { nodeId });
     } else {

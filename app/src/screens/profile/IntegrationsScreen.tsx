@@ -2,8 +2,8 @@ import React, { useState } from 'react';
 import { View } from 'react-native';
 import { Button, Card, StatusBadge, useTheme } from '@fit-and-fed/design-system';
 import { AppText, Row, Screen, Section } from '../../ui/layout';
-
-type ConnState = 'disconnected' | 'connected' | 'denied';
+import { useAppDispatch, useAppState } from '../../state/AppStateContext';
+import type { ConnectionState as ConnState } from '../../state/types';
 
 /**
  * Integrations (S4) — Google Fit / Apple Health connect (Req 13).
@@ -15,8 +15,12 @@ type ConnState = 'disconnected' | 'connected' | 'denied';
  */
 export function IntegrationsScreen() {
   const theme = useTheme();
-  const [fit, setFit] = useState<ConnState>('disconnected');
-  const [health, setHealth] = useState<ConnState>('denied');
+  const dispatch = useAppDispatch();
+  const { settings } = useAppState();
+  const fit = settings.integrations.googleFit;
+  const health = settings.integrations.appleHealth;
+  const setFit = (s: ConnState) => dispatch({ type: 'SET_INTEGRATION', provider: 'googleFit', state: s });
+  const setHealth = (s: ConnState) => dispatch({ type: 'SET_INTEGRATION', provider: 'appleHealth', state: s });
 
   function providerCard(name: string, state: ConnState, setState: (s: ConnState) => void) {
     return (

@@ -3,6 +3,8 @@ import { View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Button, Card, StatusBadge, TextField, useTheme } from '@fit-and-fed/design-system';
 import { AppText, Row, Screen, Section } from '../../ui/layout';
+import { useAppDispatch } from '../../state/AppStateContext';
+import type { FoodItem } from '../../data/foods';
 
 /**
  * Custom Food / Meal Builder (N7) — user creates/saves an ingredient or
@@ -16,6 +18,7 @@ import { AppText, Row, Screen, Section } from '../../ui/layout';
 export function CustomFoodBuilderScreen() {
   const theme = useTheme();
   const navigation = useNavigation();
+  const dispatch = useAppDispatch();
 
   const [name, setName] = useState('');
   const [kcal, setKcal] = useState('');
@@ -29,6 +32,28 @@ export function CustomFoodBuilderScreen() {
 
   const num = (v: string) => v.trim() !== '' && !Number.isNaN(Number(v));
   const valid = name.trim() !== '' && num(kcal) && unit.trim() !== '' && num(grams);
+
+  function buildFood(): FoodItem {
+    return {
+      id: `custom-${Date.now()}`,
+      name,
+      region: 'Custom',
+      category: 'composite-dish',
+      householdPortions: [{ unit, grams: Number(grams) }],
+      per100g: {
+        kcal: Number(kcal) || 0,
+        protein_g: Number(protein) || 0,
+        carbs_g: Number(carbs) || 0,
+        fat_g: Number(fat) || 0,
+      },
+      micronutrients: {},
+      // Honest labeling (App Store/Play compliance — no placeholder content
+      // masquerading as cited data): user-typed values are never asserted as
+      // FCT/USDA-sourced.
+      confidence: 'user-entered',
+      source: { name: 'User-entered custom food', url: '' },
+    };
+  }
 
   return (
     <Screen>
@@ -73,7 +98,11 @@ export function CustomFoodBuilderScreen() {
         label="Save"
         onPress={() => {
           setTouched(true);
-          if (valid) setSaved(true);
+          if (valid) {
+            const food = buildFood();
+            dispatch({ type: 'ADD_CUSTOM_FOOD', food });
+            setSaved(true);
+          }
         }}
       />
       <Button
@@ -81,7 +110,11 @@ export function CustomFoodBuilderScreen() {
         label="Save & log now"
         onPress={() => {
           setTouched(true);
-          if (valid) navigation.navigate('ConfirmLog', { foodId: 'custom-preview', customName: name });
+          if (valid) {
+            const food = buildFood();
+            dispatch({ type: 'ADD_CUSTOM_FOOD', food });
+            navigation.navigate('ConfirmLog', { foodId: food.id, unitLabel: unit, quantity: 1, customName: name });
+          }
         }}
       />
       <Button variant="tertiary" label="Cancel" onPress={() => navigation.goBack()} />

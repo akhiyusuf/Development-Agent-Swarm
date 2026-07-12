@@ -4,13 +4,10 @@ import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { Button, Card, ListRow, SegmentedControl, StatusBadge, TextField, useTheme } from '@fit-and-fed/design-system';
 import { AppText, Screen } from '../../ui/layout';
 import { FOODS, FoodItem, isComposite } from '../../data/foods';
+import { useAppState } from '../../state/AppStateContext';
 import type { RootParamList } from '../../navigation/types';
 
 type Tab = 'search' | 'recent' | 'favorites' | 'custom';
-
-// PLACEHOLDER recent/favorite ids (real user history is app-builder's job).
-const RECENT_IDS = ['ng-jollof-rice', 'ke-sukuma-wiki', 'diaspora-egg-boiled'];
-const FAVORITE_IDS: string[] = [];
 
 /**
  * Add Food Entry (modal) — tabs Search / Recent / Favorites / Custom (Req 2).
@@ -27,14 +24,16 @@ export function AddEntryScreen() {
   const navigation = useNavigation();
   const route = useRoute<RouteProp<RootParamList, 'AddEntry'>>();
   const slot = route.params?.slot;
+  const { recents, favorites, customFoods, isOnline } = useAppState();
 
   const [tab, setTab] = useState<Tab>('search');
   const [query, setQuery] = useState('');
 
+  const allFoods = [...FOODS, ...customFoods];
   const results: FoodItem[] =
     query.trim() === ''
-      ? FOODS.slice(0, 6)
-      : FOODS.filter((f) => f.name.toLowerCase().includes(query.trim().toLowerCase()));
+      ? allFoods.slice(0, 6)
+      : allFoods.filter((f) => f.name.toLowerCase().includes(query.trim().toLowerCase()));
 
   function openDetail(food: FoodItem) {
     if (isComposite(food)) navigation.navigate('CompositeMealDetail', { foodId: food.id });
@@ -54,7 +53,7 @@ export function AddEntryScreen() {
   }
 
   function foodById(id: string) {
-    return FOODS.find((f) => f.id === id);
+    return allFoods.find((f) => f.id === id);
   }
 
   return (
@@ -78,6 +77,9 @@ export function AddEntryScreen() {
 
       {tab === 'search' ? (
         <View style={{ gap: theme.spacing.space12 }}>
+          {!isOnline ? (
+            <StatusBadge tone="info" label="Offline — showing cached foods and recents" />
+          ) : null}
           <TextField label="Search foods" value={query} onChangeText={setQuery} placeholder="e.g. jollof, ugali, egg" />
           <Card>
             {results.length === 0 ? (
@@ -94,16 +96,20 @@ export function AddEntryScreen() {
 
       {tab === 'recent' ? (
         <Card>
-          {RECENT_IDS.map((id) => {
-            const f = foodById(id);
-            return f ? resultRow(f) : null;
-          })}
+          {recents.length === 0 ? (
+            <StatusBadge tone="info" label="Log something to build your recents" />
+          ) : (
+            recents.map((id) => {
+              const f = foodById(id);
+              return f ? resultRow(f) : null;
+            })
+          )}
         </Card>
       ) : null}
 
       {tab === 'favorites' ? (
         <Card>
-          {FAVORITE_IDS.length === 0 ? (
+          {favorites.length === 0 ? (
             <View style={{ gap: theme.spacing.space12 }}>
               <StatusBadge tone="info" label="Nothing here yet" />
               <AppText variant="caption" color={theme.neutrals.charcoal}>
@@ -112,7 +118,7 @@ export function AddEntryScreen() {
               <Button variant="tertiary" label="Search foods instead" onPress={() => setTab('search')} />
             </View>
           ) : (
-            FAVORITE_IDS.map((id) => {
+            favorites.map((id) => {
               const f = foodById(id);
               return f ? resultRow(f) : null;
             })

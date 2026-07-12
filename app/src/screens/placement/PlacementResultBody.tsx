@@ -3,7 +3,8 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 import { Button, Card, useTheme } from '@fit-and-fed/design-system';
 import { AppText, Screen } from '../../ui/layout';
 import { PreAuthLoginLink } from '../../components/PreAuthLoginLink';
-import type { PlacementContext, RootParamList } from '../../navigation/types';
+import type { PlacementContext, RootParamList, TrackId } from '../../navigation/types';
+import { useAppDispatch, useAppState } from '../../state/AppStateContext';
 
 /**
  * Shared Starting-Tier Placement result (A7d/A7f). Presents the computed
@@ -24,16 +25,26 @@ import type { PlacementContext, RootParamList } from '../../navigation/types';
  */
 export function PlacementResultBody({
   trackName,
-  startingTier,
+  track,
   stepsRoute,
 }: {
   trackName: string;
-  startingTier: number;
+  /**
+   * DEVIATION (app-builder, logged in BUILD_NOTES.md): replaced the fixed
+   * `startingTier: number` prop (the leaf screens shipped with hardcoded
+   * values like `startingTier={2}`) with a `track` id so this body reads the
+   * REAL computed starting tier from placement state
+   * (`logic/placement.ts` + `SET_PLACEMENT_ANSWERS`) instead of a constant.
+   */
+  track: TrackId;
   stepsRoute: keyof RootParamList;
 }) {
   const theme = useTheme();
   const navigation = useNavigation();
   const route = useRoute();
+  const dispatch = useAppDispatch();
+  const placement = useAppState().placement[track];
+  const startingTier = placement.startingTier ?? 1;
   const context = (route.params as { context?: PlacementContext } | undefined)?.context;
   const isPreAuth = context !== 'account';
 
@@ -61,7 +72,14 @@ export function PlacementResultBody({
             : navigation.navigate('TrackSelection')
         }
       />
-      <Button variant="tertiary" label="Retake" onPress={() => (navigation.navigate as (screen: string, params?: object) => void)(stepsRoute, { context })} />
+      <Button
+        variant="tertiary"
+        label="Retake"
+        onPress={() => {
+          dispatch({ type: 'RESET_PLACEMENT', track });
+          (navigation.navigate as (screen: string, params?: object) => void)(stepsRoute, { context });
+        }}
+      />
       {isPreAuth ? <PreAuthLoginLink /> : null}
     </Screen>
   );

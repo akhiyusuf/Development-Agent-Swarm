@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Button, Card, StatusBadge, useTheme } from '@fit-and-fed/design-system';
 import { AppText, Screen, Section } from '../../ui/layout';
+import { useAppDispatch, useAppState } from '../../state/AppStateContext';
 
 /**
  * Legal & Disclaimers (S7) — health-data privacy, injury liability, and the
@@ -13,7 +14,9 @@ import { AppText, Screen, Section } from '../../ui/layout';
  */
 export function LegalDisclaimersScreen() {
   const theme = useTheme();
-  const [acknowledged, setAcknowledged] = useState(false);
+  const dispatch = useAppDispatch();
+  const { settings } = useAppState();
+  const acknowledged = settings.legalAcknowledgedAt != null;
 
   return (
     <Screen>
@@ -49,7 +52,7 @@ export function LegalDisclaimersScreen() {
       {acknowledged ? (
         <StatusBadge tone="success" label="Acknowledged" />
       ) : (
-        <Button label="Acknowledge" onPress={() => setAcknowledged(true)} />
+        <Button label="Acknowledge" onPress={() => dispatch({ type: 'ACK_LEGAL' })} />
       )}
     </Screen>
   );

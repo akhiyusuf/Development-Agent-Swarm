@@ -4,8 +4,8 @@ import { useNavigation } from '@react-navigation/native';
 import { Button, Card, ProgressRing, StatusBadge, useTheme } from '@fit-and-fed/design-system';
 import { AppText, Row, Screen, Section } from '../../ui/layout';
 import { MicroBar } from '../../components/MicroBar';
-import { microRows, totalsForEntries } from '../../data/compute';
-import { SAMPLE_DIARY, SAMPLE_QUEUED_COUNT, SAMPLE_TARGETS } from '../../data/sampleData';
+import { useAppState } from '../../state/AppStateContext';
+import { todayKey, useDayTotals, useMicroRows, useQueuedCount } from '../../state/selectors';
 
 /**
  * Home (Today Dashboard) — energy-balance card, micronutrient snapshot, quick
@@ -21,10 +21,12 @@ import { SAMPLE_DIARY, SAMPLE_QUEUED_COUNT, SAMPLE_TARGETS } from '../../data/sa
 export function HomeScreen() {
   const theme = useTheme();
   const navigation = useNavigation();
-
-  const totals = totalsForEntries(SAMPLE_DIARY);
-  const micros = microRows(SAMPLE_DIARY);
-  const calProgress = totals.kcal / SAMPLE_TARGETS.kcal;
+  const { targets } = useAppState();
+  const date = todayKey();
+  const totals = useDayTotals(date);
+  const micros = useMicroRows(date);
+  const queuedCount = useQueuedCount();
+  const calProgress = totals.kcal / targets.kcal;
   const calStatus = calProgress > 1 ? 'exceeded' : calProgress > 0.9 ? 'approaching' : 'normal';
 
   return (
@@ -32,8 +34,8 @@ export function HomeScreen() {
       {/* Sync / offline status — Req 5 screen-level surface. */}
       <Row style={{ justifyContent: 'space-between' }}>
         <AppText variant="h2">Today</AppText>
-        {SAMPLE_QUEUED_COUNT > 0 ? (
-          <StatusBadge tone="info" label={`${SAMPLE_QUEUED_COUNT} queued to sync`} />
+        {queuedCount > 0 ? (
+          <StatusBadge tone="info" label={`${queuedCount} queued to sync`} />
         ) : (
           <StatusBadge tone="success" label="Synced" />
         )}
@@ -51,12 +53,12 @@ export function HomeScreen() {
             size={120}
           />
           <View style={{ justifyContent: 'space-around', gap: theme.spacing.space12 }}>
-            <ProgressRing progress={totals.protein_g / SAMPLE_TARGETS.protein_g} color={theme.macro.protein} label="Protein" valueText={`${Math.round(totals.protein_g)}g`} size={72} />
-            <ProgressRing progress={totals.carbs_g / SAMPLE_TARGETS.carbs_g} color={theme.macro.carbs} label="Carbs" valueText={`${Math.round(totals.carbs_g)}g`} size={72} />
+            <ProgressRing progress={totals.protein_g / targets.protein_g} color={theme.macro.protein} label="Protein" valueText={`${Math.round(totals.protein_g)}g`} size={72} />
+            <ProgressRing progress={totals.carbs_g / targets.carbs_g} color={theme.macro.carbs} label="Carbs" valueText={`${Math.round(totals.carbs_g)}g`} size={72} />
           </View>
         </Row>
         <AppText variant="caption" color={theme.neutrals.charcoal}>
-          {SAMPLE_TARGETS.kcal - totals.kcal} kcal remaining of {SAMPLE_TARGETS.kcal}
+          {targets.kcal - totals.kcal} kcal remaining of {targets.kcal}
         </AppText>
       </Card>
 

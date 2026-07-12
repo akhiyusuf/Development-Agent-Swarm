@@ -1,10 +1,11 @@
 /**
- * Small derived-value helpers used by the summary screens. These operate on the
- * REAL per-100g food data + sample diary entries. app-builder swaps the sample
- * entries for real state; the math is production-shaped.
+ * Small derived-value helpers used by the summary screens. These operate on
+ * the REAL per-100g food data plus real diary entries from the state layer
+ * (`app/src/state`) — the math itself is unchanged from what screen-designer
+ * shipped, just now fed genuine per-user entries instead of samples.
  */
 import { FoodItem, findFood, Micros, REQ4_MICROS, scaleMacros } from './foods';
-import { DiaryEntry } from './sampleData';
+import type { DiaryEntry } from '../state/types';
 
 export type DayTotals = {
   kcal: number;

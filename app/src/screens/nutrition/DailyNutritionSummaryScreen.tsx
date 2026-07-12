@@ -4,8 +4,8 @@ import { useNavigation } from '@react-navigation/native';
 import { Button, Card, ProgressRing, useTheme } from '@fit-and-fed/design-system';
 import { AppText, Row, Screen, Section } from '../../ui/layout';
 import { MicroBar } from '../../components/MicroBar';
-import { microRows, totalsForEntries } from '../../data/compute';
-import { SAMPLE_DIARY, SAMPLE_TARGETS } from '../../data/sampleData';
+import { useAppState } from '../../state/AppStateContext';
+import { todayKey, useDayTotals, useMicroRows } from '../../state/selectors';
 
 /**
  * Daily Nutrition Summary (N10) — calories, macro breakdown, full micronutrient
@@ -18,8 +18,10 @@ import { SAMPLE_DIARY, SAMPLE_TARGETS } from '../../data/sampleData';
 export function DailyNutritionSummaryScreen() {
   const theme = useTheme();
   const navigation = useNavigation();
-  const totals = totalsForEntries(SAMPLE_DIARY);
-  const micros = microRows(SAMPLE_DIARY);
+  const { targets } = useAppState();
+  const date = todayKey();
+  const totals = useDayTotals(date);
+  const micros = useMicroRows(date);
 
   return (
     <Screen>
@@ -27,10 +29,10 @@ export function DailyNutritionSummaryScreen() {
 
       <Card>
         <Row style={{ justifyContent: 'space-around', alignItems: 'flex-start' }}>
-          <ProgressRing progress={totals.kcal / SAMPLE_TARGETS.kcal} color={theme.macro.calories} label="Calories" valueText={`${totals.kcal}`} size={110} />
+          <ProgressRing progress={totals.kcal / targets.kcal} color={theme.macro.calories} label="Calories" valueText={`${totals.kcal}`} size={110} />
           <View style={{ gap: theme.spacing.space8 }}>
-            <ProgressRing progress={totals.protein_g / SAMPLE_TARGETS.protein_g} color={theme.macro.protein} label="Protein" valueText={`${Math.round(totals.protein_g)}g`} size={68} />
-            <ProgressRing progress={totals.fat_g / SAMPLE_TARGETS.fat_g} color={theme.macro.fat} label="Fat" valueText={`${Math.round(totals.fat_g)}g`} size={68} />
+            <ProgressRing progress={totals.protein_g / targets.protein_g} color={theme.macro.protein} label="Protein" valueText={`${Math.round(totals.protein_g)}g`} size={68} />
+            <ProgressRing progress={totals.fat_g / targets.fat_g} color={theme.macro.fat} label="Fat" valueText={`${Math.round(totals.fat_g)}g`} size={68} />
           </View>
         </Row>
       </Card>

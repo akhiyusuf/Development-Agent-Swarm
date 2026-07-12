@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { Button, Card, useTheme } from '@fit-and-fed/design-system';
+import { Button, Card, StatusBadge, useTheme } from '@fit-and-fed/design-system';
 import { AppText, Row, Screen, Section } from '../../ui/layout';
+import { useAppState } from '../../state/AppStateContext';
 
 const FAQ = [
   { q: 'Why does a nutrient say "no data"?', a: 'Some regional foods have no sourced value for that nutrient yet. We show an honest "no data" instead of a misleading zero.' },
@@ -18,7 +19,9 @@ const FAQ = [
  */
 export function HelpSupportScreen() {
   const theme = useTheme();
+  const { isOnline } = useAppState();
   const [open, setOpen] = useState<number | null>(0);
+  const [contactStatus, setContactStatus] = useState<'idle' | 'sent' | 'queued'>('idle');
 
   return (
     <Screen>
@@ -40,7 +43,9 @@ export function HelpSupportScreen() {
         ))}
       </Section>
 
-      <Button label="Contact support" onPress={() => { /* [CP-NETFAIL] / queue when offline */ }} />
+      <Button label="Contact support" onPress={() => setContactStatus(isOnline ? 'sent' : 'queued')} />
+      {contactStatus === 'sent' ? <StatusBadge tone="success" label="Message sent" /> : null}
+      {contactStatus === 'queued' ? <StatusBadge tone="info" label="Offline — message queued, will send when reconnected" /> : null}
     </Screen>
   );
 }

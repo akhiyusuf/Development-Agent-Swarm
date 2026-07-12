@@ -4,9 +4,9 @@ import { useNavigation } from '@react-navigation/native';
 import { Button, Card, ListRow, useTheme } from '@fit-and-fed/design-system';
 import { AppText, Row, Screen } from '../../ui/layout';
 import { findFood } from '../../data/foods';
-import { MEAL_SLOTS, MEAL_SLOT_LABELS, SAMPLE_DIARY } from '../../data/sampleData';
-import { totalsForEntries } from '../../data/compute';
-import { SAMPLE_TARGETS } from '../../data/sampleData';
+import { MEAL_SLOTS, MEAL_SLOT_LABELS } from '../../data/sampleData';
+import { useAppState } from '../../state/AppStateContext';
+import { todayKey, useDayTotals, useDiaryEntries } from '../../state/selectors';
 import type { MealSlot } from '../../navigation/types';
 
 /**
@@ -20,19 +20,23 @@ import type { MealSlot } from '../../navigation/types';
 export function FoodDiaryScreen() {
   const theme = useTheme();
   const navigation = useNavigation();
-  const totals = totalsForEntries(SAMPLE_DIARY);
+  const { targets } = useAppState();
+  const date = todayKey();
+  const entries = useDiaryEntries(date);
+  const totals = useDayTotals(date);
+  const dateLabel = new Date().toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
 
   return (
     <Screen>
       <Row style={{ justifyContent: 'space-between' }}>
-        <AppText variant="h2">Sun, Jul 12</AppText>
+        <AppText variant="h2">{dateLabel}</AppText>
         <AppText variant="caption" color={theme.neutrals.charcoal}>
-          {totals.kcal} / {SAMPLE_TARGETS.kcal} kcal
+          {totals.kcal} / {targets.kcal} kcal
         </AppText>
       </Row>
 
       {MEAL_SLOTS.map((slot: MealSlot) => {
-        const rows = SAMPLE_DIARY.filter((e) => e.slot === slot);
+        const rows = entries.filter((e) => e.slot === slot);
         return (
           <Card key={slot}>
             <Row style={{ justifyContent: 'space-between', marginBottom: theme.spacing.space8 }}>

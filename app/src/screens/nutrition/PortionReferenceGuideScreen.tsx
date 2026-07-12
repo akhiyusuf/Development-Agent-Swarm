@@ -5,6 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Button, Card, useTheme } from '@fit-and-fed/design-system';
 import { AppText, Row, Screen } from '../../ui/layout';
 import { findFood } from '../../data/foods';
+import { useAppState } from '../../state/AppStateContext';
 import type { RootParamList } from '../../navigation/types';
 
 /**
@@ -22,7 +23,8 @@ export function PortionReferenceGuideScreen() {
   const theme = useTheme();
   const navigation = useNavigation();
   const route = useRoute<RouteProp<RootParamList, 'PortionReferenceGuide'>>();
-  const food = findFood(route.params.foodId);
+  const { customFoods } = useAppState();
+  const food = findFood(route.params.foodId) ?? customFoods.find((f) => f.id === route.params.foodId);
 
   if (!food) {
     return (

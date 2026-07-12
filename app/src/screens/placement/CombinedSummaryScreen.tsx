@@ -4,6 +4,7 @@ import { Button, Card, useTheme } from '@fit-and-fed/design-system';
 import { AppText, Screen } from '../../ui/layout';
 import { PreAuthLoginLink } from '../../components/PreAuthLoginLink';
 import type { PlacementContext } from '../../navigation/types';
+import { useAppDispatch, useAppState } from '../../state/AppStateContext';
 
 /**
  * Combined Assessment Summary — shown only when BOTH tracks were completed (A3).
@@ -20,7 +21,9 @@ import type { PlacementContext } from '../../navigation/types';
 export function CombinedSummaryScreen() {
   const theme = useTheme();
   const navigation = useNavigation();
+  const dispatch = useAppDispatch();
   const route = useRoute();
+  const { placement } = useAppState();
   const context = (route.params as { context?: PlacementContext } | undefined)?.context;
   const isPreAuth = context !== 'account';
 
@@ -34,18 +37,24 @@ export function CombinedSummaryScreen() {
       <Card>
         <AppText variant="h3">Calisthenics</AppText>
         <AppText variant="h2" color={theme.brand.terracotta}>
-          Tier 2
+          Tier {placement.calisthenics.startingTier ?? 1}
         </AppText>
       </Card>
 
       <Card>
         <AppText variant="h3">Pilates</AppText>
         <AppText variant="h2" color={theme.brand.terracotta}>
-          Tier 1 · Basic Mat
+          Tier {placement.pilates.startingTier ?? 1}
         </AppText>
       </Card>
 
-      <Button label="Continue" onPress={() => navigation.navigate('Auth', { mode: 'signup' })} />
+      <Button
+        label="Continue"
+        onPress={() => {
+          dispatch({ type: 'SET_ONBOARDING_STEP', step: 'Auth' });
+          navigation.navigate('Auth', { mode: 'signup' });
+        }}
+      />
       <Button variant="tertiary" label="Adjust calisthenics placement" onPress={() => navigation.navigate('CalisthenicsPlacementResult')} />
       <Button variant="tertiary" label="Adjust Pilates placement" onPress={() => navigation.navigate('PilatesPlacementResult')} />
       {isPreAuth ? <PreAuthLoginLink /> : null}

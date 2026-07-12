@@ -4,6 +4,7 @@ import { useNavigation } from '@react-navigation/native';
 import { useTheme } from '@fit-and-fed/design-system';
 import { AppText } from '../../ui/layout';
 import type { RootParamList } from '../../navigation/types';
+import { useAppState } from '../../state/AppStateContext';
 
 /**
  * Splash / Launch — the pre-nav entry router.
@@ -24,22 +25,15 @@ import type { RootParamList } from '../../navigation/types';
  *   3. no session, no draft, marker -> Auth {mode:'login'} short-circuit (A7b)
  *   4. none of the above            -> ProfileSetup, genuine first launch (A1)
  *
- * Below uses a clearly-labeled first-launch stub so preview boots into the full
- * onboarding sequence. Replace `deviceState` with the real device store; the
- * resolver itself is production-shaped and must not change.
+ * `deviceState` below is now derived from the real state layer
+ * (`app/src/state`), persisted across launches via AsyncStorage — not a
+ * preview stub. The resolver itself is production-shaped and unchanged.
  */
 type DeviceEntryState = {
   hasCachedSession: boolean;
   hasOnboardingDraft: boolean;
   draftResumeScreen?: keyof RootParamList;
   hasAccountHistoryMarker: boolean;
-};
-
-// PLACEHOLDER preview state: genuine first launch (routes to Profile Setup).
-const deviceState: DeviceEntryState = {
-  hasCachedSession: false,
-  hasOnboardingDraft: false,
-  hasAccountHistoryMarker: false,
 };
 
 export function resolveEntry(s: DeviceEntryState): { route: keyof RootParamList; params?: object } {
@@ -52,12 +46,20 @@ export function resolveEntry(s: DeviceEntryState): { route: keyof RootParamList;
 export function SplashScreen() {
   const theme = useTheme();
   const navigation = useNavigation();
+  const state = useAppState();
 
   useEffect(() => {
+    if (!state.hydrated) return; // wait for AsyncStorage hydration before routing
+    const deviceState: DeviceEntryState = {
+      hasCachedSession: state.auth.isAuthenticated,
+      hasOnboardingDraft: state.onboardingStep != null,
+      draftResumeScreen: state.onboardingStep ?? undefined,
+      hasAccountHistoryMarker: state.auth.hasAccountHistoryMarker,
+    };
     const { route, params } = resolveEntry(deviceState);
     // reset so the user can't navigate "back" to the transient splash.
     navigation.reset({ index: 0, routes: [{ name: route as never, params: params as never }] });
-  }, [navigation]);
+  }, [navigation, state.hydrated, state.auth.isAuthenticated, state.onboardingStep, state.auth.hasAccountHistoryMarker]);
 
   return (
     <View style={{ flex: 1, backgroundColor: theme.neutrals.background, alignItems: 'center', justifyContent: 'center', gap: theme.spacing.space24 }}>

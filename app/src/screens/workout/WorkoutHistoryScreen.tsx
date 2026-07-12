@@ -1,14 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
-import { CalendarDatePicker, Card, ListRow, useTheme } from '@fit-and-fed/design-system';
+import { CalendarDatePicker, Card, ListRow, StatusBadge, useTheme } from '@fit-and-fed/design-system';
 import { AppText, Screen, Section } from '../../ui/layout';
-import { SAMPLE_MARKED_DAYS } from '../../data/sampleData';
-
-// PLACEHOLDER past sessions (real session history is app-builder's job).
-const SAMPLE_SESSIONS = [
-  { id: 's1', date: 'Fri, Jul 11', summary: '3 attempts · push + handstand lines' },
-  { id: 's2', date: 'Wed, Jul 09', summary: '2 attempts · pull + core lines' },
-];
+import { useAppState } from '../../state/AppStateContext';
 
 /**
  * Workout History / Session Calendar (W8) — past sessions (Req 8, 11).
@@ -20,7 +14,9 @@ const SAMPLE_SESSIONS = [
 export function WorkoutHistoryScreen() {
   const theme = useTheme();
   const navigation = useNavigation();
-  const [month, setMonth] = useState(new Date(2026, 6, 1));
+  const { sessions } = useAppState();
+  const markedDates = new Set(sessions.map((s) => s.date));
+  const [month, setMonth] = useState(new Date());
   const [selected, setSelected] = useState<Date | undefined>(undefined);
 
   return (
@@ -30,18 +26,36 @@ export function WorkoutHistoryScreen() {
         <CalendarDatePicker
           month={month}
           selectedDate={selected}
-          markedDates={SAMPLE_MARKED_DAYS}
+          markedDates={markedDates}
           onChangeMonth={setMonth}
           onSelectDay={setSelected}
         />
       </Card>
 
       <Section title="Recent sessions">
-        {SAMPLE_SESSIONS.map((s) => (
-          <Card key={s.id}>
-            <ListRow title={s.date} subtitle={s.summary} showChevron onPress={() => navigation.navigate('WorkoutSessionLog')} />
+        {sessions.length === 0 ? (
+          <Card>
+            <AppText variant="body" color={theme.neutrals.charcoal}>
+              No sessions logged yet.
+            </AppText>
+            <StatusBadge tone="info" label="Log a session to see it here" />
           </Card>
-        ))}
+        ) : (
+          sessions.map((s) => (
+            <Card key={s.id}>
+              <ListRow
+                title={s.date}
+                subtitle={`${s.rows.length} attempt${s.rows.length === 1 ? '' : 's'} · ${s.rows
+                  .map((r) => r.nodeName)
+                  .slice(0, 2)
+                  .join(', ')}`}
+                showChevron
+                onPress={() => navigation.navigate('WorkoutSessionLog')}
+                badge={s.queued ? { color: theme.semantic.info, icon: 'cloud-upload-outline', label: 'Queued' } : undefined}
+              />
+            </Card>
+          ))
+        )}
       </Section>
     </Screen>
   );

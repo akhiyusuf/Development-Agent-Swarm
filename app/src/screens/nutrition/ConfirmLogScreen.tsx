@@ -5,6 +5,8 @@ import { Button, Card, SingleSelectChips, StatusBadge, useTheme } from '@fit-and
 import { AppText, Row, Screen, Section } from '../../ui/layout';
 import { findFood, gramsForUnit, scaleMacros } from '../../data/foods';
 import { MEAL_SLOT_LABELS } from '../../data/sampleData';
+import { useAppDispatch, useAppState } from '../../state/AppStateContext';
+import { todayKey } from '../../state/selectors';
 import type { MealSlot, RootParamList } from '../../navigation/types';
 
 /**
@@ -19,10 +21,12 @@ import type { MealSlot, RootParamList } from '../../navigation/types';
 export function ConfirmLogScreen() {
   const theme = useTheme();
   const navigation = useNavigation();
+  const dispatch = useAppDispatch();
+  const { customFoods } = useAppState();
   const route = useRoute<RouteProp<RootParamList, 'ConfirmLog'>>();
   const { foodId, unitLabel, customName } = route.params;
 
-  const food = findFood(foodId);
+  const food = findFood(foodId) ?? customFoods.find((f) => f.id === foodId);
   const name = food?.name ?? customName ?? 'Custom food';
 
   const [slot, setSlot] = useState<string | null>(route.params.slot ?? null);
@@ -81,8 +85,19 @@ export function ConfirmLogScreen() {
         label="Save to diary"
         onPress={() => {
           setTouched(true);
-          if (slot) {
-            // Return to the diary; app-builder commits the DiaryEntry + queue.
+          if (slot && food) {
+            dispatch({
+              type: 'ADD_DIARY_ENTRY',
+              date: todayKey(),
+              entry: {
+                foodId: food.id,
+                slot: slot as MealSlot,
+                unitLabel: unitLabel ?? food.householdPortions[0]?.unit ?? `${Math.round(grams)}g`,
+                quantity,
+                grams: unitGrams ?? 0,
+                kcal: macros?.kcal ?? 0,
+              },
+            });
             navigation.navigate('FoodDiary');
           }
         }}

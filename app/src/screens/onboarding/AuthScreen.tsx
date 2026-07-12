@@ -4,6 +4,7 @@ import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { BottomSheet, Button, SegmentedControl, StatusBadge, TextField, useTheme } from '@fit-and-fed/design-system';
 import { AppText, Screen } from '../../ui/layout';
 import type { RootParamList } from '../../navigation/types';
+import { useAppDispatch } from '../../state/AppStateContext';
 
 /**
  * Sign Up / Log In — the mandatory account gate (user-flows §0.3: no guest/skip
@@ -22,6 +23,7 @@ import type { RootParamList } from '../../navigation/types';
 export function AuthScreen() {
   const theme = useTheme();
   const navigation = useNavigation();
+  const dispatch = useAppDispatch();
   const route = useRoute<RouteProp<RootParamList, 'Auth'>>();
 
   const [mode, setMode] = useState<'login' | 'signup'>(route.params?.mode ?? 'signup');
@@ -40,9 +42,14 @@ export function AuthScreen() {
     setTouched(true);
     if (!emailValid || !pwValid) return;
     if (mode === 'signup') {
+      // Attaches the local onboarding draft to the account (no real backend
+      // in this build — see BUILD_NOTES.md) and sets the device
+      // account-history marker (§0.2/A4).
+      dispatch({ type: 'SIGN_UP', email });
       navigation.navigate('OnboardingComplete');
     } else {
       // Returning, fully-onboarded account lands straight on Home (§0.2).
+      dispatch({ type: 'LOG_IN', email });
       navigation.reset({ index: 0, routes: [{ name: 'Main' as never }] });
     }
   }

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import { CalendarDatePicker, Card, useTheme } from '@fit-and-fed/design-system';
 import { AppText, Screen } from '../../ui/layout';
-import { SAMPLE_MARKED_DAYS } from '../../data/sampleData';
+import { useAppState } from '../../state/AppStateContext';
 
 /**
  * Nutrition History / Calendar (N12) — past days, tap into any day (Req 3).
@@ -14,7 +14,9 @@ import { SAMPLE_MARKED_DAYS } from '../../data/sampleData';
 export function NutritionHistoryScreen() {
   const theme = useTheme();
   const navigation = useNavigation();
-  const [month, setMonth] = useState(new Date(2026, 6, 1));
+  const { diary } = useAppState();
+  const markedDates = new Set(Object.keys(diary).filter((d) => diary[d].length > 0));
+  const [month, setMonth] = useState(new Date());
   const [selected, setSelected] = useState<Date | undefined>(undefined);
 
   return (
@@ -24,7 +26,7 @@ export function NutritionHistoryScreen() {
         <CalendarDatePicker
           month={month}
           selectedDate={selected}
-          markedDates={SAMPLE_MARKED_DAYS}
+          markedDates={markedDates}
           onChangeMonth={setMonth}
           onSelectDay={(d) => {
             setSelected(d);

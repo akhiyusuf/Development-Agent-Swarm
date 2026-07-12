@@ -3,5 +3,5 @@ import { PlacementResultBody } from './PlacementResultBody';
 
 /** Calisthenics Placement — Results → Starting Tier Placement. */
 export function CalisthenicsPlacementResultScreen() {
-  return <PlacementResultBody trackName="Calisthenics" startingTier={2} stepsRoute="CalisthenicsPlacementSteps" />;
+  return <PlacementResultBody trackName="Calisthenics" track="calisthenics" stepsRoute="CalisthenicsPlacementSteps" />;
 }

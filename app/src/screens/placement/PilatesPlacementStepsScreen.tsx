@@ -7,6 +7,7 @@ export function PilatesPlacementStepsScreen() {
     <PlacementStepsBody
       title="Pilates"
       resultRoute="PilatesPlacementResult"
+      track="pilates"
       steps={[
         { key: 'breath', title: 'Core / breath control', prompt: 'How controlled is your breath-with-movement coordination?' },
         { key: 'mobility', title: 'Mobility', prompt: 'How does controlled spinal and hip mobility feel?' },

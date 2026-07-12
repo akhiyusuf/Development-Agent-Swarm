@@ -3,7 +3,8 @@ import { View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Button, Card, SegmentedControl, StatusBadge, useTheme } from '@fit-and-fed/design-system';
 import { AppText, Row, Screen } from '../../ui/layout';
-import { CALISTHENICS_LINES } from '../../data/skillTree';
+import { CALISTHENICS_LINES, PILATES_TIERS } from '../../data/skillTree';
+import { useAppState } from '../../state/AppStateContext';
 
 /**
  * Skill Tree Home (W1) — track selector + per-track summary; also the deferred-
@@ -18,10 +19,16 @@ import { CALISTHENICS_LINES } from '../../data/skillTree';
 export function SkillTreeHomeScreen() {
   const theme = useTheme();
   const navigation = useNavigation();
+  const { placement } = useAppState();
   const [view, setView] = useState<'calisthenics' | 'pilates' | 'combined'>('combined');
 
   const showCal = view !== 'pilates';
   const showPil = view !== 'calisthenics';
+  const calPlaced = placement.calisthenics.status === 'done';
+  const pilPlaced = placement.pilates.status === 'done';
+  const pilTierName = placement.pilates.startingTier
+    ? PILATES_TIERS.find((t) => t.tier === placement.pilates.startingTier)?.name ?? `Tier ${placement.pilates.startingTier}`
+    : null;
 
   return (
     <Screen>
@@ -42,12 +49,21 @@ export function SkillTreeHomeScreen() {
             <View style={{ flex: 1 }}>
               <AppText variant="h3">Calisthenics</AppText>
               <AppText variant="caption" color={theme.neutrals.charcoal}>
-                {CALISTHENICS_LINES.length} skill lines · currently Tier 2
+                {CALISTHENICS_LINES.length} skill lines
+                {calPlaced ? ` · currently Tier ${placement.calisthenics.startingTier}` : ''}
               </AppText>
             </View>
-            <StatusBadge tone="success" label="Placed" />
+            <StatusBadge tone={calPlaced ? 'success' : 'info'} label={calPlaced ? 'Placed' : 'Not placed'} />
           </Row>
-          <Button label="Continue" onPress={() => navigation.navigate('TierNodeMap', { track: 'calisthenics' })} />
+          {calPlaced ? (
+            <Button label="Continue" onPress={() => navigation.navigate('TierNodeMap', { track: 'calisthenics' })} />
+          ) : (
+            <Button
+              variant="secondary"
+              label="Complete calisthenics placement"
+              onPress={() => navigation.navigate('CalisthenicsPlacementSteps', { context: 'account' })}
+            />
+          )}
         </Card>
       ) : null}
 
@@ -57,25 +73,22 @@ export function SkillTreeHomeScreen() {
             <View style={{ flex: 1 }}>
               <AppText variant="h3">Pilates</AppText>
               <AppText variant="caption" color={theme.neutrals.charcoal}>
-                Classical mat · Basic → Intermediate → Advanced
+                {pilPlaced ? `Currently ${pilTierName}` : 'Classical mat · Basic → Intermediate → Advanced'}
               </AppText>
             </View>
-            <StatusBadge tone="success" label="Placed" />
+            <StatusBadge tone={pilPlaced ? 'success' : 'info'} label={pilPlaced ? 'Placed' : 'Not placed'} />
           </Row>
-          <Button label="Continue" onPress={() => navigation.navigate('TierNodeMap', { track: 'pilates' })} />
+          {pilPlaced ? (
+            <Button label="Continue" onPress={() => navigation.navigate('TierNodeMap', { track: 'pilates' })} />
+          ) : (
+            <Button
+              variant="secondary"
+              label="Complete Pilates placement"
+              onPress={() => navigation.navigate('PilatesPlacementSteps', { context: 'account' })}
+            />
+          )}
         </Card>
       ) : null}
-
-      {/* Deferred re-entry (A9): a not-yet-placed track shows this instead of a map. */}
-      <Card>
-        <AppText variant="bodyEmphasis">Deferred a placement at onboarding?</AppText>
-        <AppText variant="caption" color={theme.neutrals.charcoal}>
-          A track with no placement yet shows "Complete placement" here — it launches that track's
-          assessment directly and returns to the skill tree.
-        </AppText>
-        {/* A9 re-entry is post-auth: `context: 'account'` suppresses the §0.2 pre-auth login link. */}
-        <Button variant="secondary" label="Complete Pilates placement" onPress={() => navigation.navigate('PilatesPlacementSteps', { context: 'account' })} />
-      </Card>
 
       <Button variant="tertiary" label="Progression status" onPress={() => navigation.navigate('ProgressionStatus')} />
       <Button variant="tertiary" label="Session history" onPress={() => navigation.navigate('WorkoutHistory')} />

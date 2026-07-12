@@ -7,6 +7,7 @@ export function CalisthenicsPlacementStepsScreen() {
     <PlacementStepsBody
       title="Calisthenics"
       resultRoute="CalisthenicsPlacementResult"
+      track="calisthenics"
       steps={[
         { key: 'push', title: 'Push pattern', prompt: 'How do push-up-style movements feel for you right now?' },
         { key: 'pull', title: 'Pull pattern', prompt: 'How do pulling movements (rows / pull-ups) feel?' },

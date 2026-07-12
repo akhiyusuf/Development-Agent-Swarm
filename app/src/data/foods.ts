@@ -14,7 +14,7 @@ import { Ionicons } from '@expo/vector-icons';
 import rawFoods from '../../../data/nutrition/foods.json';
 import type { HouseholdUnit } from '@fit-and-fed/design-system';
 
-export type Confidence = 'direct-fct' | 'usda' | 'academic' | 'compiled-estimate';
+export type Confidence = 'direct-fct' | 'usda' | 'academic' | 'compiled-estimate' | 'user-entered';
 
 export type HouseholdPortion = { unit: string; grams: number };
 

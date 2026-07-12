@@ -15,6 +15,7 @@ import { AppText, Row, Screen, Section } from '../../ui/layout';
 import { MicroBar } from '../../components/MicroBar';
 import { findFood, gramsForUnit, scaleMacros, unitsForFood } from '../../data/foods';
 import { microRowsForFood } from '../../data/compute';
+import { useAppDispatch, useAppState } from '../../state/AppStateContext';
 
 /**
  * Shared body for Ingredient Detail (N4) and Composite Meal Detail (N5) — same
@@ -30,13 +31,15 @@ import { microRowsForFood } from '../../data/compute';
 export function FoodDetailBody({ foodId, composite }: { foodId: string; composite: boolean }) {
   const theme = useTheme();
   const navigation = useNavigation();
-  const food = findFood(foodId);
+  const dispatch = useAppDispatch();
+  const { customFoods, favorites } = useAppState();
+  const food = findFood(foodId) ?? customFoods.find((f) => f.id === foodId);
 
   const units = food ? unitsForFood(food) : [];
   const [unitKey, setUnitKey] = useState<string | null>(units[0]?.key ?? null);
   const [quantity, setQuantity] = useState(1);
   const [gramOverride, setGramOverride] = useState('');
-  const [favorited, setFavorited] = useState(false);
+  const favorited = favorites.includes(foodId);
   const [showRecipe, setShowRecipe] = useState(false);
 
   if (!food) {
@@ -63,7 +66,11 @@ export function FoodDetailBody({ foodId, composite }: { foodId: string; composit
             {food.region} · {food.category}
           </AppText>
         </View>
-        <Button variant="tertiary" label={favorited ? '★ Favorited' : '☆ Favorite'} onPress={() => setFavorited((f) => !f)} />
+        <Button
+          variant="tertiary"
+          label={favorited ? '★ Favorited' : '☆ Favorite'}
+          onPress={() => dispatch({ type: 'TOGGLE_FAVORITE', foodId })}
+        />
       </Row>
 
       <StatusBadge

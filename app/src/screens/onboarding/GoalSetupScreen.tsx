@@ -5,7 +5,8 @@ import { Button, Card, ProgressRing, TextField, useTheme } from '@fit-and-fed/de
 import { AppText, Row, Screen } from '../../ui/layout';
 import { OnboardingProgress } from '../../components/OnboardingProgress';
 import { PreAuthLoginLink } from '../../components/PreAuthLoginLink';
-import { SAMPLE_TARGETS } from '../../data/sampleData';
+import { useAppDispatch, useAppState } from '../../state/AppStateContext';
+import { computeTargets } from '../../logic/targets';
 
 /**
  * Goal & Target Setup — computed calorie/macro target the user may adjust.
@@ -20,12 +21,15 @@ import { SAMPLE_TARGETS } from '../../data/sampleData';
 export function GoalSetupScreen() {
   const theme = useTheme();
   const navigation = useNavigation();
+  const dispatch = useAppDispatch();
+  const { profile, targets: computed } = useAppState();
 
-  // PLACEHOLDER "computed" default (would come from the Profile Setup draft).
-  const [kcal, setKcal] = useState(String(SAMPLE_TARGETS.kcal));
-  const [protein, setProtein] = useState(String(SAMPLE_TARGETS.protein_g));
-  const [carbs, setCarbs] = useState(String(SAMPLE_TARGETS.carbs_g));
-  const [fat, setFat] = useState(String(SAMPLE_TARGETS.fat_g));
+  // "computed" comes from Profile Setup's draft via computeTargets (Mifflin-St
+  // Jeor + activity + goal) — no network call, matching the data contract.
+  const [kcal, setKcal] = useState(String(computed.kcal));
+  const [protein, setProtein] = useState(String(computed.protein_g));
+  const [carbs, setCarbs] = useState(String(computed.carbs_g));
+  const [fat, setFat] = useState(String(computed.fat_g));
 
   const kcalNum = Number(kcal) || 0;
   const proteinKcal = (Number(protein) || 0) * 4;
@@ -91,12 +95,23 @@ export function GoalSetupScreen() {
         </View>
       </Card>
 
-      <Button label="Continue" onPress={() => navigation.navigate('RegionPreference')} />
+      <Button
+        label="Continue"
+        onPress={() => {
+          dispatch({
+            type: 'SET_TARGETS',
+            targets: { kcal: kcalNum, protein_g: Number(protein) || 0, carbs_g: Number(carbs) || 0, fat_g: Number(fat) || 0 },
+          });
+          dispatch({ type: 'SET_ONBOARDING_STEP', step: 'RegionPreference' });
+          navigation.navigate('RegionPreference');
+        }}
+      />
       <Button variant="tertiary" label="Reset to computed" onPress={() => {
-        setKcal(String(SAMPLE_TARGETS.kcal));
-        setProtein(String(SAMPLE_TARGETS.protein_g));
-        setCarbs(String(SAMPLE_TARGETS.carbs_g));
-        setFat(String(SAMPLE_TARGETS.fat_g));
+        const recomputed = computeTargets(profile);
+        setKcal(String(recomputed.kcal));
+        setProtein(String(recomputed.protein_g));
+        setCarbs(String(recomputed.carbs_g));
+        setFat(String(recomputed.fat_g));
       }} />
       <PreAuthLoginLink />
     </Screen>

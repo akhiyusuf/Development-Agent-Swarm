@@ -3,7 +3,8 @@ import { View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Button, Card, ProgressRing, SingleSelectChips, TextField, useTheme } from '@fit-and-fed/design-system';
 import { AppText, Row, Screen, Section } from '../../ui/layout';
-import { SAMPLE_TARGETS } from '../../data/sampleData';
+import { useAppDispatch, useAppState } from '../../state/AppStateContext';
+import { computeTargets, isAggressiveTarget } from '../../logic/targets';
 
 /**
  * Goal Settings / Adjust Targets (P3) — mirrors onboarding Goal Setup plus a
@@ -16,16 +17,18 @@ import { SAMPLE_TARGETS } from '../../data/sampleData';
 export function GoalSettingsScreen() {
   const theme = useTheme();
   const navigation = useNavigation();
+  const dispatch = useAppDispatch();
+  const { targets, profile, weightGoal } = useAppState();
 
-  const [kcal, setKcal] = useState(String(SAMPLE_TARGETS.kcal));
-  const [protein, setProtein] = useState(String(SAMPLE_TARGETS.protein_g));
-  const [carbs, setCarbs] = useState(String(SAMPLE_TARGETS.carbs_g));
-  const [fat, setFat] = useState(String(SAMPLE_TARGETS.fat_g));
-  const [direction, setDirection] = useState<string | null>('lose');
-  const [targetWeight, setTargetWeight] = useState('75');
+  const [kcal, setKcal] = useState(String(targets.kcal));
+  const [protein, setProtein] = useState(String(targets.protein_g));
+  const [carbs, setCarbs] = useState(String(targets.carbs_g));
+  const [fat, setFat] = useState(String(targets.fat_g));
+  const [direction, setDirection] = useState<string | null>(weightGoal.direction);
+  const [targetWeight, setTargetWeight] = useState(weightGoal.targetKg ? String(weightGoal.targetKg) : profile.weightKg ? String(profile.weightKg) : '75');
 
   const kcalNum = Number(kcal) || 0;
-  const aggressive = kcalNum > 0 && (kcalNum < 1200 || kcalNum > 4000);
+  const aggressive = isAggressiveTarget(kcalNum);
 
   return (
     <Screen>
@@ -78,12 +81,27 @@ export function GoalSettingsScreen() {
         </Section>
       </Card>
 
-      <Button label="Save targets" onPress={() => navigation.goBack()} />
+      <Button
+        label="Save targets"
+        onPress={() => {
+          // Same-day recalculation (D3): commits immediately, no confirmation delay.
+          dispatch({
+            type: 'SET_TARGETS',
+            targets: { kcal: kcalNum, protein_g: Number(protein) || 0, carbs_g: Number(carbs) || 0, fat_g: Number(fat) || 0 },
+          });
+          dispatch({
+            type: 'SET_WEIGHT_GOAL',
+            weightGoal: { direction: (direction as typeof weightGoal.direction) ?? 'maintain', targetKg: Number(targetWeight) || null },
+          });
+          navigation.goBack();
+        }}
+      />
       <Button variant="tertiary" label="Reset to computed" onPress={() => {
-        setKcal(String(SAMPLE_TARGETS.kcal));
-        setProtein(String(SAMPLE_TARGETS.protein_g));
-        setCarbs(String(SAMPLE_TARGETS.carbs_g));
-        setFat(String(SAMPLE_TARGETS.fat_g));
+        const recomputed = computeTargets(profile);
+        setKcal(String(recomputed.kcal));
+        setProtein(String(recomputed.protein_g));
+        setCarbs(String(recomputed.carbs_g));
+        setFat(String(recomputed.fat_g));
       }} />
     </Screen>
   );

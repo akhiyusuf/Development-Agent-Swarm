@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { View } from 'react-native';
 import { Button, Card, SingleSelectChips, ToggleSwitch, useTheme } from '@fit-and-fed/design-system';
 import { AppText, Screen, Section } from '../../ui/layout';
+import { useAppDispatch, useAppState } from '../../state/AppStateContext';
+import type { Market } from '../../state/types';
 
 /**
  * Region & Language Settings (S5) — market + household-unit display prefs (Req 1).
@@ -12,9 +14,11 @@ import { AppText, Screen, Section } from '../../ui/layout';
  */
 export function RegionLanguageSettingsScreen() {
   const theme = useTheme();
-  const [market, setMarket] = useState<string | null>('Nigeria');
-  const [showGrams, setShowGrams] = useState(true);
-  const [language, setLanguage] = useState<string | null>('en');
+  const dispatch = useAppDispatch();
+  const { region } = useAppState();
+  const [market, setMarket] = useState<string | null>(region.market);
+  const [showGrams, setShowGrams] = useState(region.showGrams);
+  const [language, setLanguage] = useState<string | null>(region.language);
 
   return (
     <Screen>
@@ -55,7 +59,15 @@ export function RegionLanguageSettingsScreen() {
         </Card>
       </Section>
 
-      <Button label="Save" onPress={() => { /* app-builder applies */ }} />
+      <Button
+        label="Save"
+        onPress={() =>
+          dispatch({
+            type: 'SET_REGION',
+            region: { market: (market as Market) ?? region.market, showGrams, language: (language as typeof region.language) ?? region.language },
+          })
+        }
+      />
     </Screen>
   );
 }

@@ -2,7 +2,8 @@ import React from 'react';
 import { useNavigation } from '@react-navigation/native';
 import { Button, Card, ProgressRing, useTheme } from '@fit-and-fed/design-system';
 import { AppText, Row, Screen } from '../../ui/layout';
-import { SAMPLE_TARGETS } from '../../data/sampleData';
+import { useAppState } from '../../state/AppStateContext';
+import { PILATES_TIERS } from '../../data/skillTree';
 
 /**
  * Onboarding Complete / Welcome Summary — reached only after first-time
@@ -17,6 +18,12 @@ import { SAMPLE_TARGETS } from '../../data/sampleData';
 export function OnboardingCompleteScreen() {
   const theme = useTheme();
   const navigation = useNavigation();
+  const { targets, region, moduleInterest, placement } = useAppState();
+
+  const showWorkout = moduleInterest.trainWorkout && (placement.calisthenics.status === 'done' || placement.pilates.status === 'done');
+  const pilatesTierName = placement.pilates.startingTier
+    ? PILATES_TIERS.find((t) => t.tier === placement.pilates.startingTier)?.name ?? `Tier ${placement.pilates.startingTier}`
+    : null;
 
   return (
     <Screen>
@@ -30,21 +37,28 @@ export function OnboardingCompleteScreen() {
       <Card>
         <AppText variant="h3">Daily target</AppText>
         <Row style={{ justifyContent: 'space-around', marginTop: theme.spacing.space12 }}>
-          <ProgressRing progress={1} color={theme.macro.calories} label="Calories" valueText={`${SAMPLE_TARGETS.kcal}`} size={80} />
-          <ProgressRing progress={1} color={theme.macro.protein} label="Protein" valueText={`${SAMPLE_TARGETS.protein_g}g`} size={80} />
-          <ProgressRing progress={1} color={theme.macro.carbs} label="Carbs" valueText={`${SAMPLE_TARGETS.carbs_g}g`} size={80} />
+          <ProgressRing progress={1} color={theme.macro.calories} label="Calories" valueText={`${targets.kcal}`} size={80} />
+          <ProgressRing progress={1} color={theme.macro.protein} label="Protein" valueText={`${targets.protein_g}g`} size={80} />
+          <ProgressRing progress={1} color={theme.macro.carbs} label="Carbs" valueText={`${targets.carbs_g}g`} size={80} />
         </Row>
       </Card>
 
       <Card>
         <AppText variant="h3">Region</AppText>
-        <AppText variant="body">Nigeria — household-unit portions on</AppText>
+        <AppText variant="body">{region.market} — household-unit portions on</AppText>
       </Card>
 
-      <Card>
-        <AppText variant="h3">Workout start</AppText>
-        <AppText variant="body">Calisthenics · Tier 2 &nbsp;·&nbsp; Pilates · Basic Mat</AppText>
-      </Card>
+      {/* Workout recap OMITTED entirely if not opted in / fully deferred (A8 empty state). */}
+      {showWorkout ? (
+        <Card>
+          <AppText variant="h3">Workout start</AppText>
+          <AppText variant="body">
+            {placement.calisthenics.status === 'done' ? `Calisthenics · Tier ${placement.calisthenics.startingTier}` : null}
+            {placement.calisthenics.status === 'done' && placement.pilates.status === 'done' ? ' ··· ' : ''}
+            {placement.pilates.status === 'done' ? `Pilates · ${pilatesTierName}` : null}
+          </AppText>
+        </Card>
+      ) : null}
 
       <Button
         label="Go to Home"

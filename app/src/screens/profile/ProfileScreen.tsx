@@ -3,6 +3,8 @@ import { View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Button, Card, ListRow, SingleSelectChips, TextField, useTheme } from '@fit-and-fed/design-system';
 import { AppText, Screen, Section } from '../../ui/layout';
+import { useAppDispatch, useAppState } from '../../state/AppStateContext';
+import type { Sex } from '../../state/types';
 
 /**
  * Profile (S1) — the Profile/Settings tab root: edit personal info + a shortcut
@@ -15,11 +17,13 @@ import { AppText, Screen, Section } from '../../ui/layout';
 export function ProfileScreen() {
   const theme = useTheme();
   const navigation = useNavigation();
+  const dispatch = useAppDispatch();
+  const { profile } = useAppState();
 
-  const [name, setName] = useState('Amara');
-  const [sex, setSex] = useState<string | null>('female');
-  const [height, setHeight] = useState('168');
-  const [weight, setWeight] = useState('80');
+  const [name, setName] = useState(profile.name);
+  const [sex, setSex] = useState<string | null>(profile.sex);
+  const [height, setHeight] = useState(profile.heightCm ? String(profile.heightCm) : '');
+  const [weight, setWeight] = useState(profile.weightKg ? String(profile.weightKg) : '');
 
   return (
     <Screen>
@@ -42,7 +46,20 @@ export function ProfileScreen() {
             <TextField label="Current weight (kg)" value={weight} onChangeText={setWeight} keyboardType="numeric" />
           </View>
         </Card>
-        <Button label="Save profile" onPress={() => { /* app-builder commits */ }} />
+        <Button
+          label="Save profile"
+          onPress={() =>
+            dispatch({
+              type: 'SET_PROFILE',
+              profile: {
+                name,
+                sex: sex as Sex,
+                heightCm: Number(height) || null,
+                weightKg: Number(weight) || null,
+              },
+            })
+          }
+        />
         <Button variant="secondary" label="Adjust goals & targets" onPress={() => navigation.navigate('GoalSettings')} />
       </Section>
 

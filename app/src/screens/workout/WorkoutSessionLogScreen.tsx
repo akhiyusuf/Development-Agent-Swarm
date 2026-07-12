@@ -3,8 +3,10 @@ import { View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Button, Card, ListRow, StatusBadge, useTheme } from '@fit-and-fed/design-system';
 import { AppText, Row, Screen } from '../../ui/layout';
-import { CALISTHENICS_LINES, describeThreshold, nodeState } from '../../data/skillTree';
-import { SAMPLE_SESSION_ROWS, SessionRow } from '../../data/sampleData';
+import { CALISTHENICS_LINES, describeThreshold } from '../../data/skillTree';
+import { useAppDispatch } from '../../state/AppStateContext';
+import { useNodeStateResolver, todayKey } from '../../state/selectors';
+import type { SessionRowRecord } from '../../state/types';
 
 /**
  * Workout Session Log (W7, modal) — FREEFORM logging only. Per the pipeline
@@ -21,12 +23,15 @@ import { SAMPLE_SESSION_ROWS, SessionRow } from '../../data/sampleData';
 export function WorkoutSessionLogScreen() {
   const theme = useTheme();
   const navigation = useNavigation();
-  const [rows, setRows] = useState<SessionRow[]>(SAMPLE_SESSION_ROWS);
+  const dispatch = useAppDispatch();
+  const nodeState = useNodeStateResolver();
+  const [rows, setRows] = useState<SessionRowRecord[]>([]);
 
   // Actionable nodes the user could add an attempt against.
   const actionable = CALISTHENICS_LINES.flatMap((l) => l.nodes).filter((n) => nodeState(n.id) !== 'locked');
 
   function addRow() {
+    if (actionable.length === 0) return;
     const next = actionable[rows.length % actionable.length];
     setRows((r) => [...r, { nodeId: next.id, nodeName: next.name, result: describeThreshold(next.threshold) }]);
   }
@@ -58,7 +63,10 @@ export function WorkoutSessionLogScreen() {
       <Button
         label="Save session"
         onPress={() => {
-          if (rows.length > 0) navigation.goBack();
+          if (rows.length > 0) {
+            dispatch({ type: 'SAVE_SESSION', rows, date: todayKey() });
+            navigation.goBack();
+          }
         }}
       />
       <Button variant="tertiary" label="Discard" onPress={() => navigation.goBack()} />

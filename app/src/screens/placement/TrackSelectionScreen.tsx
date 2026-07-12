@@ -4,6 +4,7 @@ import { useNavigation } from '@react-navigation/native';
 import { Button, Card, StatusBadge, useTheme } from '@fit-and-fed/design-system';
 import { AppText, Row, Screen } from '../../ui/layout';
 import { PreAuthLoginLink } from '../../components/PreAuthLoginLink';
+import { useAppDispatch, useAppState } from '../../state/AppStateContext';
 
 /**
  * Track Selection — shown only when BOTH tracks were opted into (A3). User does
@@ -18,6 +19,10 @@ import { PreAuthLoginLink } from '../../components/PreAuthLoginLink';
 export function TrackSelectionScreen() {
   const theme = useTheme();
   const navigation = useNavigation();
+  const dispatch = useAppDispatch();
+  const { placement } = useAppState();
+  const calDone = placement.calisthenics.status === 'done';
+  const pilDone = placement.pilates.status === 'done';
 
   return (
     <Screen>
@@ -34,7 +39,7 @@ export function TrackSelectionScreen() {
               Push, pull, squat/hinge and core-hold checks.
             </AppText>
           </View>
-          <StatusBadge tone="info" label="Not started" />
+          <StatusBadge tone={calDone ? 'success' : 'info'} label={calDone ? 'Placed' : 'Not started'} />
         </Row>
       </Card>
 
@@ -46,12 +51,25 @@ export function TrackSelectionScreen() {
               Core/breath control, mobility and mat-position tolerance.
             </AppText>
           </View>
-          <StatusBadge tone="info" label="Not started" />
+          <StatusBadge tone={pilDone ? 'success' : 'info'} label={pilDone ? 'Placed' : 'Not started'} />
         </Row>
       </Card>
 
-      <Button label="Continue (both placed)" onPress={() => navigation.navigate('CombinedSummary')} />
-      <Button variant="tertiary" label="Skip the rest for now" onPress={() => navigation.navigate('Auth', { mode: 'signup' })} />
+      <Button
+        label="Continue (both placed)"
+        onPress={() => {
+          dispatch({ type: 'SET_ONBOARDING_STEP', step: 'CombinedSummary' });
+          navigation.navigate('CombinedSummary');
+        }}
+      />
+      <Button
+        variant="tertiary"
+        label="Skip the rest for now"
+        onPress={() => {
+          dispatch({ type: 'SET_ONBOARDING_STEP', step: 'Auth' });
+          navigation.navigate('Auth', { mode: 'signup' });
+        }}
+      />
       <PreAuthLoginLink />
     </Screen>
   );

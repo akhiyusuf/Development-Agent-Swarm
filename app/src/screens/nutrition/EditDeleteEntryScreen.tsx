@@ -4,7 +4,9 @@ import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { Button, Card, SingleSelectChips, useTheme } from '@fit-and-fed/design-system';
 import { AppText, Row, Screen, Section } from '../../ui/layout';
 import { findFood } from '../../data/foods';
-import { MEAL_SLOT_LABELS, SAMPLE_DIARY } from '../../data/sampleData';
+import { MEAL_SLOT_LABELS } from '../../data/sampleData';
+import { useAppDispatch, useAppState } from '../../state/AppStateContext';
+import { todayKey } from '../../state/selectors';
 import type { MealSlot, RootParamList } from '../../navigation/types';
 
 /**
@@ -17,8 +19,16 @@ import type { MealSlot, RootParamList } from '../../navigation/types';
 export function EditDeleteEntryScreen() {
   const theme = useTheme();
   const navigation = useNavigation();
+  const dispatch = useAppDispatch();
+  const { diary } = useAppState();
   const route = useRoute<RouteProp<RootParamList, 'EditDeleteEntry'>>();
-  const entry = SAMPLE_DIARY.find((e) => e.id === route.params.entryId);
+
+  // The data contract is `{ entryId }` only (no date); the diary is keyed by
+  // day, so this scans across days for the entry's id (today's diary is the
+  // only place rows currently link in from, but this keeps it correct if a
+  // past day's diary opens the same screen later).
+  const entryDate = Object.keys(diary).find((d) => diary[d].some((e) => e.id === route.params.entryId)) ?? todayKey();
+  const entry = diary[entryDate]?.find((e) => e.id === route.params.entryId);
 
   const [slot, setSlot] = useState<string | null>(entry?.slot ?? null);
   const [quantity, setQuantity] = useState(entry?.quantity ?? 1);
@@ -63,7 +73,18 @@ export function EditDeleteEntryScreen() {
         </Row>
       </Card>
 
-      <Button label="Save changes" onPress={() => navigation.goBack()} />
+      <Button
+        label="Save changes"
+        onPress={() => {
+          dispatch({
+            type: 'UPDATE_DIARY_ENTRY',
+            date: entryDate,
+            entryId: entry.id,
+            changes: { slot: (slot as MealSlot) ?? entry.slot, quantity },
+          });
+          navigation.goBack();
+        }}
+      />
 
       {confirmingDelete ? (
         <Card error>
@@ -71,7 +92,15 @@ export function EditDeleteEntryScreen() {
             Delete this entry?
           </AppText>
           <View style={{ gap: theme.spacing.space8, marginTop: theme.spacing.space8 }}>
-            <Button label="Yes, delete" onPress={() => navigation.goBack()} error errorMessage="" />
+            <Button
+              label="Yes, delete"
+              onPress={() => {
+                dispatch({ type: 'DELETE_DIARY_ENTRY', date: entryDate, entryId: entry.id });
+                navigation.goBack();
+              }}
+              error
+              errorMessage=""
+            />
             <Button variant="tertiary" label="Keep it" onPress={() => setConfirmingDelete(false)} />
           </View>
         </Card>

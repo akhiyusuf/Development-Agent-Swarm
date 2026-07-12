@@ -4,7 +4,10 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 import { Button, Card, ProgressBar, SingleSelectChips, useTheme } from '@fit-and-fed/design-system';
 import { AppText, Screen } from '../../ui/layout';
 import { PreAuthLoginLink } from '../../components/PreAuthLoginLink';
-import type { PlacementContext, RootParamList } from '../../navigation/types';
+import type { PlacementContext, RootParamList, TrackId } from '../../navigation/types';
+import { useAppDispatch } from '../../state/AppStateContext';
+import type { SelfReportAnswer } from '../../state/types';
+import { scoreCalisthenicsPlacement, scorePilatesPlacement } from '../../logic/placement';
 
 export type PlacementStep = { key: string; title: string; prompt: string };
 
@@ -36,14 +39,24 @@ export function PlacementStepsBody({
   title,
   steps,
   resultRoute,
+  track,
 }: {
   title: string;
   steps: PlacementStep[];
   resultRoute: keyof RootParamList;
+  /**
+   * DEVIATION (app-builder, logged in BUILD_NOTES.md): added so this shared
+   * body can persist the self-report answers to real per-user placement
+   * state and compute a real starting tier (`logic/placement.ts`) instead of
+   * only holding them in local-only component state, which is what the
+   * screen-designer contract shipped with (no persistence hook existed).
+   */
+  track: TrackId;
 }) {
   const theme = useTheme();
   const navigation = useNavigation();
   const route = useRoute();
+  const dispatch = useAppDispatch();
   const context = (route.params as { context?: PlacementContext } | undefined)?.context;
   const isPreAuth = context !== 'account';
   const [index, setIndex] = useState(0);
@@ -54,10 +67,16 @@ export function PlacementStepsBody({
   const answer = answers[step.key] ?? null;
 
   function commit(nextAnswer?: string) {
+    let finalAnswers = answers;
     if (nextAnswer !== undefined) {
-      setAnswers((a) => ({ ...a, [step.key]: nextAnswer }));
+      finalAnswers = { ...answers, [step.key]: nextAnswer };
+      setAnswers(finalAnswers);
     }
     if (isLast) {
+      const typedAnswers = finalAnswers as Record<string, SelfReportAnswer>;
+      const startingTier =
+        track === 'calisthenics' ? scoreCalisthenicsPlacement(typedAnswers) : scorePilatesPlacement(typedAnswers);
+      dispatch({ type: 'SET_PLACEMENT_ANSWERS', track, answers: typedAnswers, startingTier });
       (navigation.navigate as (screen: string, params?: object) => void)(resultRoute, { context });
     } else {
       setIndex((i) => i + 1);

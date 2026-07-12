@@ -3,7 +3,8 @@ import { ScrollView, View } from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { Card, SkillNode, useTheme } from '@fit-and-fed/design-system';
 import { AppText, Screen, Section } from '../../ui/layout';
-import { CALISTHENICS_LINES, PILATES_TIERS, findNode, nodeState } from '../../data/skillTree';
+import { CALISTHENICS_LINES, PILATES_TIERS, findNode } from '../../data/skillTree';
+import { useNodeStateResolver } from '../../state/selectors';
 import type { RootParamList } from '../../navigation/types';
 
 /**
@@ -22,6 +23,7 @@ export function TierNodeMapScreen() {
   const navigation = useNavigation();
   const route = useRoute<RouteProp<RootParamList, 'TierNodeMap'>>();
   const track = route.params.track;
+  const nodeState = useNodeStateResolver();
 
   if (track === 'pilates') {
     return (

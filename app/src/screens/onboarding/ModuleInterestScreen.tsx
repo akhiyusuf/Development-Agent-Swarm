@@ -6,6 +6,7 @@ import { Button, Card, StatusBadge, ToggleSwitch, useTheme } from '@fit-and-fed/
 import { AppText, Row, Screen } from '../../ui/layout';
 import { OnboardingProgress } from '../../components/OnboardingProgress';
 import { PreAuthLoginLink } from '../../components/PreAuthLoginLink';
+import { useAppDispatch, useAppState } from '../../state/AppStateContext';
 
 /**
  * Module Interest — nutrition always on; workout (calisthenics/Pilates) optional.
@@ -21,22 +22,28 @@ import { PreAuthLoginLink } from '../../components/PreAuthLoginLink';
 export function ModuleInterestScreen() {
   const theme = useTheme();
   const navigation = useNavigation();
+  const dispatch = useAppDispatch();
+  const existing = useAppState().moduleInterest;
 
-  // PLACEHOLDER: workout module is live at this preview build.
+  // The workout module is live at this build (fast-follow already shipped).
   const workoutLive = true;
 
-  const [train, setTrain] = useState(false);
-  const [ack, setAck] = useState(false);
+  const [train, setTrain] = useState(existing.trainWorkout);
+  const [ack, setAck] = useState(existing.injuryDisclaimerAckAt != null);
   const [needAck, setNeedAck] = useState(false);
 
   function onContinue() {
+    dispatch({ type: 'SET_MODULE_INTEREST', trainWorkout: train && workoutLive });
     if (train && workoutLive) {
       if (!ack) {
         setNeedAck(true);
         return;
       }
+      dispatch({ type: 'ACK_INJURY_DISCLAIMER' });
+      dispatch({ type: 'SET_ONBOARDING_STEP', step: 'AssessmentIntro' });
       navigation.navigate('AssessmentIntro');
     } else {
+      dispatch({ type: 'SET_ONBOARDING_STEP', step: 'Auth' });
       navigation.navigate('Auth', { mode: 'signup' });
     }
   }

@@ -3,10 +3,7 @@ import { useNavigation } from '@react-navigation/native';
 import { Button, Card, ListRow, StatusBadge, useTheme } from '@fit-and-fed/design-system';
 import { AppText, Screen, Section } from '../../ui/layout';
 import { FOODS, isComposite } from '../../data/foods';
-
-// PLACEHOLDER: real favorites/recents come from user history (app-builder).
-const RECENT_IDS = ['ng-jollof-rice', 'ke-ugali-refined', 'diaspora-oats-cooked'];
-const FAVORITE_IDS = ['ng-egusi-soup'];
+import { useAppState } from '../../state/AppStateContext';
 
 /**
  * Favorites & Recents Management (N13) — quick-log + edit/remove (Req 2).
@@ -18,9 +15,11 @@ const FAVORITE_IDS = ['ng-egusi-soup'];
 export function FavoritesRecentsScreen() {
   const theme = useTheme();
   const navigation = useNavigation();
+  const { favorites, recents, customFoods } = useAppState();
+  const allFoods = [...FOODS, ...customFoods];
 
   function quickLog(id: string) {
-    const f = FOODS.find((x) => x.id === id);
+    const f = allFoods.find((x) => x.id === id);
     if (!f) return;
     navigation.navigate('ConfirmLog', {
       foodId: id,
@@ -31,7 +30,7 @@ export function FavoritesRecentsScreen() {
 
   function rows(ids: string[]) {
     return ids.map((id) => {
-      const f = FOODS.find((x) => x.id === id);
+      const f = allFoods.find((x) => x.id === id);
       if (!f) return null;
       return (
         <ListRow
@@ -50,20 +49,20 @@ export function FavoritesRecentsScreen() {
     <Screen>
       <Section title="Favorites">
         <Card>
-          {FAVORITE_IDS.length === 0 ? (
+          {favorites.length === 0 ? (
             <StatusBadge tone="info" label="Nothing favorited yet" />
           ) : (
-            rows(FAVORITE_IDS)
+            rows(favorites)
           )}
         </Card>
       </Section>
 
       <Section title="Recents">
         <Card>
-          {RECENT_IDS.length === 0 ? (
+          {recents.length === 0 ? (
             <StatusBadge tone="info" label="Log something to build your recents" />
           ) : (
-            rows(RECENT_IDS)
+            rows(recents)
           )}
         </Card>
       </Section>
