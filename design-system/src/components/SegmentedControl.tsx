@@ -18,8 +18,12 @@ export type SegmentedControlProps = {
 /**
  * Segmented control / in-sheet tab bar. Fills a gap flagged repeatedly by
  * the sitemap (Sign Up/Log In mode switch, Add Entry Search/Recent/
- * Favorites/Custom sheet tabs). Each segment meets the 44/48pt touch-target
- * floor regardless of how many segments are shown.
+ * Favorites/Custom sheet tabs). Each segment's own Pressable sets
+ * `minHeight: theme.minTouchTarget` (48) directly — the track's 4px padding
+ * (`space4` on all sides) sits around the segment row, not subtracted from
+ * it, so every segment's actual hit area is genuinely >= the 44/48pt
+ * touch-target floor regardless of how many segments are shown, the same
+ * way TabBar's 48px tabs are never shrunk by the bar's own outer padding.
  */
 export function SegmentedControl({ options, value, onChange, accessibilityLabel }: SegmentedControlProps) {
   const theme = useTheme();
@@ -49,7 +53,7 @@ export function SegmentedControl({ options, value, onChange, accessibilityLabel 
             style={({ pressed }) => [
               styles.segment,
               {
-                minHeight: theme.minTouchTarget - 8,
+                minHeight: theme.minTouchTarget,
                 borderRadius: theme.radii.sm - 2,
                 backgroundColor: selected
                   ? theme.brand.terracotta

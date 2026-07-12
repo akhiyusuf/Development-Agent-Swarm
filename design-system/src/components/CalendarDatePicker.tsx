@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../theme/ThemeContext';
@@ -21,13 +21,24 @@ const WEEKDAY_LABELS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
 
 /**
  * Calendar / date-picker — fills the sitemap-flagged gap needed by
- * Nutrition History and Workout History/Session Calendar. Falls back
- * gracefully: cells are square but always meet the touch-target floor via
- * hit-slop, never shrinking below it purely to fit a 7-column grid.
+ * Nutrition History and Workout History/Session Calendar. Cell Pressables
+ * fill their entire 7-column grid cell (not just the smaller visible day
+ * disc), and `hitSlop` is computed from the actually-measured column width
+ * (via `onLayout`, not assumed) so each cell's real hit area is topped up to
+ * the touch-target floor even on the narrowest supported screen widths,
+ * rather than relying on a fixed hit-slop guess that only works at typical
+ * widths.
  */
 export function CalendarDatePicker({ month, selectedDate, markedDates, onSelectDay, onChangeMonth }: CalendarDatePickerProps) {
   const theme = useTheme();
   const today = new Date();
+  const [columnWidth, setColumnWidth] = useState<number | null>(null);
+  // Before the first onLayout measurement, assume the worst case so no frame
+  // ever renders under-floor: a hit area of exactly minTouchTarget requires
+  // hitSlop = minTouchTarget on each side if the real cell were 0-width.
+  const cellHitSlop = columnWidth != null
+    ? Math.max(4, Math.ceil((theme.minTouchTarget - columnWidth) / 2))
+    : theme.minTouchTarget;
 
   const year = month.getFullYear();
   const monthIndex = month.getMonth();
@@ -51,7 +62,12 @@ export function CalendarDatePicker({ month, selectedDate, markedDates, onSelectD
         >
           <Ionicons name="chevron-back" size={22} color={theme.neutrals.ink} />
         </Pressable>
-        <Pressable onPress={() => onChangeMonth(new Date(today.getFullYear(), today.getMonth(), 1))}>
+        <Pressable
+          onPress={() => onChangeMonth(new Date(today.getFullYear(), today.getMonth(), 1))}
+          accessibilityRole="button"
+          accessibilityLabel={`${monthLabel}, jump to current month`}
+          style={{ minHeight: theme.minTouchTarget, justifyContent: 'center', paddingHorizontal: theme.spacing.space8 }}
+        >
           <Text style={{ fontSize: theme.type.h3.fontSize, fontWeight: theme.type.h3.fontWeight, color: theme.neutrals.ink }}>
             {monthLabel}
           </Text>
@@ -76,7 +92,10 @@ export function CalendarDatePicker({ month, selectedDate, markedDates, onSelectD
         ))}
       </View>
 
-      <View style={styles.grid}>
+      <View
+        style={styles.grid}
+        onLayout={(e) => setColumnWidth(e.nativeEvent.layout.width / 7)}
+      >
         {cells.map((date, idx) => {
           if (!date) return <View key={`empty-${idx}`} style={styles.cellWrap} />;
           const key = toKey(date);
@@ -85,21 +104,28 @@ export function CalendarDatePicker({ month, selectedDate, markedDates, onSelectD
           const marked = markedDates?.has(key);
           return (
             <View key={key} style={styles.cellWrap}>
+              {/* Pressable fills the entire grid column (not just the smaller
+                  visible day disc below), and hitSlop tops up any remaining
+                  shortfall — see cellHitSlop above — so the real hit area
+                  always meets the touch-target floor. */}
               <Pressable
                 onPress={() => onSelectDay(date)}
-                hitSlop={4}
+                hitSlop={cellHitSlop}
                 accessibilityRole="button"
                 accessibilityLabel={date.toDateString()}
-                style={[
-                  styles.cell,
-                  {
-                    borderRadius: 8,
-                    backgroundColor: isSelected ? theme.brand.terracotta : 'transparent',
-                    borderWidth: isToday && !isSelected ? 1.5 : 0,
-                    borderColor: theme.brand.terracotta,
-                  },
-                ]}
+                style={styles.cellPressable}
               >
+                <View
+                  style={[
+                    styles.cell,
+                    {
+                      borderRadius: 8,
+                      backgroundColor: isSelected ? theme.brand.terracotta : 'transparent',
+                      borderWidth: isToday && !isSelected ? 1.5 : 0,
+                      borderColor: theme.brand.terracotta,
+                    },
+                  ]}
+                >
                 <Text style={{ color: isSelected ? theme.neutrals.white : theme.neutrals.ink, fontSize: theme.type.body.fontSize }}>
                   {date.getDate()}
                 </Text>

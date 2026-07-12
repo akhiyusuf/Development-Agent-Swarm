@@ -129,7 +129,16 @@ export function HouseholdUnitPortionPicker({
         </View>
       ) : null}
 
-      <Pressable onPress={() => setShowAdvanced((s) => !s)} style={{ marginTop: theme.spacing.space16 }}>
+      <Pressable
+        onPress={() => setShowAdvanced((s) => !s)}
+        accessibilityRole="button"
+        accessibilityLabel={showAdvanced ? 'Hide exact weight entry' : 'Enter exact weight instead'}
+        style={{
+          marginTop: theme.spacing.space16,
+          minHeight: theme.minTouchTarget,
+          justifyContent: 'center',
+        }}
+      >
         <Text style={{ fontSize: theme.type.caption.fontSize, color: theme.brand.terracotta }}>
           {showAdvanced ? 'Hide exact weight entry' : 'Enter exact weight instead'}
         </Text>

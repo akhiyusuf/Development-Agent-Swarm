@@ -668,3 +668,36 @@ Everything under "What passes" is explicitly approved as-is and must not be thin
 4. Re-run `npx tsc --noEmit` and `npx expo export --platform web` after the fixes (this review will re-run both regardless).
 
 **Verdict: REJECTED** — narrowly. The package is structurally strong (tokens verified exclusive with a real runtime guard, all six gap components built, carry-forwards 1/3/4/5 genuinely done, doc contract met, typecheck and export verified clean by this reviewer), but both rejection gaps are code-contradicts-its-own-claim defects of the exact class this pipeline rejects, one of which produces a sub-2:1 progress indicator in a reachable mode. All fixes are mechanical and small. Screens stage remains blocked on this stage.
+
+## 2026-07-12 — Stage: user-flows (THIRD PASS) — Verdict: APPROVED
+
+**Reviewed output:** `docs/user-flows.md` (revision after second-pass rejection, commit 118b5c9)
+**Dependencies:** `sitemap` (approved, pass 3 — status re-confirmed in `pipeline/state.json`) → `docs/sitemap.md`. Checked against the pass-2 two-item fix list; routing consistency re-verified directly in the document at all five locations (§0.1, §0.2, A1, A7b, E2), not taken from the fix agent's summary; change isolation verified via `git diff c13d067 HEAD -- docs/user-flows.md`.
+
+### Pass-2 fix list: both items verified done
+
+| Required change (pass 2) | Status in this revision |
+|---|---|
+| 1. §0.1 steps 2–3: replace the stale two-check routing with the three-check mechanism; just-logged-out device must route to A7b, not A1 | **Done.** §0.1 step 2 now explicitly evaluates "the same **three** independent pieces of local device state as §0.2's Mechanism note (cached account session, local onboarding draft, device account-history marker)" in the same priority order, and step 2(a) is upgraded from the vague "Flow A7 (returning user)" to the precise "Flow A7a (returning user), straight to Home" — matching §0.2 branch 1. Step 3 now states: no session + no draft → marker check; marker **set** ("most commonly a just-logged-out device, Flow E2" — the exact case the rejection named) → Sign Up / Log In (Flow A7b), "**not** Flow A1"; only marker-**also**-absent → genuine first launch → A1. |
+| 2. §0.2 marker-lifecycle analogy ("same lifecycle as the onboarding draft" — false) | **Done, and accurately.** Replaced with: the marker has "a **narrower** set of clearing conditions than the onboarding draft in §0.1, which is also cleared on successful attachment to an account at Sign Up and on explicit 'Start over'; neither of those two events clears the marker." Verified against §0.1's own draft-lifecycle list (cleared on attachment / log-in supersession / Start-over-or-clear-data): both cited draft-only events are real, and neither clears the marker — Sign Up *sets* it (A1 step 7), Start-over doesn't touch it. The clause omits the log-in-supersession draft-clearing event, but makes no exhaustiveness claim and every statement in it is true; "narrower" is correct since the draft's clearing set is a strict superset of the marker's. Not a defect. |
+
+### Routing consistency independently re-verified (the check the rejection was about)
+
+Traced the no-session/no-draft/marker-set precondition through every location that routes it — all five now agree it lands on Sign Up / Log In (A7b), and A1 is reachable only with the marker absent:
+
+- **§0.1 step 3** (line ~55): marker set → A7b, "not Flow A1"; marker absent → A1. ✓
+- **§0.2 routing list** (lines ~164–174): four branches — session → Home (A7a); draft → resume; no-session/no-draft/marker-set → Sign Up/Log In (A7b's short-circuit); all-three-absent → Profile Setup (A1). ✓
+- **A1 trigger** (line ~285): explicitly requires "no cached account session, no local onboarding draft, **and no device account-history marker set**"; happy-path step 1 restates all three absent; step 7 notes first successful auth sets the marker. ✓
+- **A7b step 1** (line ~558): no session, no draft, marker set → Log In pre-selected, distinct from the manual fresh-device affordance. ✓
+- **E2 log-out step 4** (line ~1118): marker left untouched → Splash's no-session state → A7b's short-circuit, with the just-logged-out reasoning spelled out. **E2 deletion step 3–4** (lines ~1094–1098): purge includes the marker → all three states absent → A1 fresh start. ✓
+- **Section G #16** (line ~1328): still accurately records the whole mechanism as a reasoned default reconciling A1/A7b/E2. ✓
+
+### Change isolation (per the fix agent's own two-spot claim)
+
+`git diff c13d067 HEAD -- docs/user-flows.md` contains exactly two hunks — the §0.1 steps 2–3 rewrite and the §0.2 lifecycle clause — and nothing else. No unstaged changes to the file. Nothing from any prior "what passes" list was removed, restructured, or thinned. (Commit 118b5c9 also touches design-system files; those belong to the design-system stage's open fix list and are out of scope for this review.)
+
+### Non-blocking observations (carried, unchanged)
+
+Pass 2's non-blocking items remain non-blocking and unaddressed: the A3 quote's missing ellipsis before the truncated final word; C1's five-state vocabulary note; auth in-flight submitting state; §0.1 "Start over" not itemized in Section G.
+
+**Verdict: APPROVED.** The internal contradiction is fully resolved; the document is now routing-consistent end to end and every sitemap attribution previously flagged has been verified honest. **This unblocks the screens stage on the user-flows side.** Screens remains blocked until `design-system` (rejected, pass 1 under the new real-code contract) and `data-research` (rejected) are also approved. Carry-forwards for screens from this stage: (1) build Splash's pre-nav entry logic from §0.2's three-check mechanism exactly (cached session → Home; draft → resume at first incomplete screen; marker-set → Sign Up/Log In with Log In pre-selected; all absent → Profile Setup); (2) the persistent "Already have an account? Log in" affordance on every pre-auth screen from Profile Setup onward, draft-preserving; (3) the six common patterns (CP-*) and Section G's 18 reasoned defaults are binding flow specs, not suggestions. Reminder to the orchestrator: run the screens merge-point review at effort xhigh, per the standing note.

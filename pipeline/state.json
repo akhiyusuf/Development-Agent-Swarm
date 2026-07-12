@@ -31,7 +31,7 @@
     },
     "user-flows": {
       "agent": "user-flow-designer",
-      "status": "rejected",
+      "status": "approved",
       "output": "docs/user-flows.md",
       "depends_on": [
         "sitemap"
@@ -186,6 +186,13 @@
       "pass": 1,
       "note": "First pass under the new real-code contract (design-system/ package + short docs/design-system.md).",
       "summary": "Verified independently: tsc --noEmit exit 0 (re-run by reviewer), expo export web succeeded, ComponentGallery served on loopback and screenshotted in light AND dark modes with every shot inspected, all tokens.ts contrast claims recomputed and accurate, node-vocabulary exclusivity grep-verified plus the claimed assertNodeColorsAreExclusive runtime guard confirmed real (though it omits neutrals - non-blocking). Doc contract met: 72 lines, rationale-only, zero hexes/prop tables. All six previously-flagged component gaps genuinely built and demoed (SegmentedControl, SingleSelectChips, ToggleSwitch, CalendarDatePicker, TrendChart, ListRow). Carry-forwards 1/3/4/5 done; superseded #C98A2E/#E0BE7C appear nowhere. Rejected on two claim-vs-code defects verified live: (1) the Pilates SessionPlayer preset's comment says it is 'always light... even if the user has app-wide dark mode on' but the code uses theme-dependent neutrals - in dark mode it renders on #17181A, tonally identical to the calisthenics preset (erasing the research's tonal-flex requirement) with the goldMuted progress fill at 2.48:1 vs background and 1.56:1 vs its dark track, far below the system's own 3:1 progress-fill floor; (2) SegmentedControl's comment claims every segment meets the 44/48pt touch-target floor, but the rendered segments measure exactly 40px tall (Playwright-measured; minHeight is minTouchTarget-8 and the track padding sits outside the pressable). Three minor sub-floor touch targets to fix alongside. Full fix list in pipeline/review-log.md; everything under 'What passes' is approved as-is and must not be thinned."
+    },
+    {
+      "date": "2026-07-12",
+      "stage": "user-flows",
+      "verdict": "approved",
+      "pass": 3,
+      "summary": "Both pass-2 fixes verified done by re-reading the document and re-checking the diff (git diff c13d067 HEAD -- docs/user-flows.md shows exactly two hunks, nothing else touched). Fix 1: SS0.1 steps 2-3 now state the three-check mechanism verbatim-consistent with SS0.2 (cached session -> Home/A7a; draft -> resume at first incomplete screen; no session + no draft + marker set -> Sign Up/Log In A7b, explicitly 'not Flow A1'; marker also absent -> A1). Re-verified against every other routing location, not just the summary: A1's trigger requires marker-absent and its step 1 restates all three states absent; A7b step 1 requires marker-set with Log In pre-selected; E2 log-out preserves the marker and routes to A7b; E2 account-deletion purges the marker and routes to A1; SS0.2's four-branch routing list and Section G #16 both match. The just-logged-out device case now routes identically (A7b) in all five locations. Fix 2: the false 'same lifecycle as the onboarding draft' analogy is replaced with an accurate 'narrower set of clearing conditions' statement whose two cited draft-only clearing events (attachment at Sign Up, explicit Start-over) were verified against SS0.1's own draft-lifecycle list and verified not to clear the marker (Sign Up sets it; Start-over doesn't touch it). Nothing thinned; pass-2 non-blocking observations remain non-blocking. user-flows APPROVED. This unblocks screens on the user-flows side; screens still requires design-system (rejected, pass 1 under new contract) and data-research (rejected) before it can run. Recommend the screens merge-point review run at effort xhigh per the pipeline note."
     }
   ]
 }
