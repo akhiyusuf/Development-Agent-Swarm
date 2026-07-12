@@ -3,9 +3,9 @@
 ## Shape of the pipeline (fork → join)
 
     docs/idea.md
-        ├── researcher-product (Opus, high) ──► sitemap-architect (Sonnet, medium) ──► user-flow-designer (Sonnet, high) ──┐
-        │                                                                                                                   ├──► screen-designer (Opus, high) ──► app-builder (Sonnet, high)
-        └── researcher-design (Sonnet, medium) ──► design-system-architect (Sonnet, high) ─────────────────────────────────┘
+        ├── researcher-product (Opus, high) ──┬──► sitemap-architect (Sonnet, medium) ──► user-flow-designer (Sonnet, high) ──┐
+        │                                      └──► data-researcher (Opus, high) ────────────────────────────────────────────┼──► screen-designer (Opus, high) ──► app-builder (Sonnet, high)
+        └── researcher-design (Sonnet, medium) ──► design-system-architect (Sonnet, high) ─────────────────────────────────────┘
 
 `reviewer` (Fable 5, high — xhigh optional on the merge review) gates every arrow
 above. Nothing proceeds until reviewer marks the stage(s) it depends on as
@@ -49,6 +49,31 @@ step entirely.
 
 Everything else in the pipeline — research, sitemap, and the review gating
 discipline itself — is unchanged.
+
+## New: data-researcher — real, cited content instead of placeholders
+
+The first build's food database and skill-tree content were mock/placeholder
+data by design (the product research explicitly flagged progression-tree
+content as unvalidated) — but that meant the shipped app had generic
+`[Skill Node]` names and made-up nutrition numbers, which is a real UX
+problem, not just a content-polish one. `data-researcher` (Opus, high effort)
+runs after `research-product` is approved, in parallel with `sitemap-architect`
+and `design-system-architect`. It sources:
+- Real regional food composition data (macros, key micronutrients,
+  household-unit portions) from legitimate, citable sources per market.
+- Real calisthenics/Pilates progression content (node names, ordering,
+  thresholds) synthesized from established, citable coaching frameworks —
+  labeled honestly by actual confidence level, not oversold as
+  clinically validated and not left as an unsourced placeholder either.
+
+Output goes to `data/` (structured, real content) plus `docs/data-sourcing.md`
+(methodology, sources, and an honest limitations section). `reviewer` gained a
+citation-spot-check step for this stage specifically — fabricated-but-
+well-formatted citations are a known failure mode, so it re-checks a sample
+of the actual cited figures rather than trusting that citations exist.
+`screen-designer` and `app-builder` now both depend on `data-research` too:
+screens use real sample data where `data/` covers it, and `app-builder` wires
+the full real dataset instead of building its own mock/seeded data layer.
 
 ## New: user-flow-designer, and legacy docs kept as reference
 
@@ -136,6 +161,7 @@ the session.
 | researcher-design | Sonnet 5 | medium | lighter, pattern-based research |
 | sitemap-architect | Sonnet 5 | medium | structured transformation |
 | user-flow-designer | Sonnet 5 | high | detail-heavy, error/edge-case coverage matters |
+| data-researcher | Opus 4.8 | high | real cited nutrition/fitness data, accuracy stakes are high |
 | design-system-architect | Sonnet 5 | high | real engineering: scaffold, code, self-verify |
 | screen-designer | Opus 4.8 | high | 3-way merge point, error-prone, now writes real code |
 | app-builder | Sonnet 5 | high | real coding, quality > speed |
@@ -162,7 +188,7 @@ If you enable usage credits: set a spending cap (claude.ai → Settings → Usag
 this is the one thing that protects you if a session runs longer than expected.
 
 ## Setup
-1. Put the 8 files from `agents/` into your project as `.claude/agents/*.md`.
+1. Put the 9 files from `agents/` into your project as `.claude/agents/*.md`.
 2. Put `pipeline-state.json` into your project as `pipeline/state.json`.
 3. Write your idea into `docs/idea.md`.
 4. Start a session at claude.ai/code (Claude Code on the web) in this project —
@@ -174,14 +200,15 @@ this is the one thing that protects you if a session runs longer than expected.
 ## Kickoff prompt
 > Using docs/idea.md and pipeline/state.json, run the pipeline: researcher-product
 > and researcher-design in parallel first. Send each to reviewer as it finishes.
-> Once research-product is approved, run sitemap-architect, then reviewer, then
-> user-flow-designer, then reviewer — this can proceed alongside
+> Once research-product is approved, run sitemap-architect and data-researcher
+> in parallel (send each to reviewer as it finishes); once sitemap is approved,
+> run user-flow-designer, then reviewer. All of this can proceed alongside
 > design-system-architect once research-design is approved (send
-> design-system-architect to reviewer too). Once sitemap, user-flows, and
-> design-system are all approved, run screen-designer, then reviewer. Once
-> approved, run app-builder, then reviewer for a final check. If reviewer
-> rejects the same stage twice in a row, stop and flag me instead of retrying
-> again.
+> design-system-architect to reviewer too). Once sitemap, user-flows,
+> design-system, and data-research are all approved, run screen-designer, then
+> reviewer. Once approved, run app-builder, then reviewer for a final check.
+> If reviewer rejects the same stage twice in a row, stop and flag me instead of
+> retrying again.
 
 ## Notes
 - Models and effort levels are set per-agent in each file's frontmatter. Swap

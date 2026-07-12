@@ -37,6 +37,14 @@
         "sitemap"
       ]
     },
+    "data-research": {
+      "agent": "data-researcher",
+      "status": "pending",
+      "output": "data/",
+      "depends_on": [
+        "research-product"
+      ]
+    },
     "screens": {
       "agent": "screen-designer",
       "status": "pending",
@@ -44,7 +52,8 @@
       "depends_on": [
         "sitemap",
         "design-system",
-        "user-flows"
+        "user-flows",
+        "data-research"
       ]
     },
     "build": {
@@ -52,11 +61,12 @@
       "status": "pending",
       "output": "app/",
       "depends_on": [
-        "screens"
+        "screens",
+        "data-research"
       ]
     }
   },
-  "pipeline_note": "2026-07-11: design-system/screens/build stages were redefined to produce real, running code (a standalone design-system package + real wired app screens) instead of markdown specs, after user feedback that the prose-based specs produced generic/lossy UI. The design-system, screens, and build stages were reset to pending \u2014 their prior 'approved' artifacts (docs/design-system.md, docs/screens.md, the old flat app/ build) do not satisfy the new agent contracts and must be redone. Full review history below is preserved as a record of the OLD pipeline shape. 2026-07-12: the old docs/design-system.md and docs/screens.md were moved to docs/reference/legacy-design-system.md and docs/reference/legacy-screens.md so design-system-architect and screen-designer can still consult them as non-binding reference without those files being silently overwritten/lost when the new agents write their own (much shorter) docs/design-system.md and docs/screens.md. A new user-flow-designer stage was added between sitemap and screens (depends_on sitemap, output docs/user-flows.md) to produce explicit step-by-step flows (error/empty/loading/interruption states) that screen-designer builds against, closing a rigor gap the user flagged. docs/sitemap.md was edited to move Sign Up/Log In from immediately after Splash to immediately before Onboarding Complete (after Profile Setup/Goal Setup/Region Preference/Module Interest/Workout Placement Assessment) per user feedback that onboarding, not account creation, should be the first thing a new user does; sitemap status reset to pending pending re-review of this change. screens now depends_on sitemap, design-system, AND user-flows.",
+  "pipeline_note": "2026-07-11: design-system/screens/build stages were redefined to produce real, running code (a standalone design-system package + real wired app screens) instead of markdown specs, after user feedback that the prose-based specs produced generic/lossy UI. The design-system, screens, and build stages were reset to pending \u2014 their prior 'approved' artifacts (docs/design-system.md, docs/screens.md, the old flat app/ build) do not satisfy the new agent contracts and must be redone. Full review history below is preserved as a record of the OLD pipeline shape. 2026-07-12: the old docs/design-system.md and docs/screens.md were moved to docs/reference/legacy-design-system.md and docs/reference/legacy-screens.md so design-system-architect and screen-designer can still consult them as non-binding reference without those files being silently overwritten/lost when the new agents write their own (much shorter) docs/design-system.md and docs/screens.md. A new user-flow-designer stage was added between sitemap and screens (depends_on sitemap, output docs/user-flows.md) to produce explicit step-by-step flows (error/empty/loading/interruption states) that screen-designer builds against, closing a rigor gap the user flagged. docs/sitemap.md was edited to move Sign Up/Log In from immediately after Splash to immediately before Onboarding Complete (after Profile Setup/Goal Setup/Region Preference/Module Interest/Workout Placement Assessment) per user feedback that onboarding, not account creation, should be the first thing a new user does; sitemap status reset to pending pending re-review of this change. screens now depends_on sitemap, design-system, AND user-flows. 2026-07-12 (later): added a data-research stage (depends_on research-product, output data/) after user feedback that the app must ship with real, cited nutrition and workout-progression data instead of placeholder/mock content. screens and build now also depend_on data-research; screen-designer should use data-research's real content for sample data where available, and app-builder must wire the real data files instead of building its own mock/seeded data layer.",
   "review_log": [
     {
       "date": "2026-07-10",
