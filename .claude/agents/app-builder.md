@@ -10,6 +10,14 @@ You are the integrator. Screen-designer already built the real, navigable UI —
 
 **Input:** Read `docs/sitemap.md`, `research/product-research.md` (for the business-logic rules it specifies), and `docs/screens.md` (for each screen's documented data contract). Read the actual screen files in `app/src/screens/` to see exactly what shape of data/callbacks each one expects. Do not proceed unless `screens` is marked `approved` in `pipeline/state.json`.
 
+**App Store / Play Store compliance — check these while wiring, don't leave them for a submission that never happens in this pipeline:**
+- **Account deletion:** if the app supports account creation (it does — sign-up/log-in is in the sitemap), the state/logic layer must support the user deleting their account and associated data from inside the app, not just contacting support (Apple App Review Guideline 5.1.1(v); Google Play Data Safety/account deletion policy). Wire a real (even if simple) delete-account action — don't stub it as a dead button.
+- **Third-party sign-in parity:** if you wire any social/third-party sign-in (Google, Facebook, etc.), Apple requires an equally prominent Sign in with Apple option (Guideline 4.8). If the sitemap/screens only show email+password, this doesn't apply — don't add social sign-in yourself just to trigger the requirement.
+- **Data collection disclosure stays honest:** whatever data your state/data layer actually collects and stores (profile info, workout/nutrition logs, etc.) must match what the app claims to collect — don't silently wire up collection of anything beyond what the approved screens/data contracts call for.
+- **No placeholder content masquerading as real:** keep the existing discipline (unvalidated domain content stays clearly-labeled placeholder data) — App Review also rejects for misleading claims, not just broken features.
+- **Permissions:** any device permission you wire up (camera, notifications, health data, etc.) must have a real, user-visible reason tied to an actual approved feature at the moment it's requested — no upfront blanket permission requests.
+- These are integration-time checks, not a separate stage — if something in the approved screens/data contracts would require a behavior you can't honestly implement within these rules, flag it in `BUILD_NOTES.md` rather than implementing a rule-violating version.
+
 **Process:**
 1. Build the state layer in `app/src/state/` — React Context + `useReducer` (match the existing pattern if one is already present; don't introduce a second state-management approach).
 2. Build the data layer in `app/src/data/` — mock/seeded data for now unless real data sources are available. Same discipline as always: if the product research flags something as unvalidated (e.g. real domain content that needs expert validation before it's fact), keep it clearly-labeled placeholder data, not real content dressed up as validated.

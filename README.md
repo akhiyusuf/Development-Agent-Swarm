@@ -3,9 +3,9 @@
 ## Shape of the pipeline (fork → join)
 
     docs/idea.md
-        ├── researcher-product (Opus, high)  ──► sitemap-architect (Sonnet, medium) ──┐
-        │                                                                              ├──► screen-designer (Opus, high) ──► app-builder (Sonnet, high)
-        └── researcher-design (Sonnet, medium) ──► design-system-architect (Sonnet, high) ──┘
+        ├── researcher-product (Opus, high) ──► sitemap-architect (Sonnet, medium) ──► user-flow-designer (Sonnet, high) ──┐
+        │                                                                                                                   ├──► screen-designer (Opus, high) ──► app-builder (Sonnet, high)
+        └── researcher-design (Sonnet, medium) ──► design-system-architect (Sonnet, high) ─────────────────────────────────┘
 
 `reviewer` (Fable 5, high — xhigh optional on the merge review) gates every arrow
 above. Nothing proceeds until reviewer marks the stage(s) it depends on as
@@ -49,6 +49,40 @@ step entirely.
 
 Everything else in the pipeline — research, sitemap, and the review gating
 discipline itself — is unchanged.
+
+## New: user-flow-designer, and legacy docs kept as reference
+
+- **`user-flow-designer`** is a new stage between `sitemap-architect` and
+  `screen-designer` (depends on `sitemap`, output `docs/user-flows.md`). The
+  sitemap says which screens exist and how they connect; this stage says what
+  actually happens on each one step by step — error states, empty states,
+  loading states, and what happens if the user backs out mid-flow. Without
+  it, screen-designer was left to guess at edge cases that a sitemap
+  structurally can't capture. `screen-designer` now depends on `sitemap`,
+  `design-system`, AND `user-flows` — three inputs to reconcile at the merge
+  point, not two.
+- **The first pipeline run's old prose specs weren't deleted.** They were
+  moved to `docs/reference/legacy-design-system.md` and
+  `docs/reference/legacy-screens.md` — the new `design-system-architect`,
+  `screen-designer`, and `user-flow-designer` all read these as non-binding
+  reference (prior direction, prior resolved open questions) before doing
+  their own work. This matters because the new agents write their own,
+  much-shorter `docs/design-system.md`/`docs/screens.md` at those same paths
+  — leaving the old prose there would have meant the first agent to run
+  silently overwrote it before anyone could use it as reference.
+- **`docs/sitemap.md` was edited**: Sign Up/Log In moved from immediately
+  after Splash to immediately before Onboarding Complete, after the
+  onboarding steps that actually generate something worth an account (profile,
+  goals, region, workout placement). New users now do onboarding first and
+  hit the account wall only once there's real progress to save; returning
+  users still short-circuit Splash → Log In. Because this changed an already-
+  `approved` artifact, `sitemap`'s status was reset to `pending` for
+  re-review — it isn't exempt from the gate just because the edit was small.
+- **`app-builder`** (and, lightly, `design-system-architect`) gained explicit
+  Apple App Store / Google Play compliance checks — account deletion, sign-in
+  parity, honest data-collection disclosure, permission-request timing, and
+  platform touch-target minimums — wired in at integration time rather than
+  left for a submission step this pipeline doesn't otherwise have.
 
 ## Why these models (research-backed, not just vendor claims)
 
@@ -101,8 +135,9 @@ the session.
 | researcher-product | Opus 4.8 | high | synthesis quality matters, runs once |
 | researcher-design | Sonnet 5 | medium | lighter, pattern-based research |
 | sitemap-architect | Sonnet 5 | medium | structured transformation |
+| user-flow-designer | Sonnet 5 | high | detail-heavy, error/edge-case coverage matters |
 | design-system-architect | Sonnet 5 | high | real engineering: scaffold, code, self-verify |
-| screen-designer | Opus 4.8 | high | merge point, error-prone, now writes real code |
+| screen-designer | Opus 4.8 | high | 3-way merge point, error-prone, now writes real code |
 | app-builder | Sonnet 5 | high | real coding, quality > speed |
 | reviewer | Fable 5 | high (xhigh on merge review) | highest-stakes, now runs real verification |
 
@@ -127,7 +162,7 @@ If you enable usage credits: set a spending cap (claude.ai → Settings → Usag
 this is the one thing that protects you if a session runs longer than expected.
 
 ## Setup
-1. Put the 7 files from `agents/` into your project as `.claude/agents/*.md`.
+1. Put the 8 files from `agents/` into your project as `.claude/agents/*.md`.
 2. Put `pipeline-state.json` into your project as `pipeline/state.json`.
 3. Write your idea into `docs/idea.md`.
 4. Start a session at claude.ai/code (Claude Code on the web) in this project —
@@ -139,11 +174,14 @@ this is the one thing that protects you if a session runs longer than expected.
 ## Kickoff prompt
 > Using docs/idea.md and pipeline/state.json, run the pipeline: researcher-product
 > and researcher-design in parallel first. Send each to reviewer as it finishes.
-> Once both are approved, run sitemap-architect and design-system-architect in
-> parallel. Send each to reviewer. Once both are approved, run screen-designer,
-> then reviewer. Once approved, run app-builder, then reviewer for a final check.
-> If reviewer rejects the same stage twice in a row, stop and flag me instead of
-> retrying again.
+> Once research-product is approved, run sitemap-architect, then reviewer, then
+> user-flow-designer, then reviewer — this can proceed alongside
+> design-system-architect once research-design is approved (send
+> design-system-architect to reviewer too). Once sitemap, user-flows, and
+> design-system are all approved, run screen-designer, then reviewer. Once
+> approved, run app-builder, then reviewer for a final check. If reviewer
+> rejects the same stage twice in a row, stop and flag me instead of retrying
+> again.
 
 ## Notes
 - Models and effort levels are set per-agent in each file's frontmatter. Swap

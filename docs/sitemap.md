@@ -19,7 +19,6 @@ real node content is a downstream content-validation task, not a sitemap decisio
 ### A. Pre-Nav / Onboarding Flow
 
 - **Splash / Launch**
-- **Sign Up / Log In** (email+password; forgot-password sub-flow)
 - **Profile Setup** — name, sex, height, current weight, activity level, primary goal (lose/maintain/gain)
 - **Goal & Target Setup** — calorie/macro targets computed or user-adjusted
 - **Region & Cuisine Preference** — Nigeria / Ghana / Kenya (v1 markets) + optional Western/diaspora food set
@@ -34,6 +33,7 @@ real node content is a downstream content-validation task, not a sitemap decisio
     - Assessment Steps (a short series of Pilates-appropriate checks — e.g., core/breath control, mobility, mat-position tolerance; generic, content TBD — kept structurally parallel to the calisthenics steps but not asserting the same criteria, since Pilates placement is a materially different discipline)
     - Assessment Results → Pilates Starting Tier Placement
   - Combined Assessment Summary (shown only if both tracks were completed) — one screen recapping both starting placements before continuing
+- **Sign Up / Log In** (email+password; forgot-password sub-flow) — placed here, after the value-generating onboarding steps rather than immediately after Splash, so a new user experiences profile setup, goal/target computation, and (if opted in) their workout placement before hitting an account wall. This is the point where there's now real progress worth saving, which is the actual reason to ask for an account. A returning user with an existing account can still short-circuit straight here from Splash (log-in path skips the onboarding steps above).
 - **Onboarding Complete / Welcome Summary**
 
 ### B. Primary Navigation (bottom tabs, top-level)
@@ -112,7 +112,7 @@ real node content is a downstream content-validation task, not a sitemap decisio
 - **Top-level (bottom tab bar):** Home, Nutrition, Workout, Progress, Profile/Settings.
 - **Nested (drill-down within a tab):** Food Diary → Add Entry → Food Detail/Composite Meal Detail (→ Portion Reference Guide) → Confirm & Log; Skill Tree Home → Tier/Node Map → Node Detail → Log Attempt.
 - **Modal (transient, dismissable, no deep nav state):** Add Entry sheet, Edit/Delete entry, Portion Reference Guide, Log Attempt sheet, Mastery Gate Confirmation, quick-add Weight Entry.
-- **Pre-nav (one-time, sequential, not part of tab bar):** Splash → Auth → Profile Setup → Goal Setup → Region Preference → Module Interest → (conditional) Workout Placement Assessment (per-track: Assessment Intro → Track Selection → Calisthenics Placement and/or Pilates Placement → Combined Assessment Summary if both) → Welcome.
+- **Pre-nav (one-time, sequential, not part of tab bar):** Splash → Profile Setup → Goal Setup → Region Preference → Module Interest → (conditional) Workout Placement Assessment (per-track: Assessment Intro → Track Selection → Calisthenics Placement and/or Pilates Placement → Combined Assessment Summary if both) → Sign Up/Log In → Welcome. (Returning users: Splash → Log In short-circuits straight past the onboarding steps.)
 - **Workout tab visibility:** the tab and its nested tree may ship disabled/"coming soon" at nutrition-only launch per the research's sequencing recommendation, then activate as a fast-follow — this is a rollout/build-sequencing note, not a structural change to the sitemap.
 
 ---
@@ -147,6 +147,9 @@ real node content is a downstream content-validation task, not a sitemap decisio
 ### Requirements without a fully dedicated screen
 - **Req 13 (Android-first, low-data, low-end-device build)** is primarily an engineering/performance constraint, not a page. Data & Sync Settings exposes a low-data toggle and manual sync, and Integrations exposes optional Health/Fit sync, but the bulk of Req 13 (small footprint, offline resilience across every screen, low-end device performance) is a cross-cutting build requirement that should be tracked as an engineering checklist against every screen in this sitemap, not satisfied by one destination.
 - No other numbered requirement (1–12) is currently screen-less.
+
+### Open question this reorder introduces
+- **Pre-auth state handling:** since Profile Setup, Goal & Target Setup, Region & Cuisine Preference, Module Interest, and Workout Placement Assessment now all happen *before* Sign Up/Log In, their answers must be held locally (not yet tied to an account) and then attached to the account at Sign Up. What happens if the user abandons the app before reaching Sign Up (is progress recoverable on relaunch, or does it reset) is a flow-level decision, not a sitemap one — left to `user-flow-designer` to resolve explicitly rather than leaving implicit.
 
 ### Explicitly deferred (per research's "deliberately out of scope")
 Social/community feeds, barcode scanning, AI photo recognition, wearable-ecosystem screens beyond basic Health/Fit sync, meal-planning/recipe generation, and any gym/external-load tracking screens are intentionally absent — consistent with the research's stated out-of-scope list.
