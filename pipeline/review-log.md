@@ -1015,3 +1015,62 @@ approved lists, the `PlacementContext` plumbing, all conditional-link renderings
 onboarding Continue branch. This is a one-line revision to the account branch of one `onPress`.
 
 Build stage remains blocked (screens rejected; data-research approved).
+
+## 2026-07-12 — Stage: screens (FOURTH PASS) — Verdict: APPROVED
+
+**Reviewed output:** `app/` (revision after third-pass rejection, commit d39ab56)
+**Scope:** re-review of the single pass-3 fix item (account branch of `PlacementResultBody.tsx`'s
+Continue), change isolation, and — per this join point's history — a fully independent live drive
+of both Continue paths by this reviewer. tsc/export alone were explicitly not accepted as proof.
+
+### Join-point history (for the record — this exact line failed 3 passes running)
+- **Pass 1 (context plumbing):** rejected — the five dual-context placement screens
+  unconditionally rendered the pre-auth "Log in" link; fixed with the `PlacementContext` param.
+- **Pass 2:** rejected — Continue always navigated to `TrackSelection`, dumping the post-auth A9
+  user back into onboarding. Typechecked; wrong destination at runtime.
+- **Pass 3:** rejected — the fix `navigate('SkillTreeHome')` typechecked (RootParamList flattens
+  nested route names) but was a runtime no-op: SkillTreeHome lives in MainTabs' nested
+  WorkoutStack, and stack `navigate` bubbles up, never down into child navigators. Dead button.
+- **Pass 4 (this review):** the account branch now dispatches
+  `popTo('Main')` (React Navigation 7; `@react-navigation/native` ^7.3.8, so `popTo` exists).
+  `Main` is always beneath the placement screens on the root stack in the A9 flow, so the pop is
+  guaranteed to resolve, and Main's Workout tab is still sitting on SkillTreeHome.
+
+### Verification performed (all re-run by this reviewer, not taken from the fix agent)
+- `cd app && npx tsc --noEmit` — **clean, exit 0**.
+- `git diff 2be8ceb..HEAD` — touches exactly ONE file, ONE line:
+  `app/src/screens/placement/PlacementResultBody.tsx` line 60, the account branch of the Continue
+  `onPress`. The onboarding branch (`navigate('TrackSelection')`) is byte-identical to pass 3.
+  Change isolation **PASS**; nothing from the pass-1/2/3 approved lists altered.
+- Fresh `npx expo export --platform web` from a clean `dist/`, served on 127.0.0.1:8899, driven
+  end-to-end with this reviewer's own Playwright script (new script, different skip route than the
+  fix agent used, DOM-level assertions rather than visible-text matching).
+- **A9 account-context path: PASS.** Onboarding → Assessment Intro → "Skip for now" → sign up →
+  Main → Workout tab → Skill Tree Home → "Complete Pilates placement" → Steps 1–3 → Result →
+  **Continue lands on Skill Tree Home.** Verified beyond visible text, per the duplicate-mount
+  concern: after Continue the result screen is **fully unmounted** (innerHTML count of its unique
+  copy = 0; hidden-screen count = 0, i.e. the root stack is back to just `Main`), exactly **one**
+  mounted Skill Tree Home (DOM heading count identical before entering placement and after
+  returning), **zero** "Go back" buttons (header shows only the "Skill Tree" title), tab bar
+  visible and live. No duplicate screen, no stray back affordance. Screenshot-confirmed.
+- **Onboarding-context path: PASS (no regression).** Full onboarding → Begin → Track Selection →
+  Pilates Steps 1–3 → Result → Continue → lands on "Which placement first?" (Track Selection).
+- **Login-link contract: PASS both ways.** Account-context Steps and Result: "Already have an
+  account? Log in" absent (DOM count 0 — not merely hidden). Onboarding-context Result: link
+  present and visible (screenshot-confirmed).
+
+### Non-blocking notes (do not block; recorded for app-builder)
+1. New observation from the DOM probes: in the onboarding path, RN7's `navigate('TrackSelection')`
+   **pushes a second Track Selection instance** rather than popping back to the original (v7
+   changed `navigate` to no longer go back; `popTo` is the new pop-to-route API). Invisible to the
+   user here (onboarding group has no header/back button) and identical to the behavior approved
+   in passes 1–3, so it is explicitly NOT a rejection item — but app-builder may want
+   `popTo('TrackSelection')` for stack hygiene when wiring real state.
+2. Carried forward unchanged: Combined Summary's "Adjust … placement" buttons don't thread
+   `{ context }` (onboarding-only screen, harmless); MicroBar `gap: 4`; Home's double "Today".
+3. The `(navigation as unknown as { popTo... })` cast is ugly but honest — RootParamList's
+   flattened typing is what let passes 2–3 slip through `tsc`; app-builder should consider proper
+   per-navigator param lists.
+
+**screens stage: APPROVED.** `pipeline/state.json` updated. With data-research already approved,
+**app-builder (build stage) is now fully unblocked — both of its dependencies are satisfied.**
