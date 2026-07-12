@@ -1074,3 +1074,141 @@ of both Continue paths by this reviewer. tsc/export alone were explicitly not ac
 
 **screens stage: APPROVED.** `pipeline/state.json` updated. With data-research already approved,
 **app-builder (build stage) is now fully unblocked — both of its dependencies are satisfied.**
+
+## 2026-07-12 — Stage: build (FIRST PASS, new real-code contract) — Verdict: REJECTED
+
+**Reviewed output:** `app/` (state layer `app/src/state/`, logic `app/src/logic/`, data adapters
+`app/src/data/`, wired screens), `app/BUILD_NOTES.md`, against `docs/screens.md`,
+`docs/sitemap.md`, `research/product-research.md`, `data/nutrition/foods.json`,
+`data/workouts/skill-tree.json`, `docs/data-sourcing.md`.
+
+**Verification performed (all re-run by this reviewer, nothing taken from BUILD_NOTES):**
+- `cd app && npx tsc --noEmit` — **clean, exit 0**.
+- `npx expo export --platform web` — **clean**; export served on 127.0.0.1:8899 and driven
+  end-to-end with this reviewer's own Playwright script (~30 screenshots inspected): full
+  onboarding (profile → goal → region → module interest w/ blocking injury-disclaimer ack →
+  calisthenics placement → sign-up → Home), food logging, full-page-reload persistence, skill
+  tree / node detail / log attempt / mastery gate / below-threshold attempt, progress dashboard,
+  custom-food creation + logging, account deletion + post-delete reload.
+
+### What passes (approved as-is — must NOT be thinned in revision)
+
+1. **Targets math is a real, correct Mifflin-St Jeor implementation** (`logic/targets.ts`).
+   Live-verified: male / 80 kg / 175 cm / moderate / lose produced **2211 kcal** on the Goal
+   screen — exactly `(10·80 + 6.25·175 − 5·30 + 5) × 1.55 − 500 = 2210.6`. The missing-age
+   problem (Profile Setup's approved contract collects no age) is handled with a documented
+   assumed age of 30 rather than silently expanding data collection — the right call, logged in
+   BUILD_NOTES and in-file. Protein 1.8 g/kg, fat 25% kcal, carbs remainder; 1000-kcal floor;
+   `isAggressiveTarget` guard shared by both goal screens.
+2. **The progression engine operates on the real skill-tree graph, not an invented one**
+   (`logic/progression.ts` over `data/skillTree.ts` ← `data/workouts/skill-tree.json`).
+   Cross-line prerequisites are honored via fixed-point iteration over the JSON's actual
+   `prerequisites` arrays (muscle-up = `pull-5` AND `dip-4`; handstand push-up compound gate =
+   `hs-4` + `push-5` + `pull-5` + `core-lsit-3`); Pilates is gated tier-level
+   (Basic→Intermediate→Advanced), matching the JSON's stated `gatingModel` rather than a
+   fabricated per-exercise chain. **Live-verified:** placement tier 1 → Wall Push-Up unlocked,
+   everything downstream locked with "Requires: …" captions; logging 25 reps against the 2×20
+   gate fired Mastery Gate Confirmation ("Mastered!" + "Now unlocked: Incline Push-Up");
+   Incline Push-Up became interactive on the map; a 5-rep attempt against Incline's 3×15 gate
+   correctly did NOT master and Node Detail shows in-progress with "Best logged attempt: 5".
+   `newlyUnlocked`'s before/after diff (attempts minus the last one vs. all) is a clean,
+   correct way to compute the unlock recap.
+3. **State genuinely persists and updates across screens** — the entire point of this stage.
+   Context+useReducer only (no second state library), hydration-gated persistence (won't clobber
+   storage pre-hydration), NetInfo-driven `isOnline` feeding the offline queue. Live-verified:
+   after a full page reload, auth session, the logged diary entry (290/2211 kcal header),
+   placement, and workout attempts all survived; Progress dashboard reflects the same day's
+   calorie trend and "Now working on Wall Push-Up"/Mastered badge from the same state.
+4. **Account deletion is real** (Apple 5.1.1(v) / Play policy): reachable UI path Profile →
+   Account → "Delete account" → explicit confirm card → `DELETE_ACCOUNT` (resets in-memory state
+   to pristine `INITIAL_STATE` **including clearing `hasAccountHistoryMarker`**) + awaited
+   `purgeLocalState()` (AsyncStorage key removed). **Live-verified:** post-delete localStorage
+   record contains only pristine first-launch state (auth null/false, marker false, diary empty);
+   after reload the app routes to fresh Profile Setup — no login short-circuit, no residual
+   name/diary data anywhere. (Nuance, non-blocking: the persist effect re-writes a pristine
+   record after the purge, so the storage *key* exists but holds zero user data — acceptable.)
+5. **No blanket/upfront permission request anywhere.** Grep-verified zero uses of any permission
+   API; `package.json` has no `expo-notifications`/health-SDK dependency; Integrations and
+   Notifications toggles record local preference state only, honestly documented rather than a
+   faked OS prompt.
+6. **Custom foods are honestly labeled**: `confidence: 'user-entered'`, source "User-entered
+   custom food" (`CustomFoodBuilderScreen.buildFood`); the `Confidence` union change is purely
+   additive; the 32 cited foods' tags are untouched (verified: 15 compiled-estimate / 9 usda /
+   7 direct-fct / 1 academic, matching the approved dataset).
+7. **Screens consume real state, not the old samples.** `sampleData.ts` is reduced to the fixed
+   meal-slot vocabulary; no `SAMPLE_*`/`PREVIEW_NODE_STATE`/literal `startingTier={n}` remain
+   (grep-verified). Spot-traced and live-verified: Food Diary (useDiaryEntries/useDayTotals),
+   Skill Tree Home (per-track placement badges/CTAs — "Placed"/"Not placed" render from real
+   placement state), Tier Map + Node Detail (useNodeStateResolver), Progress Dashboard (weights,
+   7-day diary-derived calorie trend, real tier/working-on line), Account Settings (real
+   queued-count logout warning), Home (real totals + honest micronutrient no-data rows).
+8. **Placement produces a real tier** from answers over the real tree (`logic/placement.ts`,
+   max tiers derived from the data: calisthenics 6, Pilates 3). Live-verified: all-"Can't yet"
+   → Tier 1.
+9. Deviations log in BUILD_NOTES is genuine and mostly accurate (items 1–9 all check out in
+   code); confidence labels surface in UI ("Ordering sourced; volume generalized" shown on Node
+   Detail — data-sourcing #7 honored); Mastery-gate copy, injury-disclaimer blocking ack, and
+   the E7/E2/A7b/A9 flow mechanics all verified live or in code.
+
+### Why rejected — three concrete runtime failures, all in this stage's own wiring scope
+
+1. **Custom-food diary entries are silently excluded from every derived nutrition number.**
+   `app/src/data/compute.ts` (`totalsForEntries`, `microRows`) resolves entries via the static
+   `findFood` (curated 32 foods only) and never consults `state.customFoods`. **Live-verified:**
+   logging a 200-kcal custom food ("Test Stew", 1 bowl · 100 g) leaves the Food Diary header at
+   **290 / 2211 kcal while the visible rows sum to 490** (screenshot: Jollof 290 + Test Stew
+   200). The same wrong totals feed the Home energy card, Daily Nutrition Summary, and the
+   Progress dashboard's calorie trend. In an app whose entire thesis (and this pipeline's
+   repeatedly-enforced standard) is *honest numbers*, a silently false daily total is
+   disqualifying. Req 2/3 both impaired.
+2. **Custom-food diary rows render the raw id instead of the food's name.** Same root cause:
+   `FoodDiaryScreen` (line 53) and `EditDeleteEntryScreen` (line 46) call bare `findFood` with a
+   `?? e.foodId` fallback — the row literally displayed **"custom-1783828344644"**
+   (screenshot). The rest of the app (`FoodDetailBody`, `ConfirmLog`, `AddEntry`,
+   `PortionReferenceGuide`, `FavoritesRecents`) already does `findFood(id) ?? customFoods.find(…)`
+   — these two screens and compute.ts were simply missed.
+3. **Two dead primary CTAs: root-modal → nested-tab-stack `navigate()` calls that React
+   Navigation silently drops.** `ConfirmLogScreen` line 101 (`navigate('FoodDiary')` after "Save
+   to diary") and `MasteryGateConfirmationScreen` line 76 (`navigate('TierNodeMap')` on
+   "Continue"). Both screens are registered in the ROOT modal group (RootNavigator.tsx 89–101);
+   their targets exist only inside MainTabs' nested NutritionStack/WorkoutStack (MainTabs.tsx
+   56, 70). Stack `navigate` bubbles **up**, never down into a sibling's nested navigator — the
+   action is dropped with the dev warning swallowed in the production export. **Live-verified
+   with console capture:** after "Save to diary" the entry saves but the modal never dismisses
+   (user appears stuck on Confirm & Log; screenshot); the Mastery Gate's "Continue" does nothing
+   at all (before/after identical) — the flagship unlock moment ends on a dead button, escapable
+   only via the header back arrow. This is the EXACT bug class that took the screens stage four
+   passes at PlacementResultBody, called out in screens pass-4's notes to app-builder — and
+   BUILD_NOTES' navigation section affirmatively claims *"every navigate() call … targets a
+   screen registered at the RootStack level, which React Navigation resolves correctly via
+   parent-hierarchy bubbling"* — **false on both counts** (these targets are NOT root-registered,
+   and bubbling cannot reach them). That is the recurring claimed-but-untrue-internal-statement
+   pattern this pipeline has now rejected in five prior stages.
+
+### Required changes for approval (narrow; nothing else)
+
+1. Make food resolution custom-food-aware everywhere derived numbers or names are computed:
+   pass the custom set into `totalsForEntries`/`microRows` (or add a resolver that closes over
+   `state.customFoods`, e.g. extend the selectors in `app/src/state/selectors.ts`), and fix the
+   two bare `findFood` call sites in `FoodDiaryScreen.tsx` and `EditDeleteEntryScreen.tsx`.
+   Acceptance: log a custom food; diary header, Home card, Daily Summary, and Progress trend all
+   move by its kcal; the row shows its name; editing it resolves.
+2. Fix `ConfirmLogScreen`'s post-save navigation with an action the root stack can handle —
+   per the screens pass-3/4 precedent: `popTo('Main' as never)` (Main sits beneath the modal and
+   the flow can land on the active tab) or the explicit nested form
+   `navigate('Main', { screen: 'NutritionTab', params: { screen: 'FoodDiary' } })`, or simply
+   dismiss the modal stack (`popToTop`/`goBack` chain) if landing-on-diary is not required —
+   but the modal MUST dismiss on save.
+3. Same for `MasteryGateConfirmationScreen`'s Continue → the Workout tab's `TierNodeMap`
+   (nested form or popTo + tab targeting). **Both fixes must be verified live in the web export
+   before handoff** — this join-point family has now produced three typechecks-but-dead-buttons.
+   Correct BUILD_NOTES' navigation-typing paragraph to match reality while at it.
+
+Non-blocking notes recorded: post-delete pristine-record rewrite (above); Nutrition/Workout
+History day-drill-down opens "today" (documented limitation, BUILD_NOTES #8 — accepted);
+sync-queue "failed" state unreachable without a backend (BUILD_NOTES #9 — honest, accepted);
+`RootParamList` flattening remains the root enabler of bug class #3 (tightening it stays
+optional polish, but note it has now bitten twice).
+
+**build stage: REJECTED.** `pipeline/state.json` updated. This remains the final gate; the
+pipeline is NOT complete until these three items pass a live re-verification.
