@@ -39,7 +39,7 @@
     },
     "data-research": {
       "agent": "data-researcher",
-      "status": "rejected",
+      "status": "approved",
       "output": "data/",
       "depends_on": [
         "research-product"
@@ -193,6 +193,13 @@
       "verdict": "approved",
       "pass": 3,
       "summary": "Both pass-2 fixes verified done by re-reading the document and re-checking the diff (git diff c13d067 HEAD -- docs/user-flows.md shows exactly two hunks, nothing else touched). Fix 1: SS0.1 steps 2-3 now state the three-check mechanism verbatim-consistent with SS0.2 (cached session -> Home/A7a; draft -> resume at first incomplete screen; no session + no draft + marker set -> Sign Up/Log In A7b, explicitly 'not Flow A1'; marker also absent -> A1). Re-verified against every other routing location, not just the summary: A1's trigger requires marker-absent and its step 1 restates all three states absent; A7b step 1 requires marker-set with Log In pre-selected; E2 log-out preserves the marker and routes to A7b; E2 account-deletion purges the marker and routes to A1; SS0.2's four-branch routing list and Section G #16 both match. The just-logged-out device case now routes identically (A7b) in all five locations. Fix 2: the false 'same lifecycle as the onboarding draft' analogy is replaced with an accurate 'narrower set of clearing conditions' statement whose two cited draft-only clearing events (attachment at Sign Up, explicit Start-over) were verified against SS0.1's own draft-lifecycle list and verified not to clear the marker (Sign Up sets it; Start-over doesn't touch it). Nothing thinned; pass-2 non-blocking observations remain non-blocking. user-flows APPROVED. This unblocks screens on the user-flows side; screens still requires design-system (rejected, pass 1 under new contract) and data-research (rejected) before it can run. Recommend the screens merge-point review run at effort xhigh per the pipeline note."
+    },
+    {
+      "date": "2026-07-12",
+      "stage": "data-research",
+      "verdict": "approved",
+      "pass": 2,
+      "summary": "All five first-pass fixes independently re-verified by script and git diff, not from the fix summary. (1) Egusi: per100g kept at 182 kcal, 250g ladle recomputed to 455 kcal exactly matching the rewritten valueSpread, which openly retracts the old false 350-400 'consistent' claim and states a real lean-to-heavy spread; macro panel rescaled to Atwater-consistent 12.5P/7C/11.5F (181.5 vs 182), disclosure in-file. (2) Mandazi: 320x0.60=192 kcal/piece now stated verbatim; 292-320 correctly re-attributed to per-100g with an internally consistent 31g/99-kcal cross-check (319.4/100g); the impossible ~28 kcal mahamri figure survives only inside an explicit retraction, not as data. (3) All 8 USDA items now carry full B12/zinc/folate/vitA/iron/calcium panels matching FoodData Central from independent knowledge (egg, milk, enriched rice, chicken breast spot-checked; honest zeros documented); the 24 African foods' nulls machine-verified untouched (suya Fe/Zn, terere Fe, banku macros all still null, zero invented backfill); docs/data-sourcing.md gained a bolded limitation #4 whose per-nutrient counts recompute EXACTLY (B12 8/32 all-diaspora, zinc 9/32, vitA 10/32, folate 9/32) with the explicit B12-trend/Micronutrient-Detail screen impact and no-deletion statement. (4) gh-waakye and gh-fufu now carry substantive sourced valueSpreads (waakye's 379.1/227g corroboration recomputes to exactly 167/100g); zero compiled-estimate entries lack a valueSpread. (5) confidenceLegend.medium redefined as ordering-sourced/volume-generalized with the CC 3x50-vs-2x20 example, and the substitution disclosed in all four CC lines' sourceSystem fields (squat correctly scoping steps 8-10 out, core excluding the L-sit branch); diff confirms no thresholds/orderings changed. Preservation diff-verified: changes confined to the five fix areas; 32 foods and 73 thresholds intact, prerequisite graph resolves. Live re-fetch of cited secondary sources blocked by proxy 403 (same disclosed limitation); internal arithmetic and plausibility checked instead. Non-blocking carry-forwards recorded (pil-swimming duration_seconds key, ke-chapati Atwater gap, Pilates first-four phrasing, gatingModel pointer for the two-shape schema). Screens/build unblocked on the data-research side."
     }
   ]
 }

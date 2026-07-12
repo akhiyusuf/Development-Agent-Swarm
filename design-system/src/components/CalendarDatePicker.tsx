@@ -126,20 +126,21 @@ export function CalendarDatePicker({ month, selectedDate, markedDates, onSelectD
                     },
                   ]}
                 >
-                <Text style={{ color: isSelected ? theme.neutrals.white : theme.neutrals.ink, fontSize: theme.type.body.fontSize }}>
-                  {date.getDate()}
-                </Text>
-                {marked ? (
-                  <View
-                    style={{
-                      width: 4,
-                      height: 4,
-                      borderRadius: 2,
-                      marginTop: 2,
-                      backgroundColor: isSelected ? theme.neutrals.white : theme.brand.deepGreen,
-                    }}
-                  />
-                ) : null}
+                  <Text style={{ color: isSelected ? theme.neutrals.white : theme.neutrals.ink, fontSize: theme.type.body.fontSize }}>
+                    {date.getDate()}
+                  </Text>
+                  {marked ? (
+                    <View
+                      style={{
+                        width: 4,
+                        height: 4,
+                        borderRadius: 2,
+                        marginTop: 2,
+                        backgroundColor: isSelected ? theme.neutrals.white : theme.brand.deepGreen,
+                      }}
+                    />
+                  ) : null}
+                </View>
               </Pressable>
             </View>
           );
@@ -168,6 +169,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  /** The actual Pressable hit area: the full grid column, not the smaller
+   * visible day disc — see `cell` below, and the `cellHitSlop` computation
+   * in the component for how the remaining floor shortfall is topped up. */
+  cellPressable: {
+    width: '100%',
+    height: '100%',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  /** The visible day disc, inset within the (larger) Pressable above. */
   cell: {
     width: '86%',
     height: '86%',
