@@ -151,26 +151,69 @@ cleanly under `tsc --noEmit` while being runtime no-ops — `navigate()` bubbles
 Live-verified before the fix: "Save to diary" saved the entry but never
 dismissed the modal; Mastery Gate's "Continue" did nothing at all.
 
-Fixed by using the explicit nested-navigate form at both call sites,
-targeting the tab shell directly:
+Fixed (first attempt, later found incomplete — see "PASS-2 CORRECTION" below)
+by using the explicit nested-navigate form at both call sites, targeting the
+tab shell directly, e.g. `navigate('Main', { screen: 'NutritionTab', params: {
+screen: 'FoodDiary' } })` and, for the Mastery Gate, `Main` -> `WorkoutTab` ->
+`TierNodeMap` (with the `track` param nested one level deeper). `popTo('Main')`
+alone was considered but rejected for `ConfirmLogScreen` specifically: it
+would only land on whatever screen the current tab's nested stack last
+showed, which is correct if the flow started from Food Diary but wrong if it
+started from Home's "Log Meal".
+
+### PASS-2 CORRECTION: the nested-navigate form alone pushed a duplicate `Main`
+
+Build re-review (second pass) caught that the fix above, while it visually
+landed on the right screen, does **not** dismiss the modal chain the way it
+looks like it does. Verified by reading `@react-navigation/routers`'
+`StackRouter.js` `NAVIGATE` case directly: a plain `navigate(name, params)`
+action only reuses an **existing** route in the stack if `name` matches the
+**current** focused route, or if a custom `getId` matches, or if `pop: true`
+is explicitly passed. Since `ConfirmLog`/`MasteryGateConfirmation` are pushed
+several screens above `Main` in the root stack (not the current route), the
+plain nested-navigate call fell through to the router's default case and
+**appended a brand-new `Main` route** instead of popping back to the existing
+one — leaving the entire modal chain mounted and hidden underneath. DOM-level
+Playwright counts (see Verification below) showed this precisely: repeated
+"Save to diary" taps grew the hidden-screen count and duplicated the mounted
+tab bar without bound, and a reopened Add Entry surfaced a second, stale
+search input.
+
+Fixed by adding the router's own escape hatch — `navigate(name, params, {
+pop: true })` (`CommonActions.navigate`'s 3rd argument, forwarded straight
+into the `NAVIGATE` action's `payload.pop`) — which makes `StackRouter` find
+the **last** route named `Main` (via `findLast`, regardless of where it sits
+in the stack) and rewrite the stack to end there, discarding every modal
+screen pushed after it, instead of pushing a duplicate:
 ```ts
-(navigation as unknown as { navigate: (screen: string, params?: object) => void }).navigate('Main', {
-  screen: 'NutritionTab',
-  params: { screen: 'FoodDiary' },
-});
+navigation.navigate(
+  'Main',
+  { screen: 'NutritionTab', params: { screen: 'FoodDiary', pop: true } },
+  { pop: true },
+);
 ```
-and, for the Mastery Gate, `Main` -> `WorkoutTab` -> `TierNodeMap` (with the
-`track` param nested one level deeper). The cast mirrors the precedent already
-established in `PlacementResultBody.tsx`'s `popTo('Main')` fix for the
-analogous A9 case. `popTo('Main')` alone was considered but rejected for
-`ConfirmLogScreen` specifically: it would only land on whatever screen the
-current tab's nested stack last showed, which is correct if the flow started
-from Food Diary but wrong if it started from Home's "Log Meal" — the explicit
-nested form guarantees "Save to diary" always lands on Food Diary regardless
-of entry point. Both fixes were live-verified end to end (see Verification
-below): the modal now actually dismisses to Food Diary on save, and "Continue"
-on the Mastery Gate now actually returns to the Tier/Node Map with the newly
-unlocked node visible and interactive.
+Critically, the **same** dedup problem recurs one level down, inside each
+nested `Stack.Navigator` (`NutritionStack`/`WorkoutStack`) itself:
+`useNavigationBuilder`'s nested-params resolver (the code that watches a
+navigator's own `route.params.screen` and re-dispatches a `NAVIGATE` to
+itself) forwards a `pop` field straight through from `route.params.pop` — so
+the inner `{ screen: 'FoodDiary', pop: true }` / `{ screen: 'TierNodeMap',
+params: { track }, pop: true }` needed their own `pop: true` too, not just the
+outer `navigate(...)`'s 3rd argument. Without it, e.g. the Mastery Gate case
+(reached via Node Map -> NodeDetail -> LogAttempt -> this modal, so
+`WorkoutStack`'s own current route is `LogAttempt`, not `TierNodeMap`) would
+still push a duplicate `TierNodeMap` inside `WorkoutStack`'s own history on
+every unlock, even after the outer root-stack duplication was fixed. Both
+`pop: true` fields are required; this was caught by DOM-counting hidden
+screens across two repeated mastery-gate unlocks in a row (see Verification),
+which is exactly the kind of growth a single-pass, single-tap screenshot
+check cannot surface.
+
+Both fixes were live-verified end to end with real DOM-node counts, not
+screenshots (see Verification below): the modal now actually pops (not
+pushes) back to the single existing `Main`/`MainTabs` instance and lands on
+Food Diary / Tier Node Map, repeated twice each with zero growth in mounted
+tab-bar count or hidden/residual screens.
 
 `RootParamList` itself remains one flat list (not restructured into
 per-navigator param lists) — this is the structural root cause that let both
@@ -224,3 +267,53 @@ onboarding flow and jump straight to authenticated in-app state:
 
 `npx tsc --noEmit` re-run clean after all fixes; `npx expo export
 --platform web` re-run clean and re-served for the above click-through.
+
+### Re-verification after the 2026-07-12 build-review PASS-2 fix (pop: true)
+
+`dist/` re-exported after the `pop: true` fix above, served on
+`127.0.0.1:8899`, driven end-to-end with a fresh Playwright script (real
+sign-up/onboarding, no seeded state) that asserts **DOM-level counts**, not
+screenshots, per the reviewer's explicit requirement:
+
+- Mounted `MainTabs`/tab-bar instance count, measured via
+  `document.querySelectorAll('[role="tab"][aria-label="Home"]').length`
+  (`react-native-web` renders each `TabBar` tab as a `div[role="tab"]`; one
+  "Home"-labeled tab exists per mounted `AppTabBar`/`MainTabs` instance,
+  hidden ones included since `querySelectorAll` ignores CSS
+  `display`/`visibility`).
+- Hidden/residual screen count, via
+  `document.querySelectorAll('div[aria-hidden="true"]')` filtered to
+  `style.display === 'none'`.
+- Residual text-node counts for `"Save to diary"` and `"Now unlocked"`
+  anywhere in the DOM (hidden included), via a `TreeWalker` text scan.
+
+**Results (19/19 assertions passed, 0 console warnings/errors):**
+- Baseline on Home: 1 mounted tab bar, 0 hidden screens.
+- **"Save to diary" tap #1** (logged Jollof Rice): landed on Food Diary;
+  **1 mounted tab bar** (unchanged from baseline); **0** residual "Save to
+  diary" text nodes; hidden-screen count returned to **0** (from 3 while the
+  modal chain was open, confirming the pop actually discarded it rather than
+  merely hiding it).
+- **"Save to diary" tap #2** (logged Garri, via Food Diary's own "Add"):
+  identical result — 1 mounted tab bar, 0 residual text, hidden screens
+  stayed at 0 (no growth vs. tap #1).
+- **Reopening Add Entry** after both saves: exactly 1 search input in the DOM
+  (no stale duplicate form from a leftover mounted instance).
+- **Mastery Gate "Continue" #1** (Wall Push-Up, 25 reps vs. the 20-rep gate,
+  unlocking Incline Push-Up): landed on Tier/Node Map; 1 mounted tab bar; 0
+  residual "Now unlocked" text; hidden screens 4 -> 1 (one hidden screen is
+  the expected/healthy single prior entry in `WorkoutStack`'s own
+  back-history — Skill Tree Home beneath Node Map — not unbounded growth).
+- **Mastery Gate "Continue" #2** (Incline Push-Up, 20 reps vs. its 15-rep
+  gate, unlocking Kneeling Push-Up — a genuinely separate second unlock, not
+  a repeat of the first): landed on Tier/Node Map; **1 mounted tab bar (no
+  growth vs. #1)**; 0 residual text; hidden screens stayed at **1 (no
+  growth vs. #1)** — confirming the inner `WorkoutStack`-level `pop: true`
+  fix (see above) actually stops the nested NodeDetail/LogAttempt pile-up
+  that an outer-only pop fix would have left in place.
+- Node aria-labels post-fix: `"Wall Push-Up, Mastered"` / `"Incline Push-Up,
+  Mastered"` — both unlocks genuinely landed, not just the modal dismissing.
+- Switching tabs away and back afterward: still exactly 1 mounted tab bar.
+
+`npx tsc --noEmit` clean (exit 0) after this fix; `npx expo export --platform
+web` re-run clean and re-served for the above verification.

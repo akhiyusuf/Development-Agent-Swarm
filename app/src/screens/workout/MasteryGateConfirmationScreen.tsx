@@ -82,12 +82,43 @@ export function MasteryGateConfirmationScreen() {
           // MainTabs' nested WorkoutStack. A bare `navigate('TierNodeMap', ...)`
           // typechecks against the flat RootParamList but silently no-ops at
           // runtime (navigate bubbles up, never down into a sibling's nested
-          // stack). Use the explicit nested-navigate form so "Continue"
-          // actually returns to the Workout tab's node map with the right track.
-          (navigation as unknown as { navigate: (screen: string, params?: object) => void }).navigate('Main', {
-            screen: 'WorkoutTab',
-            params: { screen: 'TierNodeMap', params: { track } },
-          })
+          // stack).
+          //
+          // PASS-2 CORRECTION (logged in BUILD_NOTES.md): the nested-navigate
+          // form alone still pushed a DUPLICATE Main/MainTabs instance instead
+          // of popping back to the existing one — see the matching, longer
+          // explanation in ConfirmLogScreen.tsx. Passing `{ pop: true }` as the
+          // 3rd argument makes StackRouter's NAVIGATE handler pop the root
+          // stack back to the existing 'Main' route (discarding this and any
+          // other modal screens above it) instead of appending a new one, while
+          // still applying the nested screen/params so Main -> WorkoutTab ->
+          // TierNodeMap resolves via each nested navigator's own
+          // `useNavigationBuilder` watching its route's `params.screen`.
+          //
+          // The SAME bug also recurs one level down inside WorkoutStack
+          // itself: this confirmation is normally reached via Node Map ->
+          // NodeDetail -> LogAttempt -> (attempt saved) -> this modal, so
+          // WorkoutStack's own current route is 'LogAttempt', not
+          // 'TierNodeMap' — a bare `{ screen: 'TierNodeMap', params: { track } }`
+          // nested target would push a second TierNodeMap (with NodeDetail/
+          // LogAttempt left stranded underneath) instead of popping back to
+          // the existing one. `useNavigationBuilder`'s nested-params resolver
+          // forwards a `pop` field from `route.params.pop` into the re-dispatch
+          // it does on itself, so adding `pop: true` alongside `screen` here
+          // (not just in the outer `navigate(...)` options) closes that inner
+          // instance too. Verified live via Playwright DOM counts across two
+          // repeated mastery-gate unlocks: exactly one mounted tab bar, no
+          // residual hidden "Now unlocked" screens, and no growth in hidden
+          // WorkoutStack screens between the two unlocks.
+          (
+            navigation as unknown as {
+              navigate: (screen: string, params?: object, options?: { pop?: boolean }) => void;
+            }
+          ).navigate(
+            'Main',
+            { screen: 'WorkoutTab', params: { screen: 'TierNodeMap', params: { track }, pop: true } },
+            { pop: true },
+          )
         }
       />
     </Screen>
