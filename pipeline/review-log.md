@@ -874,3 +874,86 @@ Non-blocking nits for the same pass if convenient: `MicroBar.tsx` `gap: 4` → `
 Home renders "Today" twice (stack header + in-screen h1).
 
 Everything else in this stage is strong work — the re-review after the fix should be fast.
+
+## 2026-07-12 — Stage: screens (SECOND PASS) — Verdict: REJECTED
+
+**Reviewed output:** `app/` (revision after first-pass rejection, commit c6901f0)
+**Scope:** re-review of the single pass-1 fix item (the missing "Already have an account? Log in"
+affordance on the five dual-context placement screens), plus change-isolation and a fresh live
+click-through of both lifecycles.
+
+### Verification performed (not taken on trust)
+- `cd app && npx tsc --noEmit` — **clean, exit 0** (re-run by this reviewer).
+- `npx expo export --platform web` from a clean `dist/` — exports successfully; served on
+  127.0.0.1:8899 and driven with Playwright/Chromium (system browser at `/opt/pw-browsers`).
+- **Pre-auth click-through** (Profile Setup → Goal → Region → Module Interest with workout opt-in +
+  disclaimer ack → Assessment Intro → Track Selection → Calisthenics Steps 1–4 → Result → Retake →
+  Steps → Result → Continue → Track Selection → Combined Summary): the login link probed
+  programmatically AND screenshot-verified on every screen. It is now **visible on all five
+  previously-missing screens** — Steps (step 1 and mid-flow), Result, Steps-after-Retake, and
+  Combined Summary — as well as on all six screens where pass 1 already found it.
+- **Post-auth A9 click-through** (sign up → Onboarding Complete → Main → Workout tab → Skill Tree
+  Home → "Complete Pilates placement" → Pilates Steps 1–3 → Result → Retake → Steps → Result): the
+  login link is **absent on every account-context screen** (probed + screenshot-verified on Steps
+  step 1, mid-steps, Result, and Steps-after-Retake). ~30 screenshots read. No page errors thrown
+  in either run.
+
+### Pass-1 fix item: verified DONE, and done well
+- `app/src/navigation/types.ts` adds a typed `PlacementContext = 'onboarding' | 'account'` and
+  makes all five placement routes take `{ context?: PlacementContext }`, with an accurate
+  DATA-CONTRACT comment (app-builder may later derive it from draft presence).
+- All three shared bodies (`PlacementStepsBody.tsx`, `PlacementResultBody.tsx`,
+  `CombinedSummaryScreen.tsx`) read the param via `useRoute()` and render `PreAuthLoginLink` only
+  when `context !== 'account'`, so the onboarding navigator's existing param-less navigations
+  (Track Selection → Steps, Assessment Intro onward) correctly default to pre-auth with no changes
+  needed elsewhere.
+- Intra-flow threading holds where the fix touched it: Steps → Result passes `{ context }` on the
+  last step, and Result → Retake → Steps passes `{ context }` back. Verified statically AND live in
+  both lifecycles (Retake in account context keeps the link suppressed; Retake pre-auth keeps it
+  visible).
+- `SkillTreeHomeScreen.tsx`'s A9 re-entry button passes `{ context: 'account' }` with an accurate
+  comment. `docs/screens.md`'s five placement rows document the dual-context param — claims match
+  the code.
+
+### Change isolation: PASS
+`git diff bda6c26..HEAD` (pass-1-reviewed commit → now) touches exactly the six fix-scope files
+plus the two pipeline log files; the diff of the three bodies is strictly additive (imports,
+docstrings, the context read, the conditional link, and params added to two existing navigate
+calls). Nothing from the pass-1 approved list (sitemap coverage, design-system-only composition,
+real-data usage, flow spot-checks) was altered or thinned. Working tree clean.
+
+### Concrete gap (reason for rejection — one item, found by tracing the context end-to-end)
+**The account context is lost at the flow's join point: `PlacementResultBody`'s "Continue" always
+navigates to `TrackSelection`, dumping the post-auth A9 user back into onboarding.** User-flows A9's
+join is explicit: "on completing that track's placement (Assessment Results → Starting Tier
+Placement), the flow returns to **Skill Tree Home** (not to Combined Assessment Summary, which is an
+onboarding-only screen; **not back into onboarding at all** — this is a fully post-auth flow now)."
+Verified live: signed up, entered via Skill Tree Home's "Complete Pilates placement"
+(`context: 'account'`, link correctly absent through Steps and Result), pressed Continue — and
+landed on "Which placement first?" (Track Selection), an onboarding-only screen that (a) shows the
+"Already have an account? Log in" affordance to an already-logged-in user — re-surfacing one tap
+later exactly what this fix exists to suppress — and (b) offers "Skip the rest for now" →
+Auth in **signup** mode, a duplicate-account hazard. Screenshot-confirmed. The body has `context`
+in scope on the very line above; the fix is one conditional. This is not a new requirement — it is
+the same dual-context requirement the pass-1 fix named, applied to the screen's exit instead of its
+render. Unlike Assessment Intro's documented "app-builder branch" note (§G #17 pattern), no comment
+anywhere defers this to app-builder, so it is an oversight, not a documented deferral.
+
+### Required change for approval (single item)
+1. In `PlacementResultBody.tsx`, make "Continue" context-aware: when `context === 'account'`,
+   return to Skill Tree Home per A9's join (e.g., `navigation.goBack()` twice / pop to the Workout
+   tab — implementer's choice, stubbable via the existing DATA CONTRACT pattern); keep the
+   pre-auth behavior (→ Track Selection) unchanged. Keep `tsc --noEmit` clean.
+
+Non-blocking nits (fix if convenient, do not let them grow the diff): (a) Combined Summary's two
+"Adjust … placement" buttons navigate without `{ context }` — harmless today because Combined
+Summary is onboarding-only per A9, but threading `{ context }` costs nothing and future-proofs it;
+(b) pass 1's two nits stand (MicroBar `gap: 4`, Home's double "Today").
+
+**Explicitly approved as-is (must NOT change in revision):** the `PlacementContext` type and route
+params, all five conditional-link renderings, the Steps→Result and Retake→Steps threading, the
+SkillTreeHome `{ context: 'account' }` call, the docs/screens.md row updates, and everything on the
+pass-1 approved list. Per this pipeline's history: make the one-line fix, thin nothing.
+
+Build stage remains blocked (screens rejected; data-research approved). The pass-3 re-review should
+be minutes: re-run tsc, re-drive the A9 Continue, done.
