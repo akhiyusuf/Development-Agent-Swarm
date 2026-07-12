@@ -487,3 +487,38 @@ Every file touched by the fixes was re-read; nothing was thinned. Navigation str
 4. Pass-1 non-blocking observations (raw token-copy hexes outside `tokens.ts`, `StatusBadge`/`Card` tint values, gold favorite star, no-op Account save, no exposed theme toggle) are unchanged and carry forward as recorded.
 
 **Verdict: APPROVED.** All nine required fixes are genuinely made in source — including the two state/flow fixes (3 and 4), which were traced through actual navigation params, stack ordering, and reducer dispatches rather than taken from BUILD_NOTES — and everything on the pass-1 "What passes" list is intact and unthinned. The typecheck claim is verified by the orchestrator's independent run (this session had no shell), and BUILD_NOTES now tells the truth end to end, including about its own prior falsehood. This was the final gate: the pipeline is complete, with the three non-blocking polish items above recorded for any future cleanup pass.
+
+## 2026-07-12 — Stage: sitemap (RE-REVIEW after auth reorder) — Verdict: APPROVED
+
+**Reviewed output:** `docs/sitemap.md` (edited after pass-2 approval: Sign Up/Log In moved from immediately after Splash to immediately before Onboarding Complete, per user feedback that onboarding should precede account creation)
+**Dependencies:** `research-product` (approved, pass 2) → `research/product-research.md`. Also checked item-by-item against the pass-2 approval's preservation record.
+
+### Change isolation independently verified
+
+Rather than trusting the stated change list, the edit was verified via `git diff 50e9dd0..HEAD -- docs/sitemap.md` (pass-2-approved commit vs. current). Exactly three changes exist, matching the stated scope:
+1. §1: the Sign Up/Log In bullet (email+password; forgot-password sub-flow — both retained) moved from after Splash to after the conditional Workout Placement Assessment block, immediately before Onboarding Complete, with an explicit rationale (ask for the account at the point where there is real progress worth saving) and a returning-user short-circuit (Splash → Log In skips the onboarding steps).
+2. §2: the pre-nav line rewritten to the new order, including the returning-user parenthetical. Notably the old line's "Auth" label was replaced by "Sign Up/Log In" — no stale "Splash → Auth" reference survives anywhere (grep-verified: the only auth mentions in the file are the moved bullet, the new §2 line, traceability row 12, and the new flag).
+3. §4: new "Open question this reorder introduces" flag on pre-auth local state handling.
+
+Nothing else changed — the pass-2 preservation list (five-tab nav, all nutrition/workout/progress/settings screens, per-track placement structure, portion-photo surfaces, modal inventory, traceability rows, deferred list, Open Question 1 placeholder discipline) is intact by diff, not by re-reading impression.
+
+### Internal consistency of the reorder: holds
+
+- **§1 vs. §2:** the §2 pre-nav sequence (Splash → Profile Setup → Goal Setup → Region Preference → Module Interest → conditional per-track Placement Assessment → Sign Up/Log In → Welcome) matches the §1 screen-list order exactly, including the assessment sub-structure.
+- **Returning-user path:** stated consistently in both places (§1 "short-circuit straight here from Splash"; §2 "Splash → Log In short-circuits straight past the onboarding steps").
+- **Traceability table:** row 12 lists Sign Up/Log In among Req 12's screens without any order dependence; no other row references onboarding order. The table still holds as written.
+- **New flag:** names exactly the five screens now pre-auth (Profile Setup, Goal & Target Setup, Region & Cuisine Preference, Module Interest, Workout Placement Assessment) — matches §1 precisely — and delegates the abandon-before-sign-up recoverability question to `user-flow-designer`, which is a real stage in `pipeline/state.json` (depends_on sitemap, output `docs/user-flows.md`), so the delegation target exists.
+
+### Traceability to research-product: unaffected, one point checked hard
+
+- Nothing in the research's 13 Core Feature Requirements, Constraints & Risks, or recommendations mandates auth-first ordering. Req 12 (single account tying nutrition + training) remains satisfied: Sign Up/Log In still precedes Onboarding Complete and the tab bar, so every in-app entity (diary entries, placement results, weight log) is created under an account; only onboarding answers are temporarily local, and the new flag addresses exactly that window.
+- The one requirement genuinely touched by the reorder is **Req 9** (placement assessment): its results are now generated pre-account. The flag covers this explicitly (answers "held locally... then attached to the account at Sign Up"), and the assessment's per-track/deferral structure — the pass-2 fix — is untouched. Deferred placement re-entry from Skill Tree Home is post-auth and unaffected.
+- Req 5 (offline-first) is, if anything, reinforced: local-first pre-auth state is consistent with the research's do-not-assume-always-online constraint.
+
+### Non-blocking observations (carry-forwards for `user-flow-designer`, not rejection grounds)
+
+1. **Whether the returning-user log-in path passes through Onboarding Complete/Welcome Summary or lands directly on the tab bar** is unspecified. Flow-level; resolve explicitly.
+2. **Whether Sign Up is a hard wall** (no guest path into the tab bar) is implied by the sequential pre-nav structure but not stated. Given Req 12's single-account premise and the sync model, a hard wall before Welcome is the coherent reading; if user-flows wants a guest/skip mode, that contradicts Req 12 and must come back as a sitemap change, not be decided silently at flow level.
+3. **Log-in on a device holding partial pre-auth onboarding state** (returning user starts onboarding, then logs into an existing account mid-way): what happens to the local answers vs. the account's stored profile is a conflict-resolution flow decision — same family as the flag's abandon question; resolve alongside it.
+
+**Verdict: APPROVED.** The reorder is internally consistent, fully traced, additive-plus-move only, and honestly flags the one new open question at the right level of the pipeline. `user-flows` is unblocked on the sitemap side; the pass-2 carry-forwards (placeholder discipline, portion-photo as first-class, per-track/deferrable placement) remain in force, now joined by the three flow-level items above.

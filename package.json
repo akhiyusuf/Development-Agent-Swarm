@@ -1,0 +1,9 @@
+{
+  "name": "fit-and-fed",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "design-system",
+    "app"
+  ]
+}
