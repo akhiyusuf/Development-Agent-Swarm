@@ -767,3 +767,110 @@ Live re-fetch of the cited secondary sources (nutriscan.app, caloriqueapp.com) w
 3. All pass-1 non-blocking items remain open as carry-forwards, notably: the exclusivity guard omits neutrals; **screen-designer must not copy the gallery's illustrative exercise strings into app content** (Open Question 1 discipline); rest-timer lock-screen/notification persistence is a build-stage carry-forward.
 
 **Verdict: APPROVED.** Every pass-1 rejection item and fix-alongside is verified fixed in the live render, not just in comments; the two claim-vs-code falsehoods are gone and the new comments state what the code measurably does. **The screens stage is now fully unblocked — all four of its dependencies (sitemap, design-system, user-flows, data-research) are approved.** Standing recommendation reaffirmed: run the screens merge-point review at effort **xhigh** (four-way dependency reconciliation plus visual judgment is the hardest check in this pipeline).
+
+## 2026-07-12 — Stage: screens (FORK-JOIN MERGE: sitemap + design-system + user-flows + data-research) — Verdict: REJECTED
+
+Reviewed at effort xhigh per the design-system reviewer's standing recommendation. Each of the
+four dependencies was checked independently. Three of four pass outright; one has a single,
+narrow, but unambiguous spec violation against user-flows §0.2, and per the merge-point rule
+(a failure in any one dependency fails the stage) the stage is rejected. The fix is small and
+surgical — nothing else needs to change.
+
+### Verification performed (not taken on trust)
+- `cd app && npx tsc --noEmit` — **clean, exit 0** (run by reviewer).
+- `npx expo export --platform web` from a clean `dist/` — **exports successfully** (2MB web bundle).
+- Served on 127.0.0.1:8765 and drove the exported site with Playwright/Chromium (system browser at
+  `/opt/pw-browsers`, since cdn.playwright.dev is proxy-blocked). Completed a REAL click-through, not
+  just screenshots-of-first-paint: Profile Setup (filled + chip selection) → Goal Setup (live macro
+  rings recompute) → Region → Module Interest (injury-liability toggle gates Continue with an inline
+  error caption until acknowledged) → Assessment Intro → Track Selection → Calisthenics placement
+  steps 1–4 → Tier 2 result; separately Module-Interest-without-workout → Auth directly; Sign Up →
+  Onboarding Complete → `reset` into the tab shell; the manual "Already have an account? Log in" link →
+  Auth with Log In pre-selected → Home; Nutrition diary → Add Entry (Search tab) → search "jollof" →
+  Composite Meal Detail → Workout → Tier/Node Map → Node Detail (Half Push-Up) → Log Attempt modal;
+  Progress dashboard; Profile stack. ~25 screenshots read and judged. The navigation graph is real,
+  not merely compile-clean. No page errors thrown during the entire click-through.
+
+### 1. vs docs/sitemap.md — PASS
+- Every sitemap screen maps to a real file and a registered route: 7 onboarding screens, all 7
+  per-track placement screens (Assessment Intro, Track Selection, Cal/Pil Steps + Results, Combined
+  Summary), all five tabs' nested stacks (Nutrition ×5 + 7 modal-reachable, Workout ×5, Progress ×3,
+  Profile ×8, Home), and all six sitemap modals as a root `presentation: 'modal'` group (AddEntry,
+  EditDeleteEntry, PortionReferenceGuide, LogAttempt, MasteryGateConfirmation, QuickAddWeight).
+  "Food Search Results" renders inline as Add Entry's Search tab, documented in-file — acceptable.
+- Sign Up/Log In is correctly positioned immediately before Onboarding Complete: Module Interest and
+  every placement exit route to `Auth`, and only `Auth` (signup) routes to `OnboardingComplete` →
+  reset into `Main`. Verified both statically and in the click-through. The legacy
+  auth-right-after-Splash ordering is gone.
+
+### 2. vs docs/user-flows.md — FAIL (one violation)
+- **PASS — §0.1/§0.2 three-check Splash routing is genuinely implemented, not hand-waved.**
+  `SplashScreen.tsx` exports a pure `resolveEntry(DeviceEntryState)` evaluating, in the specified
+  priority order: cached session → Main; onboarding draft → resume at `draftResumeScreen`; device
+  account-history marker → Auth with `mode:'login'` pre-selected (A7b); else ProfileSetup (A1). It
+  navigates via `reset` so Splash is unreachable via Back. The device-state *values* are a
+  clearly-labeled preview stub with a full DATA CONTRACT for app-builder — correct scope for this
+  stage; the resolver itself is production-shaped.
+- **FAIL — the persistent "Already have an account? Log in" affordance stops halfway through the
+  placement assessment.** §0.2 requires it on Profile Setup and "every subsequent pre-auth screen
+  through Workout Placement Assessment." It is present on ProfileSetup, GoalSetup, RegionPreference,
+  ModuleInterest, AssessmentIntro, and TrackSelection — and **absent from CalisthenicsPlacementSteps,
+  CalisthenicsPlacementResult, PilatesPlacementSteps, PilatesPlacementResult, and CombinedSummary**
+  (i.e., `PlacementStepsBody.tsx`, `PlacementResultBody.tsx`, `CombinedSummaryScreen.tsx`). Those five
+  are pre-auth screens inside the assessment. The omission is an oversight, not a reasoned exception:
+  `PreAuthLoginLink.tsx`'s own docstring claims coverage of "EVERY subsequent pre-auth screen through
+  Workout Placement Assessment," which its usage doesn't deliver, and no comment anywhere argues for
+  the gap. Note for the fix: these placement screens are dual-context — Skill Tree Home re-enters them
+  post-auth for deferred placement (A9) — so the link must be conditional on the pre-auth context
+  (route param or draft-presence check, stubbed via the existing DATA CONTRACT pattern), not
+  unconditional.
+- Other flow spot-checks all pass: [CP-VALIDATION] on Profile Setup (touched-state field errors,
+  verified live), Goal Setup's non-blocking over-aggressive-target warning caption (<1200/>4000 kcal),
+  [CP-NETFAIL]-shaped Auth with preserved form + forgot-password BottomSheet sub-flow, Module
+  Interest's injury-disclaimer gate, placement "Skip this step" recorded as distinct-from-blank (§G
+  #18), diary "Nothing logged yet" empty slots, queued-offline badge on a diary row + "1 queued to
+  sync" Home indicator ([CP-OFFLINE]), Data & Sync per-item retry list (E3), Add Entry offline
+  search-fallback contract (B1), and §0.3's hard wall (no guest/skip path exists on Auth).
+
+### 3. vs design-system/ — PASS
+- Every design-system import used by app/ is a real named export of `design-system/src/index.ts`:
+  Button, TextField, Card, ListRow, SegmentedControl, SingleSelectChips, ToggleSwitch, TabBar/TabItem,
+  BottomSheet, ProgressRing, ProgressBar, SkillNode, NodeStateBadge, StatusBadge, CalendarDatePicker,
+  TrendChart, useTheme, plus HouseholdUnitPortionPicker/PortionPhotoReference (used in
+  FoodDetailBody). No restyled reimplementations: `src/ui/layout.tsx` only adds Text/Screen/Row/Section
+  composition helpers that the design system genuinely doesn't export, all reading theme tokens.
+- No raw hex colors outside comments (grep-verified; the two hits are explanatory comments). Spacing
+  is token-driven throughout; sole nit: `MicroBar.tsx` uses `gap: 4` instead of
+  `theme.spacing.space4` (non-blocking).
+- **SessionPlayer is correctly NOT used anywhere** — the only mention is a comment in
+  `WorkoutSessionLogScreen.tsx` explicitly declining it (W7 stays freeform). Confirmed by grep.
+- Visually the exported screens match the design system: cream/terracotta palette, macro ring colors,
+  chip/segmented/badge states all render as the component library defines them.
+
+### 4. vs data/ — PASS
+- `app/src/data/foods.ts` imports `data/nutrition/foods.json` directly (all 32 foods, 1:1 shape);
+  `skillTree.ts` imports `data/workouts/skill-tree.json` directly. No ComponentGallery demo strings
+  ("Full planche" etc.) and no invented generic foods — grep-verified.
+- Real content confirmed on-screen: diary shows Jollof Rice (1 plate, party-size, 508 kcal), Sukuma
+  Wiki, Akara, boiled egg — all real foods.json ids; Node Map shows the real Push-Up/Pull-Up/Dip
+  lines with real prerequisites ("Full Push-Up — Requires: Half Push-Up (partial range)"); Node
+  Detail shows the real gate "3 × 10 reps" exactly matching skill-tree.json's push-4 node, plus the
+  dataset's confidence tag surfaced as "Ordering sourced; volume generalized."
+- **Micronutrient gaps are honest.** `compute.ts` keeps a nutrient `null` (never 0) when no logged
+  food carries a value; `MicroBar` renders an explicit "No data" state. Verified visually: Jollof
+  Rice's detail panel shows all six Req-4 nutrients as "No data" (it's a compiled-estimate food with
+  null micros), with the caption "Only nutrients with sourced values are shown; the rest read 'no
+  data'." Sample state (diary, weights, node states) is clearly labeled placeholder with DATA
+  CONTRACTs — the correct division of labor vs app-builder.
+
+### Required fix (single item)
+1. Render the "Already have an account? Log in" affordance on the five missing pre-auth placement
+   screens — `PlacementStepsBody.tsx`, `PlacementResultBody.tsx` (covering both tracks' Steps and
+   Result screens), and `CombinedSummaryScreen.tsx` — conditional on the pre-auth onboarding context,
+   since Skill Tree Home reuses these screens post-auth for deferred placement (A9). Stub the
+   condition via the existing DATA CONTRACT pattern and keep `tsc --noEmit` clean.
+
+Non-blocking nits for the same pass if convenient: `MicroBar.tsx` `gap: 4` → `theme.spacing.space4`;
+Home renders "Today" twice (stack header + in-screen h1).
+
+Everything else in this stage is strong work — the re-review after the fix should be fast.

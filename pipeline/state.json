@@ -47,7 +47,7 @@
     },
     "screens": {
       "agent": "screen-designer",
-      "status": "pending",
+      "status": "rejected",
       "output": "app/",
       "depends_on": [
         "sitemap",
