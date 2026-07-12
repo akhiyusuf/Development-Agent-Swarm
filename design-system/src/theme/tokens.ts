@@ -223,7 +223,7 @@ export const motion = {
 // Theme shape (light/dark) consumed by ThemeContext
 // ---------------------------------------------------------------------------
 
-export type Neutrals = typeof lightNeutrals;
+export type Neutrals = Record<keyof typeof lightNeutrals, string>;
 
 export type Theme = {
   mode: 'light' | 'dark';

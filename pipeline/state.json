@@ -31,7 +31,7 @@
     },
     "user-flows": {
       "agent": "user-flow-designer",
-      "status": "pending",
+      "status": "rejected",
       "output": "docs/user-flows.md",
       "depends_on": [
         "sitemap"
@@ -159,6 +159,12 @@
       "verdict": "approved",
       "pass": 3,
       "summary": "Re-review after the auth reorder (Sign Up/Log In moved from immediately after Splash to immediately before Onboarding Complete). Change isolation verified independently via git diff against the pass-2-approved commit: exactly three changes (the moved bullet with rationale and returning-user short-circuit, the rewritten section-2 pre-nav line, and the new pre-auth-state flag) \u2014 nothing else touched, nothing thinned. Internal consistency holds: section-1 order matches the section-2 nav summary exactly, the old 'Splash -> Auth' label is fully replaced with no dangling reference (grep-verified), traceability row 12 is order-agnostic and still true, and the new flag names exactly the five now-pre-auth screens and delegates to user-flow-designer, which exists in state.json. Traceability to research-product unaffected: no requirement mandates auth-first; Req 12 still satisfied (account precedes the tab bar, so all in-app data stays account-tied); Req 9's pre-account placement results are exactly what the new flag covers; Req 5 offline-first is reinforced. Three non-blocking flow-level carry-forwards recorded for user-flow-designer: returning-user landing (Welcome vs. straight to tabs), whether Sign Up is a hard wall (a guest/skip mode would contradict Req 12 and must return to sitemap), and log-in-with-partial-local-onboarding-state conflict resolution. user-flows unblocked on the sitemap side; pass-2 carry-forwards remain in force."
+    },
+    {
+      "date": "2026-07-12",
+      "stage": "user-flows",
+      "verdict": "rejected",
+      "summary": "Coverage and carry-forward resolution are genuinely strong: every sitemap screen and all six modals trace to a flow with systematic error/empty/loading/interruption states via six well-factored common patterns; all three sitemap-re-review carry-forwards are resolved explicitly in Section 0 (pre-auth draft recovery + field-level server-wins merge for the login-with-unsynced-draft conflict, returning-user lands straight on Home, Sign Up hard wall tied to Req 12 with the change-is-sitemap-level note); all four fork/join points (Module Interest, per-track placement with deferral, draft-attach at Sign Up with an atomicity default, deferred-placement re-entry) are explicit; 15 reasoned defaults honestly consolidated in Section G. Rejected on four narrow items: (1) an internal routing contradiction on the returning-user short-circuit - A1 routes the no-session-no-draft precondition to Profile Setup while A7b step 1 and E2 step 4 route the identical precondition straight to Sign Up/Log In, and the short-circuit's actual trigger/affordance is never specified, in exactly carry-forward #2's area; (2) a fabricated verbatim sitemap quote in A3 ('If only one track was chosen, this step is skipped' appears nowhere in docs/sitemap.md - grep-verified); (3) 'per the sitemap's per-step actions' cited for a Skip-this-step behavior the sitemap never defines; (4) cached-session Splash-to-Home routing in 0.2/A7a mis-cited 'per the sitemap', which never mentions cached sessions. Items 2-4 are the false-internal-claim pattern this pipeline has rejected three times before; the underlying behaviors are fine and need relabeling as reasoned defaults, not redesign. Everything under 'What passes' is approved as-is and must not be thinned. Fix list in pipeline/review-log.md."
     }
   ]
 }

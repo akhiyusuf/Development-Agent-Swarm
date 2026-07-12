@@ -3,6 +3,7 @@ import { Animated, Pressable, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../theme/ThemeContext';
+import { clampedTypeMaxScale } from '../theme/tokens';
 import { useReducedMotion } from '../hooks/useReducedMotion';
 import { fireHaptic } from '../hooks/useHapticFeedback';
 import { ProgressBar } from './ProgressBar';
@@ -103,6 +104,7 @@ export function SessionPlayer(props: SessionPlayerProps) {
               color: timerColor,
               textAlign: 'center',
             }}
+            maxFontSizeMultiplier={clampedTypeMaxScale}
           >
             {props.summary.headline}
           </Text>
@@ -140,6 +142,7 @@ export function SessionPlayer(props: SessionPlayerProps) {
               color: timerColor,
             }}
             accessibilityLabel={`Timer: ${props.timerLabel}`}
+            maxFontSizeMultiplier={clampedTypeMaxScale}
           >
             {props.timerLabel}
           </Text>

@@ -1,0 +1,524 @@
+{
+  "_meta": {
+    "purpose": "Real, cited regional food data for the Fit & Fed nutrition tracker. Replaces placeholder/mock food content for screen-designer and app-builder.",
+    "priorityMarkets": ["Nigeria", "Ghana", "Kenya"],
+    "diasporaScope": "A small set of Western/diaspora staples is included per research/product-research.md's diaspora persona (dual-cuisine users), not a full Western database.",
+    "unitConvention": "Every food carries at least one householdPortion (the unit people actually serve/log in) mapped to a gram equivalent, plus macro/micronutrient values per 100g so the app can compute any portion from grams.",
+    "confidenceLegend": {
+      "direct-fct": "Value traced to a named national/regional food composition table (Nigerian FCT, WAFCT-covered Ghana staple, or Kenya FCT 2018), via a secondary compilation that itself cites that FCT.",
+      "usda": "Value traced to USDA FoodData Central (directly for raw/simple ingredients, or via a USDA-sourced nutrition aggregator).",
+      "academic": "Value traced to a peer-reviewed or government academic source analyzing the specific food.",
+      "compiled-estimate": "No single authoritative figure exists for this composite dish; value is a reasoned point estimate within a documented range from multiple independently-prepared nutrition-tracking sources, flagged with the range and the reason for variance (usually oil/meat quantity in home recipes)."
+    },
+    "knownLimitation": "This research pass used web search rather than direct binary/PDF access to the primary FAO/INFOODS WAFCT 2019, Nigerian FCT, and Kenya FCT 2018 documents (tool access to those PDFs was blocked in this environment). Values below are sourced from secondary compilations that explicitly cite those FCTs (e.g. FitNigerian, AfroTools, FitSavanna) or from USDA-derived aggregators for raw ingredients, not from reading the FCT line items directly. See docs/data-sourcing.md Limitations section before treating any single value as lab-analyzed-precise."
+  },
+  "foods": [
+    {
+      "id": "ng-jollof-rice",
+      "name": "Jollof Rice",
+      "region": "Nigeria",
+      "category": "composite-dish",
+      "householdPortions": [
+        { "unit": "1 cup, cooked", "grams": 200 },
+        { "unit": "1 plate (party-size)", "grams": 350 }
+      ],
+      "per100g": { "kcal": 145, "protein_g": 2.6, "carbs_g": 27.5, "fat_g": 2.7 },
+      "micronutrients": { "sodium_mg": 200 },
+      "confidence": "compiled-estimate",
+      "valueSpread": "Independent trackers report 145-241 kcal/100g for jollof rice depending on oil quantity and tomato-stock ratio; this entry uses the lower, lighter-oil end reported by a Nigeria-specific tracker. A household cook using more oil will run materially higher; the app should treat this as a starting default, not a fixed truth.",
+      "source": {
+        "name": "FitNigerian — Jollof Rice Nutrition Facts",
+        "url": "https://www.fitnigerian.com/nutrition-facts/jollof-rice/",
+        "note": "States it draws on Nigerian food-composition data; cross-checked against NutriScan, SnapCalorie, and AfroTools figures which range up to 241 kcal/100g."
+      }
+    },
+    {
+      "id": "ng-garri-white",
+      "name": "Garri (dry, white, roasted cassava granules)",
+      "region": "Nigeria",
+      "category": "staple-ingredient",
+      "householdPortions": [
+        { "unit": "1 cup, dry", "grams": 120 }
+      ],
+      "per100g": { "kcal": 363, "protein_g": 1.6, "carbs_g": 86.9, "fat_g": 0.7 },
+      "micronutrients": {},
+      "confidence": "direct-fct",
+      "source": {
+        "name": "FitNigerian — Garri (White) Nutrition Facts, citing the Nigerian Food Composition Table 2017",
+        "url": "https://www.fitnigerian.com/nutrition-facts/garri-white/"
+      }
+    },
+    {
+      "id": "ng-eba",
+      "name": "Eba (cooked garri swallow)",
+      "region": "Nigeria",
+      "category": "staple-prepared",
+      "householdPortions": [
+        { "unit": "1 wrap/ball (typical swallow portion)", "grams": 150 }
+      ],
+      "per100g": { "kcal": 112, "protein_g": 1.4, "carbs_g": 25.0, "fat_g": 0.2 },
+      "micronutrients": {},
+      "confidence": "compiled-estimate",
+      "valueSpread": "Reports range ~99-125 kcal/100g cooked; cooking water ratio (how loose/firm the swallow is made) is the main driver. 112 kcal is used as the midpoint.",
+      "source": {
+        "name": "BeHealthyAfrica — How Many Calories are in Gari/Eba?, and SnapCalorie Eba Nutrition (both derived from garri's dry-basis Nigerian FCT values adjusted for water absorption)",
+        "url": "https://behealthyafrica.com/much-calories-gari-eba/"
+      }
+    },
+    {
+      "id": "ng-egusi-soup",
+      "name": "Egusi Soup",
+      "region": "Nigeria",
+      "category": "composite-dish",
+      "householdPortions": [
+        { "unit": "1 ladle/bowl", "grams": 250 }
+      ],
+      "per100g": { "kcal": 182, "protein_g": 14.3, "carbs_g": 8.0, "fat_g": 13.2 },
+      "micronutrients": { "folate_mcg": 58, "iron_mg": 4.2 },
+      "confidence": "compiled-estimate",
+      "valueSpread": "Meat/fish/palm-oil content varies substantially by household recipe; per-250g-serving trackers show 350-400 kcal depending on protein load, consistent with the per-100g figure used here at a moderate-protein fill level.",
+      "source": {
+        "name": "NutriScan App — Egusi Soup: Calories, Nutrition and Health Benefits",
+        "url": "https://nutriscan.app/calories-nutrition/egusi-soup"
+      }
+    },
+    {
+      "id": "ng-moin-moin",
+      "name": "Moin Moin (steamed black-eyed pea pudding, with vegetable oil)",
+      "region": "Nigeria",
+      "category": "composite-dish",
+      "householdPortions": [
+        { "unit": "1 wrap (leaf/foil-steamed portion)", "grams": 150 }
+      ],
+      "per100g": { "kcal": 108, "protein_g": 6.5, "carbs_g": 15.7, "fat_g": 2.2 },
+      "micronutrients": {},
+      "confidence": "direct-fct",
+      "source": {
+        "name": "FitNigerian — Moin Moin (Cooked with Vegetable Oil) Nutrition Facts & Value",
+        "url": "https://www.fitnigerian.com/nutrition-facts/moin-moin-cooked-with-vegetable-oil/"
+      }
+    },
+    {
+      "id": "ng-akara",
+      "name": "Akara (fried black-eyed pea fritters, vegetable oil)",
+      "region": "Nigeria",
+      "category": "composite-dish",
+      "householdPortions": [
+        { "unit": "1 ball", "grams": 40 }
+      ],
+      "per100g": { "kcal": 220, "protein_g": 12.1, "carbs_g": 23.8, "fat_g": 8.5 },
+      "micronutrients": {},
+      "confidence": "direct-fct",
+      "source": {
+        "name": "FitNigerian — Akara (Fried with Vegetable Oil) Nutrition Facts & Value",
+        "url": "https://www.fitnigerian.com/nutrition-facts/akara-fried-with-vegetable-oil/"
+      }
+    },
+    {
+      "id": "ng-pounded-yam",
+      "name": "Pounded Yam",
+      "region": "Nigeria",
+      "category": "staple-prepared",
+      "householdPortions": [
+        { "unit": "1 wrap (typical swallow portion)", "grams": 200 }
+      ],
+      "per100g": { "kcal": 109, "protein_g": 1.5, "carbs_g": 22.2, "fat_g": 0.3 },
+      "micronutrients": {},
+      "confidence": "compiled-estimate",
+      "valueSpread": "Wide disagreement across sources (109-268 kcal/100g): fresh-pounded yam (high moisture, traditional mortar-and-pestle prep) sits at the low end used here; reconstituted yam-flour ('poundo yam') products run much higher (drier basis), which the app should model as a separate ingredient rather than conflating with fresh pounded yam.",
+      "source": {
+        "name": "FitNigerian — Pounded Yam Nutrition Facts & Value",
+        "url": "https://www.fitnigerian.com/nutrition-facts/pounded-yam/"
+      }
+    },
+    {
+      "id": "ng-suya",
+      "name": "Suya (grilled spiced beef skewer, yaji spice)",
+      "region": "Nigeria",
+      "category": "composite-dish",
+      "householdPortions": [
+        { "unit": "1 skewer", "grams": 80 }
+      ],
+      "per100g": { "kcal": 250, "protein_g": 20.0, "carbs_g": 5.0, "fat_g": 15.0 },
+      "micronutrients": { "iron_mg": null, "zinc_mg": null },
+      "confidence": "compiled-estimate",
+      "valueSpread": "Beef vs. chicken suya and yaji (peanut/spice marinade) quantity shift fat and carb values; iron/zinc are qualitatively reported as notable (suya is grilled red meat plus ground peanuts) but no source gave exact mg figures, so those fields are left null rather than invented.",
+      "source": {
+        "name": "Calorique — Calories in Suya: Nutrition Facts, Ingredients & Variations",
+        "url": "https://www.caloriqueapp.com/calories/suya"
+      }
+    },
+    {
+      "id": "ng-ogbono-soup",
+      "name": "Ogbono Soup",
+      "region": "Nigeria",
+      "category": "composite-dish",
+      "householdPortions": [
+        { "unit": "1 bowl", "grams": 250 }
+      ],
+      "per100g": { "kcal": 140, "protein_g": 4.0, "carbs_g": 6.0, "fat_g": 10.0 },
+      "micronutrients": {},
+      "confidence": "compiled-estimate",
+      "valueSpread": "Derived by dividing a recorded 250g-serving figure (350 kcal, 10g protein, 25g fat, 15g carb) by 2.5; pure ogbono seed itself is far denser (499 kcal/100g) — the soup figure assumes a typical dilution with broth, meat/fish, and vegetables. Household recipes vary.",
+      "source": {
+        "name": "Low Carb Africa — Ogbono Soup (Draw Soup) recipe nutrition panel",
+        "url": "https://lowcarbafrica.com/ogbono-soup-draw-soup/"
+      }
+    },
+    {
+      "id": "ng-fried-plantain",
+      "name": "Fried Plantain (Dodo)",
+      "region": "Nigeria",
+      "category": "composite-dish",
+      "householdPortions": [
+        { "unit": "3 slices", "grams": 90 }
+      ],
+      "per100g": { "kcal": 292, "protein_g": 1.5, "carbs_g": 48.0, "fat_g": 9.2, "fiber_g": 3.2 },
+      "micronutrients": { "potassium_mg": 507 },
+      "confidence": "direct-fct",
+      "source": {
+        "name": "FitNigerian — Fried Plantain/Dodo Nutrition Facts & Value",
+        "url": "https://www.fitnigerian.com/nutrition-facts/fried-plantain-dodo/"
+      }
+    },
+    {
+      "id": "gh-waakye",
+      "name": "Waakye (rice and beans cooked with sorghum leaves/millet stalks)",
+      "region": "Ghana",
+      "category": "composite-dish",
+      "householdPortions": [
+        { "unit": "1 plate", "grams": 300 }
+      ],
+      "per100g": { "kcal": 167, "protein_g": 7.0, "carbs_g": 34.0, "fat_g": 3.0, "fiber_g": 5.0 },
+      "micronutrients": { "sodium_mg": 291 },
+      "confidence": "compiled-estimate",
+      "source": {
+        "name": "Ayo/MyNetDiary — Waakye Beans & Rice Nutrition Facts",
+        "url": "https://www.mynetdiary.com/food/calories-in-waakye-beans-rice-by-ayo-serving-29100466-0.html"
+      }
+    },
+    {
+      "id": "gh-banku",
+      "name": "Banku (fermented corn and cassava dough)",
+      "region": "Ghana",
+      "category": "staple-prepared",
+      "householdPortions": [
+        { "unit": "1 ball", "grams": 150 }
+      ],
+      "per100g": { "kcal": 110, "protein_g": null, "carbs_g": null, "fat_g": null },
+      "micronutrients": {},
+      "confidence": "compiled-estimate",
+      "valueSpread": "Only an energy figure was corroborated across sources; a full macro breakdown was not found with confidence, so protein/carbs/fat are left null rather than invented. Flagged as a coverage gap.",
+      "source": {
+        "name": "SnapCalorie — Banku Nutrition",
+        "url": "https://www.snapcalorie.com/nutrition/banku_nutrition.html"
+      }
+    },
+    {
+      "id": "gh-fufu",
+      "name": "Fufu (cassava and plantain, pounded)",
+      "region": "Ghana",
+      "category": "staple-prepared",
+      "householdPortions": [
+        { "unit": "1 wrap (typical swallow portion)", "grams": 200 }
+      ],
+      "per100g": { "kcal": 166, "protein_g": 1.5, "carbs_g": 33.6, "fat_g": 0.2, "fiber_g": 3.1 },
+      "micronutrients": {},
+      "confidence": "compiled-estimate",
+      "source": {
+        "name": "NutriScan App — Fufu: Calories, Nutrition and Health Benefits",
+        "url": "https://nutriscan.app/calories-nutrition/fufu"
+      }
+    },
+    {
+      "id": "gh-kenkey",
+      "name": "Kenkey (fermented, steamed corn dough)",
+      "region": "Ghana",
+      "category": "staple-prepared",
+      "householdPortions": [
+        { "unit": "1 ball", "grams": 150 }
+      ],
+      "per100g": { "kcal": 140, "protein_g": 3.0, "carbs_g": 27.5, "fat_g": 0.5 },
+      "micronutrients": { "calcium_mg": 5, "iron_mg": 1.0 },
+      "confidence": "compiled-estimate",
+      "valueSpread": "Sources disagree substantially (112-180 kcal/100g) depending on Ga vs. Fante preparation and fermentation time; 140 kcal is a rough midpoint, not a lab value.",
+      "source": {
+        "name": "SnapCalorie — Kenkey Nutrition (cross-checked against multiple kenkey trackers)",
+        "url": "https://www.snapcalorie.com/nutrition/kenkey_nutrition.html"
+      }
+    },
+    {
+      "id": "gh-groundnut-soup",
+      "name": "Groundnut Soup / Nkatenkwan (peanut soup)",
+      "region": "Ghana",
+      "category": "composite-dish",
+      "householdPortions": [
+        { "unit": "1 bowl", "grams": 240 }
+      ],
+      "per100g": { "kcal": 120, "protein_g": 6.0, "carbs_g": 6.0, "fat_g": 8.0 },
+      "micronutrients": {},
+      "confidence": "compiled-estimate",
+      "valueSpread": "Very wide range across recorded recipes (92-273 kcal/100g equivalent) depending on whether meat/chicken is included and how much raw groundnut paste is used. A peer-reviewed University of Ghana study on the proximate composition of Ghanaian composite soups exists (see source) but its exact reported figures were not extractable in this pass; this is a compiled midpoint, explicitly low-confidence, and a strong candidate for the nutrition-analyst review flagged in docs/data-sourcing.md.",
+      "source": {
+        "name": "Records, Sarpong et al. — Proximate composition and serving sizes of selected composite Ghanaian soups (University of Ghana)",
+        "url": "https://pure.ug.edu.gh/en/publications/proximate-composition-and-serving-sizes-of-selected-composite-gha-3/"
+      }
+    },
+    {
+      "id": "ke-ugali-refined",
+      "name": "Ugali (refined maize meal, cooked)",
+      "region": "Kenya",
+      "category": "staple-prepared",
+      "householdPortions": [
+        { "unit": "1 slice (typical serving wedge)", "grams": 100 }
+      ],
+      "per100g": { "kcal": 148, "protein_g": 3.0, "carbs_g": 27.0, "fat_g": 0.5 },
+      "micronutrients": {},
+      "confidence": "direct-fct",
+      "source": {
+        "name": "Kenya Food Composition Tables 2018 (via secondary compilation)",
+        "url": "https://familyhealth.go.ke/wp-content/uploads/2019/05/Final-Food-compostion-book-2018.pdf",
+        "note": "Value corroborated via myfooddata.com's Kenyan-ugali entry and caloriehealthy.com, both of which attribute figures to KFCT 2018."
+      }
+    },
+    {
+      "id": "ke-ugali-whole-maize",
+      "name": "Ugali (whole/unrefined maize meal, cooked)",
+      "region": "Kenya",
+      "category": "staple-prepared",
+      "householdPortions": [
+        { "unit": "1 slice (typical serving wedge)", "grams": 100 }
+      ],
+      "per100g": { "kcal": 141, "protein_g": 3.2, "carbs_g": 26.0, "fat_g": 0.6, "fiber_g": 1.5 },
+      "micronutrients": {},
+      "confidence": "direct-fct",
+      "source": {
+        "name": "Kenya Food Composition Tables 2018 (via secondary compilation)",
+        "url": "https://familyhealth.go.ke/wp-content/uploads/2019/05/Final-Food-compostion-book-2018.pdf"
+      }
+    },
+    {
+      "id": "ke-sukuma-wiki",
+      "name": "Sukuma Wiki (stir-fried collard greens/kale)",
+      "region": "Kenya",
+      "category": "composite-dish",
+      "householdPortions": [
+        { "unit": "1 cup, cooked", "grams": 100 }
+      ],
+      "per100g": { "kcal": 54, "protein_g": 2.5, "carbs_g": 5.0, "fat_g": 3.0 },
+      "micronutrients": { "calcium_mg": 291, "iron_mg": 2.3, "vitaminC_mg": 82 },
+      "confidence": "direct-fct",
+      "valueSpread": "Steamed-without-oil preparation runs far lower (~25 kcal/100g); the stir-fried figure used here reflects typical household prep with oil/onion/tomato.",
+      "source": {
+        "name": "Fit Savanna — Sukuma Wiki (Stir-Fried Kales), citing Kenya Food Composition Tables 2018",
+        "url": "https://www.fitsavanna.co.ke/foods/sukuma-wiki-stir-fried"
+      }
+    },
+    {
+      "id": "ke-githeri",
+      "name": "Githeri (boiled maize and beans)",
+      "region": "Kenya",
+      "category": "composite-dish",
+      "householdPortions": [
+        { "unit": "1 bowl", "grams": 250 }
+      ],
+      "per100g": { "kcal": 180, "protein_g": 7.8, "carbs_g": 15.1, "fat_g": 7.6, "fiber_g": 10.4 },
+      "micronutrients": { "iron_mg": 1.7, "zinc_mg": 1.21 },
+      "confidence": "compiled-estimate",
+      "valueSpread": "Fat content (7.6g/100g) is high relative to a plain maize-and-beans dish, implying most recorded recipes include added cooking oil; a plain-boiled version would run lower-fat. Reported as found rather than adjusted.",
+      "source": {
+        "name": "NutrInformation — Nutritional Composition of Githeri",
+        "url": "https://www.nutrinformation.com/nutritional-composition-and-value-of-githeri/"
+      }
+    },
+    {
+      "id": "ke-chapati",
+      "name": "Chapati (wheat flatbread)",
+      "region": "Kenya",
+      "category": "composite-dish",
+      "householdPortions": [
+        { "unit": "1 piece (medium)", "grams": 40 }
+      ],
+      "per100g": { "kcal": 300, "protein_g": 7.5, "carbs_g": 50.0, "fat_g": 2.5, "fiber_g": 7.5 },
+      "micronutrients": {},
+      "confidence": "compiled-estimate",
+      "valueSpread": "Per-piece figures (~120 kcal for a 40g chapati) scale to ~300 kcal/100g; oil/ghee brushed on the surface after cooking adds ~40-45 kcal per teaspoon on top of this base and is common in Kenyan households, so real-world values run higher.",
+      "source": {
+        "name": "AceBlend — Chapati Calories: The Complete Nutritional Guide",
+        "url": "https://aceblend.com/blogs/daily-vitality/chapati-calories-the-complete-nutritional-guide"
+      }
+    },
+    {
+      "id": "ke-nyama-choma-goat",
+      "name": "Nyama Choma (roasted goat meat)",
+      "region": "Kenya",
+      "category": "composite-dish",
+      "householdPortions": [
+        { "unit": "1 serving (shared-plate portion)", "grams": 200 }
+      ],
+      "per100g": { "kcal": 144, "protein_g": 27.0, "carbs_g": 0.0, "fat_g": 4.0 },
+      "micronutrients": {},
+      "confidence": "compiled-estimate",
+      "valueSpread": "Fried/extra-fatty cuts run to ~153 kcal/100g; protein/fat split here is a reasoned estimate based on typical roasted-goat composition since the found sources gave energy but not a full consistent macro panel.",
+      "source": {
+        "name": "RecipeOfHealth — Nyama Choma (Roast Meat) nutrition panel",
+        "url": "http://recipeofhealth.com/recipe/nyama-choma-roast-meat-428370rb"
+      }
+    },
+    {
+      "id": "ke-mandazi",
+      "name": "Mandazi (fried sweet dough)",
+      "region": "Kenya",
+      "category": "composite-dish",
+      "householdPortions": [
+        { "unit": "1 piece", "grams": 60 }
+      ],
+      "per100g": { "kcal": 320, "protein_g": 5.0, "carbs_g": 40.0, "fat_g": 15.0 },
+      "micronutrients": {},
+      "confidence": "compiled-estimate",
+      "valueSpread": "Piece-size and oil absorption during deep-frying vary calorie count by roughly 292-320 kcal per piece across sources; the vegan mahamri variant runs far lower (~28 kcal/piece) and is tracked as a distinct item if added later.",
+      "source": {
+        "name": "Calorique — Mandazi Calories",
+        "url": "https://www.caloriqueapp.com/calories/mandazi"
+      }
+    },
+    {
+      "id": "ke-managu",
+      "name": "Managu (African nightshade, boiled)",
+      "region": "Kenya",
+      "category": "ingredient",
+      "householdPortions": [
+        { "unit": "1 cup, cooked", "grams": 100 }
+      ],
+      "per100g": { "kcal": 38, "protein_g": 4.3, "carbs_g": 5.7, "fat_g": 0.5, "fiber_g": 1.4 },
+      "micronutrients": { "iron_mg": 6.2, "vitaminA_mcg_betaCarotene": 3660 },
+      "confidence": "academic",
+      "valueSpread": "Fresh-leaf iron is reported at 1.0mg/100g vs. 6.2mg/100g once boiled/concentrated; the boiled (as-eaten) figure is used since that is how the food is logged.",
+      "source": {
+        "name": "Nutrition Point Kenya — Indigenous Vegetables Eaten in Kenya",
+        "url": "https://nutrition.co.ke/indigenous-vegetables-eaten-in-kenya_10/"
+      }
+    },
+    {
+      "id": "ke-terere",
+      "name": "Terere (amaranth leaves, cooked)",
+      "region": "Kenya",
+      "category": "ingredient",
+      "householdPortions": [
+        { "unit": "1 cup, cooked", "grams": 100 }
+      ],
+      "per100g": { "kcal": 23, "protein_g": 2.5, "carbs_g": 4.0, "fat_g": 0.3 },
+      "micronutrients": { "iron_mg": null, "vitaminC_mg": 43.3, "vitaminA_IU": 2917 },
+      "confidence": "usda",
+      "valueSpread": "Iron reported qualitatively as '~29% of DRI' rather than an absolute mg figure by the source used; left null rather than back-calculated from an assumed DRI baseline.",
+      "source": {
+        "name": "Nutrition-and-You.com — Amaranth Greens Nutrition Facts and Health Benefits (cross-checked against USDA-derived nutritionvalue.org entry for raw amaranth leaves)",
+        "url": "https://www.nutrition-and-you.com/amaranth-greens.html"
+      }
+    },
+    {
+      "id": "diaspora-chicken-breast",
+      "name": "Chicken Breast, cooked, skinless",
+      "region": "Diaspora/Western",
+      "category": "ingredient",
+      "householdPortions": [
+        { "unit": "1 breast, cooked", "grams": 172 }
+      ],
+      "per100g": { "kcal": 165, "protein_g": 31.0, "carbs_g": 0.0, "fat_g": 3.6 },
+      "micronutrients": {},
+      "confidence": "usda",
+      "source": { "name": "USDA FoodData Central — Chicken, broiler or fryers, breast, meat only, cooked", "url": "https://fdc.nal.usda.gov/" }
+    },
+    {
+      "id": "diaspora-egg-boiled",
+      "name": "Egg, whole, boiled",
+      "region": "Diaspora/Western",
+      "category": "ingredient",
+      "householdPortions": [
+        { "unit": "1 large egg", "grams": 50 }
+      ],
+      "per100g": { "kcal": 155, "protein_g": 13.0, "carbs_g": 1.1, "fat_g": 11.0 },
+      "micronutrients": {},
+      "confidence": "usda",
+      "source": { "name": "USDA FoodData Central — Egg, whole, cooked, hard-boiled", "url": "https://fdc.nal.usda.gov/" }
+    },
+    {
+      "id": "diaspora-white-rice",
+      "name": "White Rice, cooked",
+      "region": "Diaspora/Western",
+      "category": "ingredient",
+      "householdPortions": [
+        { "unit": "1 cup, cooked", "grams": 158 }
+      ],
+      "per100g": { "kcal": 130, "protein_g": 2.7, "carbs_g": 28.0, "fat_g": 0.3 },
+      "micronutrients": {},
+      "confidence": "usda",
+      "source": { "name": "USDA FoodData Central — Rice, white, long-grain, cooked", "url": "https://fdc.nal.usda.gov/" }
+    },
+    {
+      "id": "diaspora-oats-cooked",
+      "name": "Rolled Oats, cooked (water)",
+      "region": "Diaspora/Western",
+      "category": "ingredient",
+      "householdPortions": [
+        { "unit": "1 cup, cooked", "grams": 234 }
+      ],
+      "per100g": { "kcal": 71, "protein_g": 2.5, "carbs_g": 12.0, "fat_g": 1.5, "fiber_g": 1.7 },
+      "micronutrients": {},
+      "confidence": "usda",
+      "source": { "name": "USDA FoodData Central — Oats, regular and quick, cooked with water", "url": "https://fdc.nal.usda.gov/" }
+    },
+    {
+      "id": "diaspora-banana",
+      "name": "Banana, raw",
+      "region": "Diaspora/Western",
+      "category": "ingredient",
+      "householdPortions": [
+        { "unit": "1 medium", "grams": 118 }
+      ],
+      "per100g": { "kcal": 89, "protein_g": 1.1, "carbs_g": 22.8, "fat_g": 0.3 },
+      "micronutrients": { "potassium_mg": 358, "vitaminC_mg": 8.7 },
+      "confidence": "usda",
+      "source": { "name": "USDA FoodData Central — Bananas, raw", "url": "https://fdc.nal.usda.gov/" }
+    },
+    {
+      "id": "diaspora-peanut-butter",
+      "name": "Peanut Butter",
+      "region": "Diaspora/Western",
+      "category": "ingredient",
+      "householdPortions": [
+        { "unit": "1 tbsp", "grams": 16 }
+      ],
+      "per100g": { "kcal": 588, "protein_g": 25.0, "carbs_g": 20.0, "fat_g": 50.0 },
+      "micronutrients": {},
+      "confidence": "usda",
+      "source": { "name": "USDA FoodData Central — Peanut butter, smooth style", "url": "https://fdc.nal.usda.gov/" }
+    },
+    {
+      "id": "diaspora-whole-milk",
+      "name": "Whole Milk",
+      "region": "Diaspora/Western",
+      "category": "ingredient",
+      "householdPortions": [
+        { "unit": "1 cup", "grams": 244 }
+      ],
+      "per100g": { "kcal": 61, "protein_g": 3.2, "carbs_g": 4.8, "fat_g": 3.3 },
+      "micronutrients": { "calcium_mg": 113 },
+      "confidence": "usda",
+      "source": { "name": "USDA FoodData Central — Milk, whole, 3.25% milkfat", "url": "https://fdc.nal.usda.gov/" }
+    },
+    {
+      "id": "diaspora-whole-wheat-bread",
+      "name": "Whole Wheat Bread",
+      "region": "Diaspora/Western",
+      "category": "ingredient",
+      "householdPortions": [
+        { "unit": "1 slice", "grams": 28 }
+      ],
+      "per100g": { "kcal": 247, "protein_g": 13.0, "carbs_g": 41.0, "fat_g": 3.4, "fiber_g": 7.0 },
+      "micronutrients": {},
+      "confidence": "usda",
+      "source": { "name": "USDA FoodData Central — Bread, whole-wheat, commercially prepared", "url": "https://fdc.nal.usda.gov/" }
+    }
+  ]
+}
